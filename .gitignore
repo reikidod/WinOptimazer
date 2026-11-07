@@ -1,0 +1,8 @@
+bin/
+obj/
+publish/
+certs/*.pfx
+certs/*.key
+*.user
+.vs/
+dist/
