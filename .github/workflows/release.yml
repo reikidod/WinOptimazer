@@ -1,13 +1,20 @@
 name: Release
 
-# Публикует релиз при пуше тега вида v0.3.2. Встроенное обновление приложения
-# (Проверить обновления) берёт из релиза файл WinOptimizer-win-x64.zip.
+# Каждый пуш в main автоматически собирает приложение и публикует релиз с файлом
+# WinOptimizer-win-x64.zip. Встроенное обновление приложения («Проверить обновления»
+# и проверка при запуске) скачивает именно его — собирать проект вручную не нужно.
+# Номер версии: major.minor из <Version> в WinOptimizer.csproj + номер запуска сборки.
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -19,12 +26,22 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Version
+        shell: pwsh
+        run: |
+          [xml]$proj = Get-Content WinOptimizer.csproj
+          $base = $proj.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ } | Select-Object -First 1
+          $p = $base.Split('.')
+          $v = "$($p[0]).$($p[1]).${{ github.run_number }}"
+          "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Версия релиза: $v"
+
       - name: Publish
         shell: pwsh
         run: |
-          $v = '${{ github.ref_name }}'.TrimStart('v')
           dotnet publish WinOptimizer.csproj -c Release -r win-x64 --self-contained false -o publish `
-            -p:Version=$v -p:AssemblyVersion="$v.0" -p:FileVersion="$v.0"
+            -p:Version=$env:VERSION -p:AssemblyVersion="$env:VERSION.0" -p:FileVersion="$env:VERSION.0"
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet publish завершился с ошибкой' }
           if (-not (Test-Path publish\WinOptimizer.exe)) { throw 'publish\WinOptimizer.exe не найден' }
           Compress-Archive -Path publish\* -DestinationPath WinOptimizer-win-x64.zip
 
@@ -32,4 +49,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create '${{ github.ref_name }}' WinOptimizer-win-x64.zip --title '${{ github.ref_name }}' --generate-notes
+        run: |
+          git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
+          gh release create "v$env:VERSION" WinOptimizer-win-x64.zip `
+            --target ${{ github.sha }} --title "v$env:VERSION" --notes-file notes.md
