@@ -251,9 +251,26 @@ public sealed class AppInstallService : IAppInstallService
 
     private static async Task DownloadFileAsync(string url, string path, CancellationToken ct)
     {
-        using var resp = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-        resp.EnsureSuccessStatusCode();
-        await using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-        await resp.Content.CopyToAsync(fs, ct).ConfigureAwait(false);
+        // Редиректы ведём вручную: стандартный клиент не переходит с https на http,
+        // а зеркала (например, get.videolan.org) именно так и отвечают (302).
+        var current = new Uri(url);
+        for (var hop = 0; hop < 10; hop++)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, current);
+            using var resp = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+
+            if ((int)resp.StatusCode is >= 300 and < 400 && resp.Headers.Location is { } location)
+            {
+                current = location.IsAbsoluteUri ? location : new Uri(current, location);
+                continue;
+            }
+
+            resp.EnsureSuccessStatusCode();
+            await using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+            await resp.Content.CopyToAsync(fs, ct).ConfigureAwait(false);
+            return;
+        }
+
+        throw new HttpRequestException("Слишком много перенаправлений при скачивании: " + url);
     }
 }
