@@ -680,6 +680,7 @@
             <Grid Visibility="{Binding IsDebloatPage, Converter={StaticResource BoolToVis}}" Margin="32,28,16,12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid Margin="0,0,16,18">
@@ -688,8 +689,8 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Лишние приложения" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Удаление предустановленных приложений Windows, которые вам не нужны"
+                        <TextBlock Text="Удаление приложений" Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Все установленные программы и приложения Windows. Удаляйте штатным деинсталлятором и сразу стирайте остатки: папки, ярлыки, записи реестра — как в Geek Uninstaller. Если программа не удаляется, её можно снести принудительно."
                                    Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                         <TextBlock Text="{Binding Debloat.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0"
                                    Foreground="{StaticResource AccentBrush}" />
@@ -701,8 +702,61 @@
                                 Command="{Binding Debloat.RemoveSelectedCommand}" />
                     </StackPanel>
                 </Grid>
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Debloat.Items}" Margin="0,0,16,8">
+                <!-- Поиск и фильтр по типу -->
+                <Grid Grid.Row="1" Margin="0,0,16,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding Debloat.SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Поиск по названию и издателю" Margin="0,0,12,0"
+                             AutomationProperties.Name="Поиск приложений" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel.Resources>
+                            <Style x:Key="FilterChip" TargetType="RadioButton">
+                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Margin" Value="0,0,8,0" />
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="RadioButton">
+                                            <Border x:Name="Chip" CornerRadius="8" Padding="12,8"
+                                                    Background="{StaticResource BgCardBrush}"
+                                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Chip" Property="Background" Value="{StaticResource BgCardHoverBrush}" />
+                                                </Trigger>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter TargetName="Chip" Property="Background" Value="#243044" />
+                                                    <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </StackPanel.Resources>
+                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
+                                     Content="{Binding Debloat.AllLabel}"
+                                     IsChecked="{Binding Debloat.IsFilterAll, Mode=OneWay}"
+                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="0" />
+                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
+                                     Content="{Binding Debloat.Win32Label}"
+                                     IsChecked="{Binding Debloat.IsFilterWin32, Mode=OneWay}"
+                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="1" />
+                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}" Margin="0"
+                                     Content="{Binding Debloat.StoreLabel}"
+                                     IsChecked="{Binding Debloat.IsFilterStore, Mode=OneWay}"
+                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="2" />
+                    </StackPanel>
+                </Grid>
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Debloat.View}" Margin="0,0,16,8">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <!-- Вся плашка кликабельна: переключает выбор -->
@@ -738,6 +792,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
                                         <Border Width="22" Height="22" CornerRadius="6" Margin="0,0,14,0"
@@ -788,6 +843,11 @@
                                             <TextBlock Text="{Binding Status}" FontSize="12" Margin="0,4,0,0"
                                                        Foreground="{StaticResource AccentBrush}" />
                                         </StackPanel>
+
+                                        <Button Grid.Column="3" Content="Удалить" VerticalAlignment="Center" Margin="12,0,0,0"
+                                                Command="{Binding DataContext.Debloat.RemoveOneCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Удалить и сразу найти остатки" />
                                     </Grid>
                                 </ToggleButton>
                             </DataTemplate>

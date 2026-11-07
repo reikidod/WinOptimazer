@@ -4,6 +4,15 @@ using WinOptimizer.Infrastructure;
 
 namespace WinOptimizer.Services;
 
+public enum AppKind
+{
+    /// <summary>Приложение Microsoft Store (UWP / MSIX).</summary>
+    Store,
+
+    /// <summary>Классическая программа из списка «Программы и компоненты».</summary>
+    Win32,
+}
+
 public sealed record DebloatApp(
     string Id,
     string DisplayName,
@@ -13,12 +22,29 @@ public sealed record DebloatApp(
     bool IsInstalled,
     bool IsRecommended,
     string? InstallLocation,
-    string? IconPath);
+    string? IconPath,
+    AppKind Kind = AppKind.Store,
+    string Publisher = "",
+    string Version = "",
+    string? UninstallCommand = null,
+    string? QuietUninstallCommand = null,
+    string? RegistryKeyPath = null,
+    string? PackageFamilyName = null,
+    long SizeKb = 0,
+    bool IsMsi = false);
 
 public interface IDebloatService
 {
     Task<IReadOnlyList<DebloatApp>> ListAsync(CancellationToken ct = default);
     Task<(bool Ok, string Message)> RemoveAsync(DebloatApp app, CancellationToken ct = default);
+
+    /// <summary>Принудительное удаление, если штатный деинсталлятор не справился (Win32).</summary>
+    Task<(bool Ok, string Message)> ForceRemoveAsync(DebloatApp app, CancellationToken ct = default);
+
+    /// <summary>Остатки после удаления: папки, ярлыки, ключи реестра.</summary>
+    Task<IReadOnlyList<Leftover>> FindLeftoversAsync(DebloatApp app, CancellationToken ct = default);
+
+    Task<(int Removed, IReadOnlyList<string> Failed)> RemoveLeftoversAsync(IEnumerable<Leftover> items, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -65,43 +91,94 @@ public sealed class DebloatService : IDebloatService
         ("quick-assist", "Быстрая помощь", "MicrosoftCorporationII.QuickAssist", "Quick Assist", false),
     ];
 
+    private static readonly HashSet<string> ProtectedPackages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Microsoft.WindowsStore", "Microsoft.StorePurchaseApp", "Microsoft.DesktopAppInstaller",
+        "Microsoft.SecHealthUI", "Microsoft.WindowsTerminal", "Microsoft.Windows.Search",
+        "Microsoft.AAD.BrokerPlugin", "Microsoft.AccountsControl", "Microsoft.LockApp",
+    };
+
     public async Task<IReadOnlyList<DebloatApp>> ListAsync(CancellationToken ct = default)
     {
-        var packages = await Task.Run(GetInstalledPackages, ct).ConfigureAwait(false);
+        var packagesTask = Task.Run(GetInstalledPackages, ct);
+        var win32Task = Task.Run(Win32Uninstaller.List, ct);
+        var packages = await packagesTask.ConfigureAwait(false);
         var list = new List<DebloatApp>();
 
-        foreach (var (id, name, pattern, desc, recommended) in Catalog)
+        foreach (var pkg in packages)
         {
-            var match = packages.FirstOrDefault(p =>
-                p.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase) ||
-                pattern.Contains(p.Name, StringComparison.OrdinalIgnoreCase));
-            if (match is null)
+            // Магазин, установщик приложений и компоненты безопасности не предлагаем к удалению
+            if (ProtectedPackages.Contains(pkg.Name) ||
+                pkg.Name.StartsWith("Microsoft.WindowsAppRuntime", StringComparison.OrdinalIgnoreCase) ||
+                pkg.Name.StartsWith("MicrosoftWindows.", StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            var icon = ResolvePackageIcon(match.InstallLocation);
+            var catalog = Catalog.FirstOrDefault(c =>
+                pkg.Name.Equals(c.Pattern, StringComparison.OrdinalIgnoreCase) ||
+                pkg.Name.Contains(c.Pattern, StringComparison.OrdinalIgnoreCase));
+            var known = catalog.Id is not null;
+
+            var name = known && (string.IsNullOrWhiteSpace(pkg.DisplayName) || pkg.DisplayName == pkg.Name)
+                ? catalog.Name
+                : pkg.DisplayName;
+            var desc = known
+                ? catalog.Desc
+                : "Приложение Microsoft Store" + (string.IsNullOrEmpty(pkg.Version) ? "" : " · версия " + pkg.Version);
+
             list.Add(new DebloatApp(
-                id,
-                string.IsNullOrWhiteSpace(match.DisplayName) ? name : match.DisplayName,
-                match.Name,
-                match.PackageFullName,
+                known ? catalog.Id : "store:" + pkg.Name,
+                name,
+                pkg.Name,
+                pkg.PackageFullName,
                 desc,
                 IsInstalled: true,
-                recommended,
-                match.InstallLocation,
-                icon));
+                IsRecommended: known && catalog.Recommended,
+                pkg.InstallLocation,
+                ResolvePackageIcon(pkg.InstallLocation),
+                AppKind.Store,
+                Version: pkg.Version,
+                PackageFamilyName: pkg.Family));
         }
 
-        return list.OrderBy(a => a.DisplayName, StringComparer.CurrentCultureIgnoreCase).ToList();
+        list.AddRange(await win32Task.ConfigureAwait(false));
+
+        return list
+            .OrderByDescending(a => a.IsRecommended)
+            .ThenBy(a => a.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
     }
+
+    public Task<(bool Ok, string Message)> ForceRemoveAsync(DebloatApp app, CancellationToken ct = default) =>
+        Task.Run(() => app.Kind == AppKind.Win32
+            ? Win32Uninstaller.ForceRemove(app)
+            : (false, "Принудительное удаление доступно только для классических программ."), ct);
+
+    public Task<IReadOnlyList<Leftover>> FindLeftoversAsync(DebloatApp app, CancellationToken ct = default) =>
+        Task.Run<IReadOnlyList<Leftover>>(() => Win32Uninstaller.FindLeftovers(app), ct);
+
+    public Task<(int Removed, IReadOnlyList<string> Failed)> RemoveLeftoversAsync(
+        IEnumerable<Leftover> items, CancellationToken ct = default) =>
+        Task.Run<(int, IReadOnlyList<string>)>(() =>
+        {
+            var (removed, failed) = Win32Uninstaller.RemoveLeftovers(items);
+            return (removed, failed);
+        }, ct);
 
     public async Task<(bool Ok, string Message)> RemoveAsync(DebloatApp app, CancellationToken ct = default)
     {
         try
         {
+            if (app.Kind == AppKind.Win32)
+            {
+                var r = await Win32Uninstaller.UninstallAsync(app, ct).ConfigureAwait(false);
+                if (r.Ok) Logger.Info($"Удалена программа: {app.DisplayName}");
+                return r;
+            }
+
             var pattern = string.IsNullOrWhiteSpace(app.PackageName) ? app.Id : app.PackageName;
             var script =
-                $"Get-AppxPackage -Name '*{Escape(pattern)}*' | Remove-AppxPackage -ErrorAction SilentlyContinue; " +
-                $"Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -like '*{Escape(pattern)}*' }} | " +
+                $"Get-AppxPackage -Name '{Escape(pattern)}' | Remove-AppxPackage -ErrorAction SilentlyContinue; " +
+                $"Get-AppxProvisionedPackage -Online | Where-Object {{ $_.DisplayName -eq '{Escape(pattern)}' }} | " +
                 "Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue; " +
                 "'OK'";
             var result = await Task.Run(() => RunPowerShell(script), ct).ConfigureAwait(false);
@@ -121,13 +198,14 @@ public sealed class DebloatService : IDebloatService
         }
     }
 
-    private sealed record InstalledPackage(string Name, string PackageFullName, string InstallLocation, string DisplayName);
+    private sealed record InstalledPackage(string Name, string PackageFullName, string InstallLocation, string DisplayName, string Family, string Version);
 
     private static List<InstalledPackage> GetInstalledPackages()
     {
         // CSV-подобная выдача: Name|FullName|InstallLocation
         const string script =
-            "Get-AppxPackage | ForEach-Object { \"$($_.Name)|$($_.PackageFullName)|$($_.InstallLocation)\" }";
+            "Get-AppxPackage | Where-Object { -not $_.IsFramework -and -not $_.IsResourcePackage -and -not $_.NonRemovable -and $_.SignatureKind -ne 'System' } | " +
+            "ForEach-Object { \"$($_.Name)|$($_.PackageFullName)|$($_.InstallLocation)|$($_.PackageFamilyName)|$($_.Version)\" }";
         var result = RunPowerShell(script);
         var list = new List<InstalledPackage>();
 
@@ -138,10 +216,12 @@ public sealed class DebloatService : IDebloatService
             var name = parts[0].Trim();
             var full = parts[1].Trim();
             var loc = parts[2].Trim();
+            var family = parts.Length > 3 ? parts[3].Trim() : "";
+            var version = parts.Length > 4 ? parts[4].Trim() : "";
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(loc)) continue;
 
             var display = ReadDisplayName(loc) ?? name;
-            list.Add(new InstalledPackage(name, full, loc, display));
+            list.Add(new InstalledPackage(name, full, loc, display, family, version));
         }
 
         return list;
