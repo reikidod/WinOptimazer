@@ -167,21 +167,37 @@ public sealed class UpdateService : IUpdateService
 
                 var targetDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
                 var bat = Path.Combine(AppPaths.DownloadsDirectory, "apply-update.bat");
+                var pid = Environment.ProcessId;
                 var content = $"""
                     @echo off
-                    timeout /t 2 /nobreak >nul
-                    xcopy /y /e /i "{extract}\*" "{targetDir}\"
+                    chcp 65001 >nul
+                    :wait
+                    tasklist /fi "PID eq {pid}" 2>nul | find "{pid}" >nul
+                    if not errorlevel 1 (
+                        timeout /t 1 /nobreak >nul
+                        goto wait
+                    )
+                    xcopy /y /e /i /q "{extract}\*" "{targetDir}\"
                     start "" "{Path.Combine(targetDir, Path.GetFileName(exe))}"
                     del "%~f0"
                     """;
                 await File.WriteAllTextAsync(bat, content, ct).ConfigureAwait(false);
-                Process.Start(new ProcessStartInfo
+                try
                 {
-                    FileName = bat,
-                    UseShellExecute = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                });
+                    // Программа обычно стоит в Program Files — для замены файлов нужны права администратора.
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = bat,
+                        UseShellExecute = true,
+                        Verb = "runas",
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                    });
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    return (false, "Обновление отменено: для замены файлов нужны права администратора.");
+                }
+
                 return (true, "Обновление будет применено после закрытия. Перезапуск…");
             }
 
