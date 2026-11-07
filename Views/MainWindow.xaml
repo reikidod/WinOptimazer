@@ -419,8 +419,17 @@
                         </DockPanel>
                         <TextBlock Text="{Binding Store.StatusText}" Margin="0,12,0,0" TextWrapping="Wrap"
                                    Foreground="{StaticResource AccentBrush}" FontSize="12.5" />
-                        <TextBlock Margin="0,6,0,0" FontSize="11.5" Foreground="{StaticResource TextDimBrush}"
-                                   Text="Нужен winget (App Installer). Без него установка из каталога Store недоступна." />
+                        <!-- Проверка winget -->
+                        <DockPanel Margin="0,10,0,0">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Content="Проверить winget" Padding="12,7" Margin="10,0,0,0"
+                                        Command="{Binding Store.CheckWingetCommand}" />
+                                <Button Content="Установить / починить winget" Padding="12,7" Margin="8,0,0,0"
+                                        Command="{Binding Store.RepairWingetCommand}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Store.WingetStatus}" TextWrapping="Wrap" VerticalAlignment="Center"
+                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                        </DockPanel>
                     </StackPanel>
                 </Border>
 
@@ -442,8 +451,16 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <Border Width="40" Height="40" CornerRadius="10" Background="#22FFFFFF" Margin="0,0,12,0">
-                                                <TextBlock Text="📦" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <Border Width="44" Height="44" CornerRadius="10" Background="#22FFFFFF"
+                                                    Margin="0,0,12,0" ClipToBounds="True">
+                                                <Grid>
+                                                    <TextBlock Text="{Binding Initial}" FontSize="20" FontWeight="SemiBold"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                                    <Image Source="{Binding Icon}" Stretch="Uniform" Margin="4"
+                                                           RenderOptions.BitmapScalingMode="HighQuality"
+                                                           Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}" />
+                                                </Grid>
                                             </Border>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"

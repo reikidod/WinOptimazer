@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.Services;
 using WinOptimizer.Views;
@@ -9,22 +12,83 @@ namespace WinOptimizer.ViewModels;
 public sealed class StoreItemViewModel : ObservableObject
 {
     private bool _isBusy;
+    private string _publisher;
+    private string _description;
+    private ImageSource? _icon;
 
     public StoreItemViewModel(StoreAppInfo app)
     {
         App = app;
+        _publisher = string.IsNullOrEmpty(app.Publisher) ? app.Source : app.Publisher;
+        _description = app.Description ?? $"Источник: {app.Source}";
     }
 
     public StoreAppInfo App { get; }
     public string Name => App.Name;
     public string Id => App.Id;
-    public string Publisher => string.IsNullOrEmpty(App.Publisher) ? App.Source : App.Publisher;
-    public string Description => App.Description ?? $"Источник: {App.Source}";
+
+    /// <summary>Первая буква названия — заглушка, пока иконка не загрузилась (или её нет).</summary>
+    public string Initial => string.IsNullOrWhiteSpace(Name) ? "?" : Name.Trim()[..1].ToUpperInvariant();
+
+    public string Publisher
+    {
+        get => _publisher;
+        private set => SetField(ref _publisher, value);
+    }
+
+    public string Description
+    {
+        get => _description;
+        private set => SetField(ref _description, value);
+    }
+
+    public ImageSource? Icon
+    {
+        get => _icon;
+        private set
+        {
+            if (SetField(ref _icon, value))
+                OnPropertyChanged(nameof(HasIcon));
+        }
+    }
+
+    public bool HasIcon => _icon != null;
 
     public bool IsBusy
     {
         get => _isBusy;
         set => SetField(ref _isBusy, value);
+    }
+
+    /// <summary>Подгружает иконку, издателя и описание из каталога Store; вызывать из UI-потока.</summary>
+    public async Task LoadMetadataAsync(IMsStoreService store, CancellationToken ct)
+    {
+        var meta = await store.GetMetadataAsync(App, ct);
+        if (meta is null || ct.IsCancellationRequested) return;
+
+        if (!string.IsNullOrWhiteSpace(meta.Publisher)) Publisher = meta.Publisher!;
+        if (App.Description is null && !string.IsNullOrWhiteSpace(meta.Description))
+            Description = meta.Description!;
+
+        if (meta.Icon is { Length: > 0 })
+        {
+            try
+            {
+                var bmp = new BitmapImage();
+                using var ms = new MemoryStream(meta.Icon);
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.StreamSource = ms;
+                bmp.DecodePixelWidth = 96;
+                bmp.EndInit();
+                bmp.Freeze();
+                Icon = bmp;
+            }
+            catch
+            {
+                // битый файл иконки — остаётся буква
+            }
+        }
     }
 }
 
@@ -36,6 +100,8 @@ public sealed class StoreViewModel : ObservableObject
     private string _statusText = "Каталог Microsoft Store";
     private bool _isBusy;
     private bool _wingetOk;
+    private string _wingetStatus = "Проверяю winget…";
+    private CancellationTokenSource? _iconsCts;
 
     public StoreViewModel(IMsStoreService store, IDialogService dialogs)
     {
@@ -50,11 +116,72 @@ public sealed class StoreViewModel : ObservableObject
         OpenLibraryCommand = new RelayCommand(() => _store.OpenStoreLibrary());
         RefreshFeaturedCommand = new RelayCommand(LoadFeatured);
 
-        _wingetOk = _store.IsWingetAvailable();
-        StatusText = _wingetOk
-            ? "winget найден — поиск и установка прямо в WinOptimizer."
-            : "winget не найден — установите App Installer, иначе каталог Store недоступен.";
+        CheckWingetCommand = new AsyncRelayCommand(CheckWingetAsync, () => !IsBusy, ReportError);
+        RepairWingetCommand = new AsyncRelayCommand(RepairWingetAsync, () => !IsBusy, ReportError);
+
         LoadFeatured();
+        _ = CheckWingetAsync();
+    }
+
+    public ICommand CheckWingetCommand { get; }
+    public ICommand RepairWingetCommand { get; }
+
+    public string WingetStatus
+    {
+        get => _wingetStatus;
+        private set => SetField(ref _wingetStatus, value);
+    }
+
+    /// <summary>Проверка winget: путь, версия, источник msstore.</summary>
+    private async Task CheckWingetAsync()
+    {
+        WingetStatus = "Проверяю winget…";
+        var st = await _store.CheckWingetAsync();
+        WingetAvailable = st.Available && st.MsStoreSource;
+        WingetStatus = (st.Available && st.MsStoreSource ? "✔ " : "⚠ ") + st.Message;
+        StatusText = WingetAvailable
+            ? "winget готов — поиск и установка прямо в WinOptimizer."
+            : "winget не готов: установите или почините его кнопками выше.";
+    }
+
+    private async Task RepairWingetAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var progress = new Progress<string>(m => { StatusText = m; WingetStatus = m; });
+            var (ok, msg) = await _store.EnsureWingetAsync(progress);
+            await CheckWingetAsync();
+            _dialogs.Info("winget", msg, ok ? DialogKind.Success : DialogKind.Warning);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Иконки и описания подгружаем в фоне по 4 штуки: карточки появляются сразу, картинки — по мере загрузки.</summary>
+    private async Task LoadIconsAsync()
+    {
+        _iconsCts?.Cancel();
+        var cts = _iconsCts = new CancellationTokenSource();
+        var items = Results.ToList();
+        using var gate = new SemaphoreSlim(4);
+        try
+        {
+            await Task.WhenAll(items.Select(async item =>
+            {
+                await gate.WaitAsync(cts.Token);
+                try { await item.LoadMetadataAsync(_store, cts.Token); }
+                catch (OperationCanceledException) { }
+                catch (Exception ex) { Logger.Error("Иконка Store: " + item.Name, ex); }
+                finally { gate.Release(); }
+            }));
+        }
+        catch (OperationCanceledException)
+        {
+            // список обновился — старая загрузка не нужна
+        }
     }
 
     public ObservableCollection<StoreItemViewModel> Results { get; } = new();
@@ -101,6 +228,7 @@ public sealed class StoreViewModel : ObservableObject
         foreach (var app in _store.Featured)
             Results.Add(new StoreItemViewModel(app));
         StatusText = $"Избранные приложения Store ({Results.Count}). Введите запрос для поиска.";
+        _ = LoadIconsAsync();
     }
 
     private async Task SearchAsync()
@@ -108,7 +236,6 @@ public sealed class StoreViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            WingetAvailable = _store.IsWingetAvailable();
             StatusText = string.IsNullOrWhiteSpace(Query)
                 ? "Загрузка избранного…"
                 : $"Поиск «{Query}»…";
@@ -119,6 +246,7 @@ public sealed class StoreViewModel : ObservableObject
             StatusText = Results.Count == 0
                 ? "Ничего не найдено."
                 : $"Найдено: {Results.Count}";
+            _ = LoadIconsAsync();
         }
         finally
         {
@@ -129,6 +257,19 @@ public sealed class StoreViewModel : ObservableObject
     private async Task InstallAsync(StoreItemViewModel? item)
     {
         if (item is null) return;
+
+        // Перед установкой проверяем winget; если его нет — предлагаем поставить
+        if (!_store.IsWingetAvailable())
+        {
+            var choice = _dialogs.Ask(
+                "winget не найден",
+                "Для установки приложений из Store нужен winget (App Installer). Установить его сейчас?",
+                primary: "Установить winget", cancel: "Отмена", kind: DialogKind.Warning);
+            if (choice != DialogChoice.Primary) return;
+            await RepairWingetAsync();
+            if (!_store.IsWingetAvailable()) return;
+        }
+
         IsBusy = true;
         item.IsBusy = true;
         try
