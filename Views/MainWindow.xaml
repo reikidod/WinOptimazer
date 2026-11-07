@@ -407,18 +407,73 @@
 
                 <Border Grid.Row="1" Style="{StaticResource BorderCard}" Margin="0,0,16,14" Padding="16,14">
                     <StackPanel>
-                        <DockPanel>
-                            <Button DockPanel.Dock="Right" Content="Найти" Style="{StaticResource AccentButton}"
-                                    Margin="10,0,0,0" MinWidth="110" Padding="16,10"
-                                    Command="{Binding Store.SearchCommand}" />
-                            <Button DockPanel.Dock="Right" Content="Избранные" Margin="0,0,0,0" Padding="14,10"
+                        <!-- Поле поиска в стиле чата: одна скруглённая плашка, кнопка отправки внутри -->
+                        <Border CornerRadius="22" Padding="20,8,8,8" BorderThickness="1"
+                                Background="{StaticResource BgSidebarBrush}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="StoreSearchBox" Text="{Binding Store.Query, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="Transparent" BorderThickness="0" Padding="0" FontSize="15"
+                                         VerticalContentAlignment="Center" MinHeight="36"
+                                         AutomationProperties.Name="Поиск в Microsoft Store">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding Store.SearchCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <TextBlock Text="Найти приложение в Microsoft Store…" FontSize="15" IsHitTestVisible="False"
+                                           VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=StoreSearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Button Grid.Column="1" Width="36" Height="36" Margin="10,0,0,0" Cursor="Hand"
+                                        Command="{Binding Store.SearchCommand}" ToolTip="Найти (Enter)"
+                                        AutomationProperties.Name="Найти">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Dot" CornerRadius="18" Background="{StaticResource AccentBrush}">
+                                                <TextBlock Text="↑" FontSize="18" FontWeight="Bold" Foreground="#101216"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Dot" Property="Background" Value="{StaticResource AccentStrongBrush}" />
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.4" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        <DockPanel Margin="6,12,0,0">
+                            <Button DockPanel.Dock="Right" Content="★ Избранные" Padding="10,5" FontSize="12"
                                     Command="{Binding Store.RefreshFeaturedCommand}" />
-                            <TextBox Text="{Binding Store.Query, UpdateSourceTrigger=PropertyChanged}"
-                                     Padding="14,11" FontSize="14"
-                                     ToolTip="Название или Id пакета Microsoft Store" />
+                            <TextBlock Text="{Binding Store.StatusText}" TextWrapping="Wrap" VerticalAlignment="Center"
+                                       Foreground="{StaticResource AccentBrush}" FontSize="12.5" />
                         </DockPanel>
-                        <TextBlock Text="{Binding Store.StatusText}" Margin="0,12,0,0" TextWrapping="Wrap"
-                                   Foreground="{StaticResource AccentBrush}" FontSize="12.5" />
                         <!-- Проверка winget -->
                         <DockPanel Margin="0,10,0,0">
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
