@@ -205,7 +205,7 @@ public static class AppLocator
             var deadline = DateTime.UtcNow + budget;
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var scanned = 0;
-            var options = new EnumerationOptions
+            var options = new System.IO.EnumerationOptions
             {
                 IgnoreInaccessible = true,
                 RecurseSubdirectories = false,
