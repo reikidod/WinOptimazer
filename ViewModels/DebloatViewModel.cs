@@ -12,6 +12,14 @@ using WinOptimizer.Views;
 
 namespace WinOptimizer.ViewModels;
 
+/// <summary>Раздел списка удаления.</summary>
+public enum AppCategory
+{
+    Game,
+    Program,
+    Windows,
+}
+
 public sealed class DebloatItemViewModel : ObservableObject
 {
     private bool _isSelected;
@@ -29,6 +37,53 @@ public sealed class DebloatItemViewModel : ObservableObject
             ? "Рекомендуется удалить"
             : app.Kind == AppKind.Store ? "Приложение Windows / Store" : "Программа";
         _icon = LoadIcon(app.IconPath);
+        Category = Categorize(app);
+    }
+
+    public AppCategory Category { get; }
+
+    private static readonly System.Text.RegularExpressions.Regex StoreGameName = new(
+        @"solitaire|minecraft|mahjong|candy|bubble|asphalt|gardenscapes|homescapes|royal|empires|" +
+        @"jigsaw|sudoku|wordament|disney", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    private static readonly string[] GameFolders =
+    {
+        @"\steamapps\", @"\Epic Games\", @"\GOG Games\", @"\GOG Galaxy\Games\", @"\Riot Games\",
+        @"\Ubisoft Game Launcher\games\", @"\EA Games\", @"\Origin Games\", @"\XboxGames\", @"\Games\",
+    };
+
+    private static readonly string[] WindowsPublisherMarks =
+    {
+        "Microsoft", "Windows", "Xbox", "Intel", "NVIDIA", "AMD", "Realtek", "Advanced Micro Devices",
+    };
+
+    /// <summary>
+    /// Игры — всё от лаунчеров и из игровых папок; «Приложения Windows» — пакеты Store, компоненты и программы
+    /// Microsoft и подобные системные (драйверы, среды выполнения); остальное — обычные программы.
+    /// </summary>
+    private static AppCategory Categorize(DebloatApp app)
+    {
+        if (app.Launcher != null) return AppCategory.Game;
+
+        var loc = app.InstallLocation ?? "";
+        if (app.Kind == AppKind.Win32 && !loc.Contains(@"\Launcher", StringComparison.OrdinalIgnoreCase)
+            && GameFolders.Any(f => loc.Contains(f, StringComparison.OrdinalIgnoreCase)))
+            return AppCategory.Game;
+        if (app.Kind == AppKind.Store && StoreGameName.IsMatch(app.PackageName))
+            return AppCategory.Game;
+
+        if (app.Kind == AppKind.Store) return AppCategory.Windows;
+
+        var name = app.DisplayName;
+        if (WindowsPublisherMarks.Any(m => app.Publisher.Contains(m, StringComparison.OrdinalIgnoreCase))
+            || name.StartsWith("Microsoft ", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("Windows ", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Visual C++", StringComparison.OrdinalIgnoreCase)
+            || name.Contains(".NET", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Redistributable", StringComparison.OrdinalIgnoreCase))
+            return AppCategory.Windows;
+
+        return AppCategory.Program;
     }
 
     public DebloatApp App { get; }
@@ -104,7 +159,7 @@ public sealed class DebloatViewModel : ObservableObject
     private bool _isBusy;
     private string _statusText = "Готово";
     private string _searchText = "";
-    private int _filterMode; // 0 — все, 1 — программы, 2 — приложения Windows
+    private int _filterMode; // 0 — все, 1 — игры, 2 — программы, 3 — приложения Windows и подобные
 
     public DebloatViewModel(IDebloatService service, IDialogService dialogs)
     {
@@ -127,7 +182,7 @@ public sealed class DebloatViewModel : ObservableObject
     public ICommand RemoveOneCommand { get; }
     public ICommand SetFilterCommand { get; }
 
-    /// <summary>0 — все, 1 — классические программы, 2 — приложения Windows (Store).</summary>
+    /// <summary>0 — все, 1 — игры, 2 — программы, 3 — приложения Windows и подобные.</summary>
     public int FilterMode
     {
         get => _filterMode;
@@ -135,25 +190,29 @@ public sealed class DebloatViewModel : ObservableObject
         {
             if (!SetField(ref _filterMode, value)) return;
             OnPropertyChanged(nameof(IsFilterAll));
-            OnPropertyChanged(nameof(IsFilterWin32));
-            OnPropertyChanged(nameof(IsFilterStore));
+            OnPropertyChanged(nameof(IsFilterGames));
+            OnPropertyChanged(nameof(IsFilterPrograms));
+            OnPropertyChanged(nameof(IsFilterWindows));
             View.Refresh();
         }
     }
 
     public bool IsFilterAll => _filterMode == 0;
-    public bool IsFilterWin32 => _filterMode == 1;
-    public bool IsFilterStore => _filterMode == 2;
+    public bool IsFilterGames => _filterMode == 1;
+    public bool IsFilterPrograms => _filterMode == 2;
+    public bool IsFilterWindows => _filterMode == 3;
 
     public string AllLabel => $"Все ({Items.Count})";
-    public string Win32Label => $"Программы ({Items.Count(i => i.Kind == AppKind.Win32)})";
-    public string StoreLabel => $"Приложения Windows ({Items.Count(i => i.Kind == AppKind.Store)})";
+    public string GamesLabel => $"Игры ({Items.Count(i => i.Category == AppCategory.Game)})";
+    public string ProgramsLabel => $"Программы ({Items.Count(i => i.Category == AppCategory.Program)})";
+    public string WindowsLabel => $"Windows и системные ({Items.Count(i => i.Category == AppCategory.Windows)})";
 
     private void RaiseCounts()
     {
         OnPropertyChanged(nameof(AllLabel));
-        OnPropertyChanged(nameof(Win32Label));
-        OnPropertyChanged(nameof(StoreLabel));
+        OnPropertyChanged(nameof(GamesLabel));
+        OnPropertyChanged(nameof(ProgramsLabel));
+        OnPropertyChanged(nameof(WindowsLabel));
     }
 
     public ObservableCollection<DebloatItemViewModel> Items { get; } = new();
@@ -173,8 +232,9 @@ public sealed class DebloatViewModel : ObservableObject
 
     private bool MatchesSearch(DebloatItemViewModel i)
     {
-        if (_filterMode == 1 && i.Kind != AppKind.Win32) return false;
-        if (_filterMode == 2 && i.Kind != AppKind.Store) return false;
+        if (_filterMode == 1 && i.Category != AppCategory.Game) return false;
+        if (_filterMode == 2 && i.Category != AppCategory.Program) return false;
+        if (_filterMode == 3 && i.Category != AppCategory.Windows) return false;
         return string.IsNullOrWhiteSpace(_searchText)
                || i.Name.Contains(_searchText, StringComparison.CurrentCultureIgnoreCase)
                || i.Description.Contains(_searchText, StringComparison.CurrentCultureIgnoreCase);

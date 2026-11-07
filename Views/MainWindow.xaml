@@ -746,13 +746,17 @@
                                      IsChecked="{Binding Debloat.IsFilterAll, Mode=OneWay}"
                                      Command="{Binding Debloat.SetFilterCommand}" CommandParameter="0" />
                         <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
-                                     Content="{Binding Debloat.Win32Label}"
-                                     IsChecked="{Binding Debloat.IsFilterWin32, Mode=OneWay}"
+                                     Content="{Binding Debloat.GamesLabel}"
+                                     IsChecked="{Binding Debloat.IsFilterGames, Mode=OneWay}"
                                      Command="{Binding Debloat.SetFilterCommand}" CommandParameter="1" />
-                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}" Margin="0"
-                                     Content="{Binding Debloat.StoreLabel}"
-                                     IsChecked="{Binding Debloat.IsFilterStore, Mode=OneWay}"
+                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
+                                     Content="{Binding Debloat.ProgramsLabel}"
+                                     IsChecked="{Binding Debloat.IsFilterPrograms, Mode=OneWay}"
                                      Command="{Binding Debloat.SetFilterCommand}" CommandParameter="2" />
+                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}" Margin="0"
+                                     Content="{Binding Debloat.WindowsLabel}"
+                                     IsChecked="{Binding Debloat.IsFilterWindows, Mode=OneWay}"
+                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="3" />
                     </StackPanel>
                 </Grid>
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
