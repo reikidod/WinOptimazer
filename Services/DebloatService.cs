@@ -31,7 +31,9 @@ public sealed record DebloatApp(
     string? RegistryKeyPath = null,
     string? PackageFamilyName = null,
     long SizeKb = 0,
-    bool IsMsi = false);
+    bool IsMsi = false,
+    string? Launcher = null,
+    string? LauncherGameId = null);
 
 public interface IDebloatService
 {
@@ -149,7 +151,9 @@ public sealed class DebloatService : IDebloatService
     }
 
     public Task<(bool Ok, string Message)> ForceRemoveAsync(DebloatApp app, CancellationToken ct = default) =>
-        Task.Run(() => app.Kind == AppKind.Win32
+        Task.Run(() => app.Launcher != null
+            ? (false, $"Игру нужно удалять через {app.Launcher}: принудительное удаление отключено, чтобы не повредить лаунчер.")
+            : app.Kind == AppKind.Win32
             ? Win32Uninstaller.ForceRemove(app)
             : (false, "Принудительное удаление доступно только для классических программ."), ct);
 
@@ -168,6 +172,10 @@ public sealed class DebloatService : IDebloatService
     {
         try
         {
+            // Игры из Steam и других лаунчеров удаляет только сам лаунчер: иначе можно снести и его папку.
+            if (app.Launcher != null)
+                return Win32Uninstaller.UninstallViaLauncher(app);
+
             if (app.Kind == AppKind.Win32)
             {
                 var r = await Win32Uninstaller.UninstallAsync(app, ct).ConfigureAwait(false);

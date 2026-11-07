@@ -37,6 +37,12 @@ public static class Win32Uninstaller
         "Default", "Public", "All Users", "Desktop", "Documents", "Downloads",
     };
 
+    private static readonly string[] LauncherExecutables =
+    {
+        "steam.exe", "EpicGamesLauncher.exe", "GalaxyClient.exe", "UbisoftConnect.exe", "upc.exe",
+        "EADesktop.exe", "Origin.exe", "Battle.net.exe", "Battle.net Launcher.exe", "RiotClientServices.exe",
+    };
+
     // ---------- Список ----------
 
     public static List<DebloatApp> List()
@@ -101,12 +107,17 @@ public static class Win32Uninstaller
         var publisher = (key.GetValue("Publisher") as string)?.Trim() ?? "";
         var version = (key.GetValue("DisplayVersion") as string)?.Trim() ?? "";
         var location = (key.GetValue("InstallLocation") as string)?.Trim().Trim('"');
-        if (string.IsNullOrEmpty(location) || !Directory.Exists(location))
+        var launcher = DetectLauncher(subName, uninstall, quiet, location, out var launcherGameId);
+        // Для игр из лаунчеров путь по деинсталлятору — это папка самого лаунчера, её угадывать нельзя.
+        if (launcher is null && (string.IsNullOrEmpty(location) || !Directory.Exists(location)))
             location = GuessLocation(key, uninstall);
+        if (launcher != null && !string.IsNullOrEmpty(location) && !Directory.Exists(location))
+            location = null;
         var sizeKb = 0L;
         try { sizeKb = Convert.ToInt64(key.GetValue("EstimatedSize") ?? 0); } catch { /* не число */ }
 
         var parts = new List<string>();
+        if (launcher != null) parts.Add($"Игра {launcher} · удаляется через {launcher}");
         if (publisher.Length > 0) parts.Add(publisher);
         if (version.Length > 0) parts.Add("версия " + version);
         if (sizeKb > 0) parts.Add(FormatSize(sizeKb));
@@ -129,7 +140,73 @@ public static class Win32Uninstaller
             QuietUninstallCommand: quiet,
             RegistryKeyPath: $"{prefix}\\{subName}",
             SizeKb: sizeKb,
-            IsMsi: isMsi);
+            IsMsi: isMsi,
+            Launcher: launcher,
+            LauncherGameId: launcherGameId);
+    }
+
+    // ---------- Игры из лаунчеров ----------
+
+    private static bool Has(string? text, string needle) =>
+        !string.IsNullOrEmpty(text) && text.Contains(needle, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Определяет игру, которой управляет лаунчер (Steam, Epic, GOG, Ubisoft, EA, Battle.net, Riot).
+    /// Такие игры нельзя удалять «снаружи»: их команда удаления указывает на лаунчер, и принудительное
+    /// удаление или очистка остатков стёрли бы папку самого лаунчера.
+    /// </summary>
+    internal static string? DetectLauncher(string subName, string? uninstall, string? quiet, string? location, out string? gameId)
+    {
+        gameId = null;
+        var cmd = (uninstall ?? "") + " " + (quiet ?? "");
+
+        var m = Regex.Match(subName, @"^Steam App (\d+)$", RegexOptions.IgnoreCase);
+        if (!m.Success) m = Regex.Match(cmd, @"steam://uninstall/(\d+)", RegexOptions.IgnoreCase);
+        if (m.Success) { gameId = m.Groups[1].Value; return "Steam"; }
+        if (Has(cmd, "steam://") || Has(location, @"\steamapps\common\")) return "Steam";
+
+        if (Has(cmd, "com.epicgames.launcher://") ||
+            (Has(location, @"\Epic Games\") && !Has(location, @"\Epic Games\Launcher"))) return "Epic Games";
+        if (Has(location, @"\GOG Galaxy\Games\") || Has(cmd, "goggalaxy://")) return "GOG Galaxy";
+        if (Has(cmd, "uplay://") || Has(cmd, "upc://") || Has(location, @"\Ubisoft Game Launcher\games\")) return "Ubisoft Connect";
+        if (Has(cmd, "origin2://") || Has(cmd, "EADesktop") ||
+            Has(location, @"\EA Games\") || Has(location, @"\Origin Games\")) return "EA app";
+        if (Has(cmd, "Battle.net") && Has(cmd, "--uninstall")) return "Battle.net";
+        if (Has(cmd, "RiotClientServices")) return "Riot Client";
+        return null;
+    }
+
+    /// <summary>Открывает лаунчер на удалении игры; саму игру удаляет лаунчер, и только её.</summary>
+    public static (bool Ok, string Message) UninstallViaLauncher(DebloatApp app)
+    {
+        var (url, name) = app.Launcher switch
+        {
+            "Steam" => (app.LauncherGameId is { Length: > 0 }
+                ? $"steam://uninstall/{app.LauncherGameId}" : "steam://open/games", "Steam"),
+            "Epic Games" => ("com.epicgames.launcher://apps/library", "Epic Games Launcher"),
+            "GOG Galaxy" => ("goggalaxy://", "GOG Galaxy"),
+            "Ubisoft Connect" => ("uplay://", "Ubisoft Connect"),
+            "EA app" => ("origin2://library/open", "EA app"),
+            "Battle.net" => ("battlenet://", "Battle.net"),
+            _ => ((string?)null, app.Launcher ?? "лаунчер"),
+        };
+
+        if (url is null)
+            return (true, $"Откройте {name} и удалите игру там — так не пострадает сам лаунчер.");
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            Logger.Info($"Удаление игры {app.DisplayName} передано лаунчеру: {url}");
+            return (true, app.Launcher == "Steam" && app.LauncherGameId != null
+                ? "Открыт Steam — подтвердите удаление игры в его окне."
+                : $"Открыт {name} — удалите игру в библиотеке.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Запуск лаунчера: " + app.DisplayName, ex);
+            return (true, $"Не удалось открыть {name}. Откройте его вручную и удалите игру там.");
+        }
     }
 
     private static string FormatSize(long kb) =>
@@ -189,6 +266,8 @@ public static class Win32Uninstaller
 
     public static async Task<(bool Ok, string Message)> UninstallAsync(DebloatApp app, CancellationToken ct)
     {
+        if (app.Launcher != null)
+            return UninstallViaLauncher(app);
         var command = BuildCommand(app);
         if (command is null)
             return (false, "Для этой программы нет команды удаления.");
@@ -259,6 +338,8 @@ public static class Win32Uninstaller
     /// <summary>Принудительное удаление: закрывает процессы из папки программы, стирает папку и запись в реестре.</summary>
     public static (bool Ok, string Message) ForceRemove(DebloatApp app)
     {
+        if (app.Launcher != null)
+            return (false, $"Игру нужно удалять через {app.Launcher}.");
         try
         {
             var dir = app.InstallLocation;
@@ -299,6 +380,8 @@ public static class Win32Uninstaller
     public static List<Leftover> FindLeftovers(DebloatApp app)
     {
         var found = new List<Leftover>();
+        // Остатки игр лаунчера не ищем: лаунчер сам знает, что стирать, а чужая очистка может зацепить его папку.
+        if (app.Launcher != null) return found;
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void Add(Leftover l)
         {
@@ -537,7 +620,12 @@ public static class Win32Uninstaller
             }
 
             var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            return !full.StartsWith(windows, StringComparison.OrdinalIgnoreCase);
+            if (full.StartsWith(windows, StringComparison.OrdinalIgnoreCase)) return false;
+
+            // Папка игрового лаунчера (или родитель его папки) — никогда не удаляем.
+            foreach (var launcherExe in LauncherExecutables)
+                if (File.Exists(Path.Combine(full, launcherExe))) return false;
+            return true;
         }
         catch
         {

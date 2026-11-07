@@ -23,7 +23,9 @@ public sealed class DebloatItemViewModel : ObservableObject
     {
         App = app;
         _isInstalled = app.IsInstalled;
-        _status = app.IsRecommended
+        _status = app.Launcher != null
+            ? $"Игра из {app.Launcher}: удаляется только через лаунчер"
+            : app.IsRecommended
             ? "Рекомендуется удалить"
             : app.Kind == AppKind.Store ? "Приложение Windows / Store" : "Программа";
         _icon = LoadIcon(app.IconPath);
@@ -243,6 +245,9 @@ public sealed class DebloatViewModel : ObservableObject
             $"Будет удалено: {selected.Count}.\n\n" +
             string.Join("\n", selected.Take(12).Select(s => "• " + s.Name)) +
             (selected.Count > 12 ? $"\n… и ещё {selected.Count - 12}" : "") +
+            (selected.Any(i => i.App.Launcher != null)
+                ? "\n\nИгры из Steam и других лаунчеров будут удалены через сам лаунчер — так он останется целым."
+                : "") +
             "\n\nСначала запустится штатный деинсталлятор, затем программа найдёт остатки " +
             "(папки, ярлыки, записи реестра) и предложит удалить их.",
             primary: "Удалить",
@@ -254,11 +259,21 @@ public sealed class DebloatViewModel : ObservableObject
         try
         {
             var ok = 0;
+            var launcherGames = 0;
             var leftovers = new List<Leftover>();
             foreach (var item in selected)
             {
                 StatusText = $"Удаляю {item.Name}…";
                 var (success, message) = await _service.RemoveAsync(item.App);
+
+                // Игра из лаунчера: удаление делает сам лаунчер, наш список и остатки не трогаем
+                if (item.App.Launcher != null)
+                {
+                    item.Status = message;
+                    item.IsSelected = false;
+                    launcherGames++;
+                    continue;
+                }
 
                 // Деинсталлятор не справился — предлагаем снести программу принудительно
                 if (!success && item.Kind == AppKind.Win32)
@@ -316,7 +331,10 @@ public sealed class DebloatViewModel : ObservableObject
                 }
             }
 
-            StatusText = $"Готово. Удалено: {ok} из {selected.Count}.";
+            StatusText = launcherGames > 0
+                ? $"Готово. Удалено: {ok}. Игры из лаунчеров ({launcherGames}) удалите в окне лаунчера, затем нажмите «Обновить»."
+                : $"Готово. Удалено: {ok} из {selected.Count}.";
+            if (launcherGames > 0) return;
             await RefreshAsync();
         }
         finally
