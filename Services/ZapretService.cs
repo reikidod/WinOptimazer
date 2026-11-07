@@ -13,6 +13,15 @@ public sealed record ZapretBatInfo(string FileName, string FullPath, string Rela
 public interface IZapretService
 {
     ZapretStatus GetStatus();
+    /// <summary>Установлен ли Zapret самим приложением (иначе — найден в системе и не удаляется).</summary>
+    bool IsManagedInstall { get; }
+    /// <summary>Ключ и проверка для общего поиска по дискам (<see cref="AppLocator.Search"/>).</summary>
+    string LocatorKey { get; }
+    Func<string, string?> LocatorProbe { get; }
+    /// <summary>Принять путь, найденный поиском по дискам. false — папка не похожа на Zapret.</summary>
+    bool Adopt(string folder);
+    /// <summary>Ищет Zapret по всей системе. Если уже найден — возвращает сразу.</summary>
+    Task<(bool Found, string Message)> FindExistingAsync(IProgress<string>? progress = null, CancellationToken ct = default);
     IReadOnlyList<ZapretBatInfo> ListBatFiles();
     Task<(bool Ok, string Message)> TestBatAsync(string fullPath, CancellationToken ct = default);
     /// <summary>Запускает встроенные тесты service.bat (Run Tests) — интерактивно покажет лучшую стратегию.</summary>
@@ -40,18 +49,121 @@ public sealed class ZapretService : IZapretService
         Http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     }
 
-    public string InstallRoot => Path.Combine(AppPaths.DataDirectory, "zapret");
+    private string? _root;
+
+    /// <summary>Куда приложение само ставит Zapret.</summary>
+    private static string ManagedRoot => Path.Combine(AppPaths.DataDirectory, "zapret");
+
+    /// <summary>Папка с найденным (или установленным) Zapret; если ничего нет — папка для новой установки.</summary>
+    public string InstallRoot => _root ?? ManagedRoot;
+
+    public bool IsManagedInstall => _root is not null && IsUnder(_root, AppPaths.DataDirectory);
+
+    public string LocatorKey => "zapret";
+
+    public Func<string, string?> LocatorProbe => ProbeDirectory;
+
+    /// <summary>Папка — это Zapret (Flowseal), если в ней есть winws.exe (в корне или в bin) и хотя бы один bat.</summary>
+    private static string? ProbeDirectory(string dir)
+    {
+        if (!File.Exists(Path.Combine(dir, "winws.exe")) && !File.Exists(Path.Combine(dir, "bin", "winws.exe")))
+            return null;
+        return Directory.EnumerateFiles(dir, "*.bat").Any() ? dir : null;
+    }
+
+    private static bool IsUnder(string path, string parent) =>
+        Path.GetFullPath(path).StartsWith(Path.GetFullPath(parent).TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase);
+
+    public bool Adopt(string folder)
+    {
+        var dir = ResolveZapretDirectory(folder);
+        if (dir is null) return false;
+        _root = dir;
+        AppLocator.Remember(LocatorKey, dir);
+        Logger.Info("Zapret найден: " + dir);
+        return true;
+    }
+
+    /// <summary>Принимает и саму папку Zapret, и bin, и родителя (на один уровень вверх/вниз).</summary>
+    private static string? ResolveZapretDirectory(string folder)
+    {
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder)) return null;
+        var candidates = new List<string> { folder };
+        var parent = Directory.GetParent(folder)?.FullName;
+        if (parent != null) candidates.Add(parent);
+        try { candidates.AddRange(Directory.EnumerateDirectories(folder)); } catch { /* нет доступа */ }
+
+        foreach (var c in candidates)
+        {
+            try
+            {
+                var hit = ProbeDirectory(c);
+                if (hit != null) return hit;
+            }
+            catch { /* нет доступа */ }
+        }
+
+        return null;
+    }
+
+    /// <summary>Быстрые проверки без обхода дисков: текущий путь, запомненный, папка приложения, процесс, служба.</summary>
+    private string? ResolveQuick()
+    {
+        string? Try(string? dir)
+        {
+            if (string.IsNullOrEmpty(dir)) return null;
+            try { return ResolveZapretDirectory(dir); } catch { return null; }
+        }
+
+        var found = Try(_root) ?? Try(AppLocator.GetCached(LocatorKey));
+        if (found != null) return found;
+
+        // Установленное самим приложением (допускаем и старые установки с любыми bat)
+        if (Directory.Exists(ManagedRoot) &&
+            Directory.EnumerateFiles(ManagedRoot, "*.bat", SearchOption.AllDirectories).Any())
+            return ManagedRoot;
+
+        foreach (var exe in AppLocator.GetProcessPaths("winws"))
+        {
+            found = Try(Path.GetDirectoryName(exe));
+            if (found != null) return found;
+        }
+
+        var svc = AppLocator.GetServiceExePath("zapret");
+        return svc is null ? null : Try(Path.GetDirectoryName(svc));
+    }
+
+    public async Task<(bool Found, string Message)> FindExistingAsync(
+        IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        var quick = await Task.Run(ResolveQuick, ct).ConfigureAwait(false);
+        if (quick != null)
+        {
+            _root = quick;
+            AppLocator.Remember(LocatorKey, quick);
+            return (true, $"Zapret найден: {quick}");
+        }
+
+        progress?.Report("Ищу Zapret на компьютере…");
+        var hits = await Task.Run(() => AppLocator.Search(
+            new Dictionary<string, Func<string, string?>> { [LocatorKey] = ProbeDirectory }, progress, ct), ct)
+            .ConfigureAwait(false);
+        if (hits.TryGetValue(LocatorKey, out var dir) && Adopt(dir))
+            return (true, $"Zapret найден: {dir}");
+
+        return (false, "Zapret на компьютере не найден. Можно указать папку вручную или скачать.");
+    }
 
     public ZapretStatus GetStatus()
     {
-        var installed = Directory.Exists(InstallRoot) &&
-                        Directory.EnumerateFiles(InstallRoot, "*.bat", SearchOption.AllDirectories).Any();
+        _root = ResolveQuick();
+        var installed = _root is not null;
         var running = IsServiceRunning("zapret") || IsServiceRunning("winws") || ProcessExists("winws");
         var msg = !installed
-            ? "Zapret не установлен."
+            ? "Zapret не найден."
             : running
-                ? "Zapret установлен, служба/процесс активны."
-                : "Zapret установлен, служба не запущена.";
+                ? "Zapret найден, служба/процесс активны."
+                : "Zapret найден, служба не запущена.";
         return new ZapretStatus(installed, running, InstallRoot, msg);
     }
 
@@ -204,21 +316,22 @@ public sealed class ZapretService : IZapretService
             }
 
             progress?.Report("Распаковываю…");
-            if (Directory.Exists(InstallRoot))
+            if (Directory.Exists(ManagedRoot))
             {
-                try { Directory.Delete(InstallRoot, true); } catch { /* locked files */ }
+                try { Directory.Delete(ManagedRoot, true); } catch { /* locked files */ }
             }
 
-            Directory.CreateDirectory(InstallRoot);
-            ZipFile.ExtractToDirectory(zipPath, InstallRoot, overwriteFiles: true);
+            Directory.CreateDirectory(ManagedRoot);
+            ZipFile.ExtractToDirectory(zipPath, ManagedRoot, overwriteFiles: true);
 
             // Иногда релиз кладёт всё в одну подпапку — поднимаем содержимое.
-            FlattenSingleRoot(InstallRoot);
+            FlattenSingleRoot(ManagedRoot);
+            _root = ManagedRoot;
 
             // Не запускаем service.bat / general.bat сами — иначе каждый раз всплывает последний пресет.
             KillZapretProcesses();
 
-            Logger.Info("Zapret установлен в " + InstallRoot);
+            Logger.Info("Zapret установлен в " + ManagedRoot);
             return (true,
                 "Zapret скачан и распакован.\n\n" +
                 "Стратегии не запускались автоматически.\n" +
@@ -283,9 +396,15 @@ public sealed class ZapretService : IZapretService
                 try { ProcessRunner.Run("sc.exe", "stop zapret", 8_000); } catch { }
                 try { ProcessRunner.Run("sc.exe", "delete zapret", 8_000); } catch { }
 
-                if (Directory.Exists(InstallRoot))
-                    Directory.Delete(InstallRoot, true);
+                if (!IsManagedInstall)
+                {
+                    _root = null;
+                    return (true, "Служба Zapret удалена. Файлы Zapret лежат в папке, которую приложение не устанавливало, " +
+                                  "поэтому они не тронуты: " + InstallRoot);
+                }
 
+                Directory.Delete(ManagedRoot, true);
+                _root = null;
                 return (true, "Zapret удалён.");
             }
             catch (Exception ex)

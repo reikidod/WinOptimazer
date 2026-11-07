@@ -839,12 +839,18 @@
                         <ContentControl Style="{StaticResource HoverCard}">
                             <StackPanel>
                                 <TextBlock TextWrapping="Wrap" Style="{StaticResource SecondaryText}"
-                                           Text="Обход блокировок Discord/YouTube. Скачивается release с GitHub Flowseal/zapret-discord-youtube." />
+                                           Text="Обход блокировок Discord/YouTube. Уже установленный Zapret находится автоматически (диски, процессы, службы); скачивать нужно, только если его нет. Источник: GitHub Flowseal/zapret-discord-youtube." />
                                 <TextBlock Text="{Binding Apps.ZapretStatusText}" Margin="0,10,0,12" TextWrapping="Wrap"
                                            Foreground="{StaticResource AccentBrush}" />
                                 <WrapPanel>
-                                    <Button Content="Скачать и установить" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
-                                            Command="{Binding Apps.ZapretInstallCommand}" />
+                                    <Button Content="Найти на ПК" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
+                                            Command="{Binding Apps.ZapretLocateCommand}"
+                                            ToolTip="Поиск уже установленного Zapret по всем дискам, процессам и службам" />
+                                    <Button Content="Указать папку…" Margin="0,0,8,8" Command="{Binding Apps.ZapretBrowseCommand}"
+                                            ToolTip="Выбрать папку, где уже лежит Zapret (service.bat и bin\winws.exe)" />
+                                    <Button Content="Скачать и установить" Margin="0,0,8,8"
+                                            Command="{Binding Apps.ZapretInstallCommand}"
+                                            ToolTip="Доступно, только если Zapret на компьютере не найден" />
                                     <Button Content="Запустить службу" Margin="0,0,8,8" Command="{Binding Apps.ZapretStartCommand}" />
                                     <Button Content="Остановить" Margin="0,0,8,8" Command="{Binding Apps.ZapretStopCommand}" />
                                     <Button Content="Удалить" Margin="0,0,8,8" Command="{Binding Apps.ZapretUninstallCommand}" />
@@ -865,12 +871,18 @@
                         <ContentControl Style="{StaticResource HoverCard}">
                             <StackPanel>
                                 <TextBlock TextWrapping="Wrap" Style="{StaticResource SecondaryText}"
-                                           Text="Локальный MTProto-прокси через WebSocket для Telegram Desktop (Flowseal/tg-ws-proxy). Не путать с Zapret." />
+                                           Text="Локальный MTProto-прокси через WebSocket для Telegram Desktop (Flowseal/tg-ws-proxy). Установленный экземпляр находится автоматически. Не путать с Zapret." />
                                 <TextBlock Text="{Binding Apps.TgStatusText}" Margin="0,10,0,12" TextWrapping="Wrap"
                                            Foreground="{StaticResource AccentBrush}" />
                                 <WrapPanel>
-                                    <Button Content="Скачать и установить" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
-                                            Command="{Binding Apps.TgInstallCommand}" />
+                                    <Button Content="Найти на ПК" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
+                                            Command="{Binding Apps.TgLocateCommand}"
+                                            ToolTip="Поиск уже установленного TG WS Proxy по всем дискам, процессам и автозагрузке" />
+                                    <Button Content="Указать exe…" Margin="0,0,8,8" Command="{Binding Apps.TgBrowseCommand}"
+                                            ToolTip="Выбрать TgWsProxy_windows.exe, который уже есть на компьютере" />
+                                    <Button Content="Скачать и установить" Margin="0,0,8,8"
+                                            Command="{Binding Apps.TgInstallCommand}"
+                                            ToolTip="Доступно, только если TG WS Proxy на компьютере не найден" />
                                     <Button Content="Запустить" Margin="0,0,8,8" Command="{Binding Apps.TgStartCommand}" />
                                     <Button Content="Остановить" Margin="0,0,8,8" Command="{Binding Apps.TgStopCommand}" />
                                     <Button Content="Удалить" Margin="0,0,8,8" Command="{Binding Apps.TgUninstallCommand}" />

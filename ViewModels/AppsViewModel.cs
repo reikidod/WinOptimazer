@@ -101,19 +101,24 @@ public sealed class AppsViewModel : ObservableObject
 
         InstallAppCommand = new AsyncRelayCommand<AppItemViewModel>(InstallAppAsync, _ => !IsBusy, ReportError);
         RefreshCommand = new RelayCommand(Refresh, () => !IsBusy);
-        ZapretInstallCommand = new AsyncRelayCommand(ZapretInstallAsync, () => !IsBusy, ReportError);
+        ZapretInstallCommand = new AsyncRelayCommand(ZapretInstallAsync, () => !IsBusy && !ZapretInstalled, ReportError);
+        ZapretLocateCommand = new AsyncRelayCommand(ZapretLocateAsync, () => !IsBusy, ReportError);
+        ZapretBrowseCommand = new RelayCommand(ZapretBrowse, () => !IsBusy);
         ZapretStartCommand = new AsyncRelayCommand(ZapretStartAsync, () => !IsBusy && ZapretInstalled, ReportError);
         ZapretStopCommand = new AsyncRelayCommand(ZapretStopAsync, () => !IsBusy && ZapretInstalled, ReportError);
         ZapretUninstallCommand = new AsyncRelayCommand(ZapretUninstallAsync, () => !IsBusy && ZapretInstalled, ReportError);
         TestBatCommand = new AsyncRelayCommand<ZapretBatItemViewModel>(TestBatAsync, _ => !IsBusy && ZapretInstalled, ReportError);
         AutoTestAllCommand = new AsyncRelayCommand(AutoTestAllAsync, () => !IsBusy && ZapretInstalled, ReportError);
         OfficialTestsCommand = new AsyncRelayCommand(OfficialTestsAsync, () => !IsBusy && ZapretInstalled, ReportError);
-        TgInstallCommand = new AsyncRelayCommand(TgInstallAsync, () => !IsBusy, ReportError);
+        TgInstallCommand = new AsyncRelayCommand(TgInstallAsync, () => !IsBusy && !TgInstalled, ReportError);
+        TgLocateCommand = new AsyncRelayCommand(TgLocateAsync, () => !IsBusy, ReportError);
+        TgBrowseCommand = new RelayCommand(TgBrowse, () => !IsBusy);
         TgStartCommand = new AsyncRelayCommand(TgStartAsync, () => !IsBusy && TgInstalled, ReportError);
         TgStopCommand = new AsyncRelayCommand(TgStopAsync, () => !IsBusy && TgInstalled, ReportError);
         TgUninstallCommand = new AsyncRelayCommand(TgUninstallAsync, () => !IsBusy && TgInstalled, ReportError);
         RefreshZapret();
         RefreshTg();
+        _ = AutoDetectAsync();
     }
 
     public ObservableCollection<AppItemViewModel> Apps { get; } = new();
@@ -122,6 +127,10 @@ public sealed class AppsViewModel : ObservableObject
     public ICommand InstallAppCommand { get; }
     public ICommand RefreshCommand { get; }
     public ICommand ZapretInstallCommand { get; }
+    public ICommand ZapretLocateCommand { get; }
+    public ICommand ZapretBrowseCommand { get; }
+    public ICommand TgLocateCommand { get; }
+    public ICommand TgBrowseCommand { get; }
     public ICommand ZapretStartCommand { get; }
     public ICommand ZapretStopCommand { get; }
     public ICommand ZapretUninstallCommand { get; }
@@ -308,7 +317,7 @@ public sealed class AppsViewModel : ObservableObject
 
     private async Task ZapretUninstallAsync()
     {
-        var choice = _dialogs.Ask("Удалить Zapret?", "Служба будет остановлена и файлы удалены.", primary: "Удалить", secondary: "Отмена", kind: DialogKind.Danger);
+        var choice = _dialogs.Ask("Удалить Zapret?", "Служба будет остановлена и удалена. Файлы удаляются, только если Zapret был установлен этим приложением; найденный в другой папке остаётся на месте.", primary: "Удалить", secondary: "Отмена", kind: DialogKind.Danger);
         if (choice != DialogChoice.Primary) return;
         IsBusy = true;
         try
@@ -432,6 +441,106 @@ public sealed class AppsViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// При запуске: если Zapret или TG WS Proxy не нашлись быстрой проверкой (процессы, службы, автозагрузка,
+    /// запомненный путь), ищем их по всем дискам в фоне — устанавливать заново не нужно, если они уже есть.
+    /// </summary>
+    private async Task AutoDetectAsync()
+    {
+        try
+        {
+            var probes = new Dictionary<string, Func<string, string?>>();
+            if (!ZapretInstalled) probes[_zapret.LocatorKey] = _zapret.LocatorProbe;
+            if (!TgInstalled) probes[_tgWs.LocatorKey] = _tgWs.LocatorProbe;
+            if (probes.Count == 0) return;
+
+            StatusText = "Ищу Zapret и TG WS Proxy на компьютере…";
+            var progress = new Progress<string>(m => StatusText = m);
+            var hits = await Task.Run(() => AppLocator.Search(probes, progress)).ConfigureAwait(true);
+
+            if (hits.TryGetValue(_zapret.LocatorKey, out var z)) _zapret.Adopt(z);
+            if (hits.TryGetValue(_tgWs.LocatorKey, out var t)) _tgWs.Adopt(t);
+            RefreshZapret();
+            RefreshTg();
+
+            var names = new List<string>();
+            if (hits.ContainsKey(_zapret.LocatorKey)) names.Add("Zapret");
+            if (hits.ContainsKey(_tgWs.LocatorKey)) names.Add("TG WS Proxy");
+            StatusText = names.Count > 0
+                ? "Найдено на компьютере: " + string.Join(", ", names)
+                : "Готово";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Автопоиск Zapret / TG WS Proxy", ex);
+            StatusText = "Готово";
+        }
+    }
+
+    private async Task ZapretLocateAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var progress = new Progress<string>(m => StatusText = m);
+            var (found, msg) = await _zapret.FindExistingAsync(progress);
+            StatusText = msg;
+            RefreshZapret();
+            _dialogs.Info("Zapret", msg, found ? DialogKind.Success : DialogKind.Warning);
+        }
+        finally { IsBusy = false; }
+    }
+
+    private void ZapretBrowse()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Выберите папку с Zapret (где лежат service.bat и bin\\winws.exe)" };
+        if (dialog.ShowDialog() != true) return;
+
+        if (_zapret.Adopt(dialog.FolderName))
+        {
+            RefreshZapret();
+            StatusText = "Zapret добавлен: " + dialog.FolderName;
+        }
+        else
+        {
+            _dialogs.Info("Zapret", "В этой папке не найден Zapret (нужен winws.exe и хотя бы один bat-файл).", DialogKind.Warning);
+        }
+    }
+
+    private async Task TgLocateAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var progress = new Progress<string>(m => StatusText = m);
+            var (found, msg) = await _tgWs.FindExistingAsync(progress);
+            StatusText = msg;
+            RefreshTg();
+            _dialogs.Info("TG WS Proxy", msg, found ? DialogKind.Success : DialogKind.Warning);
+        }
+        finally { IsBusy = false; }
+    }
+
+    private void TgBrowse()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Выберите TgWsProxy_windows.exe",
+            Filter = "TG WS Proxy (*.exe)|*.exe",
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        if (_tgWs.Adopt(dialog.FileName))
+        {
+            RefreshTg();
+            StatusText = "TG WS Proxy добавлен: " + dialog.FileName;
+        }
+        else
+        {
+            _dialogs.Info("TG WS Proxy", "Это не похоже на TgWsProxy_windows.exe.", DialogKind.Warning);
+        }
+    }
+
     private void RefreshZapretStatusOnly()
     {
         var s = _zapret.GetStatus();
@@ -499,7 +608,7 @@ public sealed class AppsViewModel : ObservableObject
 
     private async Task TgUninstallAsync()
     {
-        var choice = _dialogs.Ask("Удалить TG WS Proxy?", "Процесс будет остановлен, файлы удалены.",
+        var choice = _dialogs.Ask("Удалить TG WS Proxy?", "Процесс будет остановлен. Файлы удаляются, только если программа была установлена этим приложением.",
             primary: "Удалить", secondary: "Отмена", kind: DialogKind.Danger);
         if (choice != DialogChoice.Primary) return;
         IsBusy = true;

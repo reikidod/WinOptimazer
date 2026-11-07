@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using WinOptimizer.Infrastructure;
 
 namespace WinOptimizer.Services;
@@ -10,6 +11,13 @@ public sealed record TgWsProxyStatus(bool Installed, bool Running, string Instal
 public interface ITgWsProxyService
 {
     TgWsProxyStatus GetStatus();
+    /// <summary>Установлен ли прокси самим приложением (иначе — найден в системе и не удаляется).</summary>
+    bool IsManagedInstall { get; }
+    string LocatorKey { get; }
+    Func<string, string?> LocatorProbe { get; }
+    /// <summary>Принять путь к exe (или папке), найденный поиском. false — это не TG WS Proxy.</summary>
+    bool Adopt(string exeOrFolder);
+    Task<(bool Found, string Message)> FindExistingAsync(IProgress<string>? progress = null, CancellationToken ct = default);
     Task<(bool Ok, string Message)> DownloadAndInstallAsync(IProgress<string>? progress = null, CancellationToken ct = default);
     Task<(bool Ok, string Message)> StartAsync(CancellationToken ct = default);
     Task<(bool Ok, string Message)> StopAsync(CancellationToken ct = default);
@@ -31,19 +39,105 @@ public sealed class TgWsProxyService : ITgWsProxyService
         Http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     }
 
-    public string InstallRoot => Path.Combine(AppPaths.DataDirectory, "tg-ws-proxy");
-    private string ExePath => Path.Combine(InstallRoot, "TgWsProxy_windows.exe");
+    private static readonly Regex ExeName = new(@"^(TgWsProxy|tg-ws-proxy)[^\\/]*\.exe$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly string[] ProcessNames = { "TgWsProxy_windows", "TgWsProxy", "tg-ws-proxy" };
+
+    private string? _exe;
+
+    private static string ManagedRoot => Path.Combine(AppPaths.DataDirectory, "tg-ws-proxy");
+    private static string ManagedExe => Path.Combine(ManagedRoot, "TgWsProxy_windows.exe");
+
+    /// <summary>Папка с найденным exe; если ничего нет — папка для новой установки.</summary>
+    public string InstallRoot => _exe is null ? ManagedRoot : Path.GetDirectoryName(_exe)!;
+    private string ExePath => _exe ?? ManagedExe;
+
+    public bool IsManagedInstall => _exe is not null &&
+        Path.GetFullPath(_exe).StartsWith(Path.GetFullPath(AppPaths.DataDirectory).TrimEnd('\\') + "\\",
+            StringComparison.OrdinalIgnoreCase);
+
+    public string LocatorKey => "tgws";
+
+    public Func<string, string?> LocatorProbe => ProbeDirectory;
+
+    private static string? ProbeDirectory(string dir)
+    {
+        // Скачанный, но не установленный exe во временной папке загрузок установкой не считается
+        if (dir.StartsWith(AppPaths.DownloadsDirectory, StringComparison.OrdinalIgnoreCase))
+            return null;
+        foreach (var file in Directory.EnumerateFiles(dir, "*.exe"))
+            if (ExeName.IsMatch(Path.GetFileName(file)))
+                return file;
+        return null;
+    }
+
+    public bool Adopt(string exeOrFolder)
+    {
+        string? exe = null;
+        if (File.Exists(exeOrFolder) && ExeName.IsMatch(Path.GetFileName(exeOrFolder)))
+            exe = exeOrFolder;
+        else if (Directory.Exists(exeOrFolder))
+        {
+            try { exe = ProbeDirectory(exeOrFolder); } catch { /* нет доступа */ }
+        }
+
+        if (exe is null) return false;
+        _exe = exe;
+        AppLocator.Remember(LocatorKey, exe);
+        Logger.Info("TG WS Proxy найден: " + exe);
+        return true;
+    }
+
+    private string? ResolveQuick()
+    {
+        static bool Valid(string? p) => !string.IsNullOrEmpty(p) && File.Exists(p);
+
+        if (Valid(_exe)) return _exe;
+        var cached = AppLocator.GetCached(LocatorKey);
+        if (Valid(cached)) return cached;
+        if (File.Exists(ManagedExe)) return ManagedExe;
+
+        foreach (var path in AppLocator.GetProcessPaths(ProcessNames))
+            if (Valid(path)) return path;
+
+        foreach (var path in AppLocator.GetAutorunPaths(ExeName))
+            if (Valid(path)) return path;
+
+        return null;
+    }
+
+    public async Task<(bool Found, string Message)> FindExistingAsync(
+        IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        var quick = await Task.Run(ResolveQuick, ct).ConfigureAwait(false);
+        if (quick != null)
+        {
+            _exe = quick;
+            AppLocator.Remember(LocatorKey, quick);
+            return (true, $"TG WS Proxy найден: {quick}");
+        }
+
+        progress?.Report("Ищу TG WS Proxy на компьютере…");
+        var hits = await Task.Run(() => AppLocator.Search(
+            new Dictionary<string, Func<string, string?>> { [LocatorKey] = ProbeDirectory }, progress, ct), ct)
+            .ConfigureAwait(false);
+        if (hits.TryGetValue(LocatorKey, out var exe) && Adopt(exe))
+            return (true, $"TG WS Proxy найден: {exe}");
+
+        return (false, "TG WS Proxy на компьютере не найден. Можно указать exe вручную или скачать.");
+    }
 
     public TgWsProxyStatus GetStatus()
     {
-        var installed = File.Exists(ExePath);
-        var running = Process.GetProcessesByName("TgWsProxy_windows").Length > 0
-                      || Process.GetProcessesByName("TgWsProxy").Length > 0;
+        _exe = ResolveQuick();
+        var installed = _exe is not null;
+        var running = ProcessNames.Any(n => Process.GetProcessesByName(n).Length > 0);
         var msg = !installed
-            ? "TG WS Proxy не установлен."
+            ? "TG WS Proxy не найден."
             : running
-                ? "TG WS Proxy установлен и запущен (трей). В Telegram: прокси 127.0.0.1:1443 MTProto."
-                : "TG WS Proxy установлен, сейчас не запущен.";
+                ? "TG WS Proxy найден и запущен (трей). В Telegram: прокси 127.0.0.1:1443 MTProto."
+                : "TG WS Proxy найден, сейчас не запущен.";
         return new TgWsProxyStatus(installed, running, InstallRoot, msg);
     }
 
@@ -57,9 +151,9 @@ public sealed class TgWsProxyService : ITgWsProxyService
             if (string.IsNullOrEmpty(url))
                 return (false, "Не найден TgWsProxy_windows.exe в releases GitHub.");
 
-            Directory.CreateDirectory(InstallRoot);
+            Directory.CreateDirectory(ManagedRoot);
             Directory.CreateDirectory(AppPaths.DownloadsDirectory);
-            var target = Path.Combine(InstallRoot, "TgWsProxy_windows.exe");
+            var target = ManagedExe;
             var temp = Path.Combine(AppPaths.DownloadsDirectory, name ?? "TgWsProxy_windows.exe");
 
             progress?.Report("Скачиваю TgWsProxy_windows.exe…");
@@ -72,6 +166,7 @@ public sealed class TgWsProxyService : ITgWsProxyService
             }
 
             File.Copy(temp, target, overwrite: true);
+            _exe = target;
             Logger.Info("TG WS Proxy installed: " + target);
             return (true,
                 "TG WS Proxy скачан.\n\n" +
@@ -91,7 +186,7 @@ public sealed class TgWsProxyService : ITgWsProxyService
         Task.Run(() =>
         {
             if (!File.Exists(ExePath))
-                return (false, "Сначала установите TG WS Proxy.");
+                return (false, "TG WS Proxy не найден. Найдите его на ПК или установите.");
 
             try
             {
@@ -101,7 +196,7 @@ public sealed class TgWsProxyService : ITgWsProxyService
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = ExePath,
-                    WorkingDirectory = InstallRoot,
+                    WorkingDirectory = Path.GetDirectoryName(ExePath),
                     UseShellExecute = true,
                 });
                 return (true, "Запущен. Смотрите иконку в системном трее.");
@@ -117,7 +212,7 @@ public sealed class TgWsProxyService : ITgWsProxyService
         {
             try
             {
-                foreach (var name in new[] { "TgWsProxy_windows", "TgWsProxy", "tg-ws-proxy" })
+                foreach (var name in ProcessNames)
                 {
                     foreach (var p in Process.GetProcessesByName(name))
                     {
@@ -139,8 +234,17 @@ public sealed class TgWsProxyService : ITgWsProxyService
             try
             {
                 await StopAsync(ct).ConfigureAwait(false);
-                if (Directory.Exists(InstallRoot))
-                    Directory.Delete(InstallRoot, true);
+                if (!IsManagedInstall)
+                {
+                    var where = InstallRoot;
+                    _exe = null;
+                    return (true, "Процесс остановлен. Файлы лежат в папке, которую приложение не устанавливало, " +
+                                  "поэтому они не тронуты: " + where);
+                }
+
+                if (Directory.Exists(ManagedRoot))
+                    Directory.Delete(ManagedRoot, true);
+                _exe = null;
                 return (true, "TG WS Proxy удалён.");
             }
             catch (Exception ex)
