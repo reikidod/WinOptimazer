@@ -126,7 +126,7 @@ public sealed class DebloatService : IDebloatService
                 : "Приложение Microsoft Store" + (string.IsNullOrEmpty(pkg.Version) ? "" : " · версия " + pkg.Version);
 
             list.Add(new DebloatApp(
-                known ? catalog.Id : "store:" + pkg.Name,
+                known ? catalog.Id! : "store:" + pkg.Name,
                 name,
                 pkg.Name,
                 pkg.PackageFullName,
