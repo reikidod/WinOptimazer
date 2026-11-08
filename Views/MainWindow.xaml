@@ -1190,14 +1190,6 @@
                                     <Button Content="Удалить" Margin="0,0,8,8" Command="{Binding Apps.ZapretUninstallCommand}" />
                                     <Button Content="Обновить" Margin="0,0,8,8" Command="{Binding Apps.RefreshCommand}" />
                                 </WrapPanel>
-                                <WrapPanel Margin="0,4,0,0">
-                                    <Button Content="Подобрать лучшую (service.bat)" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
-                                            Command="{Binding Apps.AutoTestAllCommand}"
-                                            ToolTip="Остановит Zapret и откроет service.bat → Run Tests. Bat сами не запускаются." />
-                                    <Button Content="Официальные тесты (service.bat)" Margin="0,0,8,8"
-                                            Command="{Binding Apps.OfficialTestsCommand}"
-                                            ToolTip="Run Tests → Standard → All — Zapret сам выберет лучшую" />
-                                </WrapPanel>
                             </StackPanel>
                         </ContentControl>
 
@@ -1224,34 +1216,55 @@
                             </StackPanel>
                         </ContentControl>
 
-                        <TextBlock Text="Пресеты (bat) — тест стабильности" FontSize="16" FontWeight="SemiBold" Margin="0,20,0,6" />
-                        <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,0,0,10"
-                                   Text="Запускайте по одному или через «Автотест всех стратегий». Официальный вердикт Zapret: service.bat → Run Tests → Standard → All." />
-                        <ItemsControl ItemsSource="{Binding Apps.ZapretBats}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <ContentControl Style="{StaticResource HoverCard}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding FileName}" FontSize="14" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding Kind}" FontSize="12" Margin="0,3,0,0"
-                                                           Foreground="{StaticResource AccentBrush}" />
-                                                <TextBlock Text="{Binding RelativePath}" Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,2,0,0" />
-                                                <TextBlock Text="{Binding Note}" FontSize="12" Margin="0,4,0,0"
-                                                           Foreground="{StaticResource SuccessBrush}" />
-                                            </StackPanel>
-                                            <Button Grid.Column="1" Content="Протестировать" VerticalAlignment="Center" Margin="16,0,0,0"
-                                                    Command="{Binding DataContext.Apps.TestBatCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}" />
-                                        </Grid>
-                                    </ContentControl>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <Expander Style="{StaticResource SectionExpander}" Header="Тесты стратегий Zapret" Margin="0,20,0,0" IsExpanded="False">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                                           Text="У каждого провайдера блокировки устроены по-своему, поэтому лучше всего работает своя стратегия (bat-файл). Найдите свою: подберите автоматически или проверьте стратегии по одной." />
+
+                                <ContentControl Style="{StaticResource HoverCard}" Margin="0,12,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Автоматический подбор" FontSize="14" FontWeight="SemiBold" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                                   Text="Zapret остановится, откроется service.bat. Выберите Run Tests → Standard → All и дождитесь итога: лучшая стратегия та, где больше всего успешных проверок. Затем установите её как службу." />
+                                        <WrapPanel Margin="0,12,0,0">
+                                            <Button Content="Подобрать лучшую" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
+                                                    Command="{Binding Apps.AutoTestAllCommand}"
+                                                    ToolTip="Остановит Zapret и откроет service.bat. Стратегии сами не запускаются." />
+                                            <Button Content="Открыть официальные тесты" Margin="0,0,8,0"
+                                                    Command="{Binding Apps.OfficialTestsCommand}"
+                                                    ToolTip="Откроет service.bat → Run Tests; режимы Standard / All выбираете сами." />
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </ContentControl>
+
+                                <TextBlock Text="Все стратегии" FontSize="14" FontWeight="SemiBold" Margin="2,6,0,8" />
+                                <ItemsControl ItemsSource="{Binding Apps.ZapretBats}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ContentControl Style="{StaticResource HoverCard}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding FileName}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Kind}" FontSize="12" Margin="0,3,0,0"
+                                                                   Foreground="{StaticResource AccentBrush}" />
+                                                        <TextBlock Text="{Binding Note}" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"
+                                                                   Foreground="{StaticResource SuccessBrush}" />
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Content="Проверить" VerticalAlignment="Center" Margin="16,0,0,0"
+                                                            ToolTip="{Binding RelativePath}"
+                                                            Command="{Binding DataContext.Apps.TestBatCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </ContentControl>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Expander>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

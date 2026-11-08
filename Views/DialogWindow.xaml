@@ -58,7 +58,7 @@
             </Border>
 
             <!-- Текст -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="320"
+            <ScrollViewer Style="{StaticResource OverlayScroll}" Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="320"
                           Margin="24,18,24,0" Padding="0,0,4,0">
                 <Border Background="#14FFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1"
                         CornerRadius="12" Padding="16,14">
