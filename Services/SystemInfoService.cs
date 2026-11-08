@@ -222,7 +222,7 @@ public sealed partial class SystemInfoService : ISystemInfoService
         };
     }
 
-    private static ulong? ReadVideoMemoryBytes(string adapterName)
+    internal static ulong? ReadVideoMemoryBytes(string adapterName)
     {
         using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
         using var classKey = baseKey.OpenSubKey(DisplayClassKey, writable: false);

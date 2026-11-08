@@ -48,6 +48,29 @@ public sealed class GameItemViewModel : ObservableObject
         get => _busy;
         set => SetField(ref _busy, value);
     }
+
+    private OptimizationResult? _result;
+
+    /// <summary>Рекомендованные настройки (null — ещё не подбирали или скрыты).</summary>
+    public OptimizationResult? Result
+    {
+        get => _result;
+        set
+        {
+            if (!SetField(ref _result, value)) return;
+            OnPropertyChanged(nameof(HasResult));
+            OnPropertyChanged(nameof(HasWarnings));
+            OnPropertyChanged(nameof(WarningsText));
+            OnPropertyChanged(nameof(NotesText));
+            OnPropertyChanged(nameof(AdviceButtonText));
+        }
+    }
+
+    public bool HasResult => _result is not null;
+    public bool HasWarnings => _result is { Warnings.Count: > 0 };
+    public string WarningsText => _result is null ? "" : string.Join("\n", _result.Warnings.Select(w => "⚠ " + w));
+    public string NotesText => _result is null ? "" : string.Join("\n", _result.Notes);
+    public string AdviceButtonText => HasResult ? "Скрыть настройки" : "Подобрать настройки";
 }
 
 public sealed class GamesViewModel : ObservableObject
@@ -58,12 +81,27 @@ public sealed class GamesViewModel : ObservableObject
     private string _status = "Нажмите «Найти игры», чтобы просканировать Steam, Epic, GOG и Xbox.";
     private string _filter = "";
     private bool _busy;
+    private readonly IHardwareProfileService _hardware;
+    private readonly IBenchmarkService _benchmarks;
+    private HardwareProfile? _profile;
+    private HardwareScores? _scores;
+    private string _hardwareSummary = "";
 
-    public GamesViewModel(IGameDiscoveryService discovery, IOptiScalerService opti, IDialogService dialogs)
+    public GamesViewModel(IGameDiscoveryService discovery, IOptiScalerService opti, IDialogService dialogs,
+        IHardwareProfileService? hardware = null, IBenchmarkService? benchmarks = null)
     {
         _discovery = discovery;
         _opti = opti;
         _dialogs = dialogs;
+        _hardware = hardware ?? new HardwareProfileService();
+        _benchmarks = benchmarks ?? new BenchmarkService();
+        OptimizeCommand = new AsyncRelayCommand<GameItemViewModel>(OptimizeAsync, _ => !IsBusy, Report);
+        DetectHardwareCommand = new AsyncRelayCommand(async () =>
+        {
+            IsBusy = true;
+            try { await EnsureHardwareAsync(force: true); }
+            finally { IsBusy = false; }
+        }, () => !IsBusy, Report);
 
         ScanCommand = new AsyncRelayCommand(ScanAsync, () => !IsBusy, Report);
         InstallOptiCommand = new AsyncRelayCommand<GameItemViewModel>(InstallOptiAsync, _ => !IsBusy, Report);
@@ -87,6 +125,57 @@ public sealed class GamesViewModel : ObservableObject
     public ICommand ToggleGpuCommand { get; }
     public ICommand OpenFolderCommand { get; }
     public ICommand DownloadOptiCommand { get; }
+    public ICommand OptimizeCommand { get; }
+    public ICommand DetectHardwareCommand { get; }
+
+    public string HardwareSummary
+    {
+        get => _hardwareSummary;
+        private set
+        {
+            if (SetField(ref _hardwareSummary, value)) OnPropertyChanged(nameof(HasHardware));
+        }
+    }
+
+    public bool HasHardware => !string.IsNullOrEmpty(_hardwareSummary);
+
+    private async Task EnsureHardwareAsync(bool force = false)
+    {
+        if (_profile is not null && _scores is not null && !force) return;
+        Status = "Определяю железо и загружаю тесты комплектующих…";
+        _profile = await _hardware.CollectAsync();
+        _scores = await _benchmarks.GetScoresAsync(_profile, new Progress<string>(s => Status = s));
+        HardwareSummary =
+            $"Процессор: {_profile.CpuName} — {_scores.CpuSource}\n" +
+            $"Видеокарта: {_profile.GpuName} ({_profile.VramGb:0.#} ГБ) — {_scores.GpuSource}\n" +
+            $"Память: {_profile.RamGb:0.#} ГБ · Экран: {_profile.ScreenWidth}×{_profile.ScreenHeight} @ {_profile.RefreshHz} Гц";
+        Status = "Железо определено. Нажмите «Подобрать настройки» у нужной игры.";
+    }
+
+    private async Task OptimizeAsync(GameItemViewModel? item)
+    {
+        if (item is null) return;
+        if (item.HasResult)
+        {
+            item.Result = null;
+            return;
+        }
+
+        IsBusy = true;
+        item.IsBusy = true;
+        try
+        {
+            await EnsureHardwareAsync();
+            var traits = await Task.Run(() => GameKnowledge.Analyze(item.Name, item.Folder));
+            item.Result = GameOptimizer.Recommend(traits, _profile!, _scores!);
+            Status = $"Настройки для «{item.Name}» подобраны.";
+        }
+        finally
+        {
+            item.IsBusy = false;
+            IsBusy = false;
+        }
+    }
 
     public string Status
     {

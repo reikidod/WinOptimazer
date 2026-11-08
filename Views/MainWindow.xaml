@@ -642,12 +642,18 @@
                                     Command="{Binding Games.ScanCommand}" />
                             <Button Content="Скачать OptiScaler" Margin="0,0,8,8"
                                     Command="{Binding Games.DownloadOptiCommand}" />
+                            <Button Content="Определить железо" Margin="0,0,8,8"
+                                    ToolTip="Определить процессор, видеокарту и экран и сравнить их с тестами из интернета"
+                                    Command="{Binding Games.DetectHardwareCommand}" />
                             <TextBox Width="260" Margin="0,0,8,8" Tag="Фильтр по названию…"
                                      Text="{Binding Games.Filter, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Фильтр по названию" />
                         </WrapPanel>
                         <TextBlock Text="{Binding Games.Status}" TextWrapping="Wrap" FontSize="12.5"
                                    Foreground="{StaticResource AccentBrush}" />
+                        <TextBlock Text="{Binding Games.HardwareSummary}" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,0"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Visibility="{Binding Games.HasHardware, Converter={StaticResource BoolToVis}}" />
                     </StackPanel>
                 </Border>
 
@@ -661,6 +667,10 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" />
@@ -673,6 +683,10 @@
                                             <TextBlock Text="{Binding Path}" Margin="0,2,0,0" FontSize="11"
                                                        Foreground="{StaticResource TextDimBrush}"
                                                        TextTrimming="CharacterEllipsis" />
+                                            <Button Content="{Binding AdviceButtonText}" HorizontalAlignment="Left" Margin="0,8,0,0" Padding="12,6"
+                                                    ToolTip="Подобрать настройки графики под ваше железо по тестам комплектующих из интернета"
+                                                    Command="{Binding DataContext.Games.OptimizeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                             <Button Content="GPU: макс." Margin="0,0,6,0" Padding="10,6"
@@ -689,6 +703,38 @@
                                             <Button Content="Поставить OptiScaler" Style="{StaticResource AccentButton}" Padding="12,6"
                                                     Command="{Binding DataContext.Games.InstallOptiCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}" />
+                                        </StackPanel>
+
+                                        <!-- Рекомендованные настройки -->
+                                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
+                                                    Visibility="{Binding HasResult, Converter={StaticResource BoolToVis}}">
+                                            <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,10" />
+                                            <TextBlock Text="{Binding Result.Headline}" FontSize="13.5" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding WarningsText}" Margin="0,6,0,0" FontSize="12.5" TextWrapping="Wrap"
+                                                       Foreground="#E3B341"
+                                                       Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVis}}" />
+                                            <ItemsControl ItemsSource="{Binding Result.Settings}" Margin="0,8,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="230" />
+                                                                <ColumnDefinition Width="210" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" FontSize="12.5"
+                                                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,10,0" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" FontSize="12.5"
+                                                                       FontWeight="SemiBold" Margin="0,0,10,0" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding Reason}" TextWrapping="Wrap" FontSize="12"
+                                                                       Foreground="{StaticResource TextDimBrush}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <TextBlock Text="{Binding NotesText}" Margin="0,6,0,0" FontSize="11.5" TextWrapping="Wrap"
+                                                       Foreground="{StaticResource TextDimBrush}" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
