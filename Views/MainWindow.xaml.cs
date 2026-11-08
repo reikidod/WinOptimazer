@@ -17,8 +17,19 @@ public partial class MainWindow : Window
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
+        FitToScreen();
         DataContext = viewModel;
         Loaded += OnLoaded;
+    }
+
+    /// <summary>Размер окна по умолчанию, но не больше ~92% рабочей области: на ноутбуках с масштабом 125–150% всё помещается и читается.</summary>
+    private void FitToScreen()
+    {
+        var area = SystemParameters.WorkArea;
+        Width = Math.Min(Width, Math.Floor(area.Width * 0.92));
+        Height = Math.Min(Height, Math.Floor(area.Height * 0.92));
+        MinWidth = Math.Min(MinWidth, Width);
+        MinHeight = Math.Min(MinHeight, Height);
     }
 
     protected override void OnSourceInitialized(EventArgs e)

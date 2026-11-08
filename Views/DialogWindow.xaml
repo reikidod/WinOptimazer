@@ -5,7 +5,7 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         SizeToContent="Height"
-        Width="540"
+        Width="588"
         MaxHeight="640"
         WindowStartupLocation="CenterOwner"
         Background="Transparent"
@@ -16,7 +16,8 @@
         AllowsTransparency="True"
         MouseLeftButtonDown="OnDragWindow">
 
-    <Border CornerRadius="18" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+    <Border x:Name="Root" RenderTransformOrigin="0.5,0.5" Margin="24"
+            CornerRadius="18" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
             Background="{StaticResource BgWindowBrush}" SnapsToDevicePixels="True">
         <Border.Effect>
             <DropShadowEffect BlurRadius="32" ShadowDepth="10" Direction="270" Opacity="0.5" Color="Black" />

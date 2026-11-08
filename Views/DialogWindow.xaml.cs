@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using WinOptimizer.Infrastructure;
 
 namespace WinOptimizer.Views;
@@ -32,6 +33,28 @@ public partial class DialogWindow : Window
         CancelButton.Visibility = string.IsNullOrEmpty(cancel) ? Visibility.Collapsed : Visibility.Visible;
 
         ApplyKind(kind, subtitle);
+
+        // Мягкое появление; Esc закрывает окно.
+        Opacity = SystemParameters.ClientAreaAnimation ? 0 : 1;
+        Loaded += (_, _) => PlayOpenAnimation();
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key != Key.Escape) return;
+            Choice = DialogChoice.Cancel;
+            Close();
+        };
+    }
+
+    private void PlayOpenAnimation()
+    {
+        if (!SystemParameters.ClientAreaAnimation) return;
+        var scale = new ScaleTransform(0.95, 0.95);
+        Root.RenderTransform = scale;
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var duration = TimeSpan.FromMilliseconds(220);
+        BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration) { EasingFunction = ease });
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = ease });
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.95, 1, duration) { EasingFunction = ease });
     }
 
     public DialogChoice Choice { get; private set; } = DialogChoice.Cancel;
