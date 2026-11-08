@@ -244,7 +244,7 @@ public sealed class DebloatService : IDebloatService
         n.StartsWith("Windows.", StringComparison.OrdinalIgnoreCase) ||
         n.StartsWith("MicrosoftWindows.", StringComparison.OrdinalIgnoreCase);
 
-    private static string PublisherFromSubject(string subject)
+    internal static string PublisherFromSubject(string subject)
     {
         var m = Regex.Match(subject, @"CN=(?:""([^""]+)""|([^,]+))");
         var cn = m.Success ? (m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value).Trim() : "";
@@ -312,7 +312,7 @@ public sealed class DebloatService : IDebloatService
         ["Microsoft.MSPaint"] = "Paint 3D",
     };
 
-    private static string FriendlyName(string packageName)
+    internal static string FriendlyName(string packageName)
     {
         if (FriendlyNames.TryGetValue(packageName, out var n)) return n;
 

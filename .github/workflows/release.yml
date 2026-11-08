@@ -36,6 +36,12 @@ jobs:
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Версия релиза: $v"
 
+      - name: Test
+        shell: pwsh
+        run: |
+          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release --nologo
+          if ($LASTEXITCODE -ne 0) { throw 'Тесты не прошли, релиз не публикуется' }
+
       - name: Publish
         shell: pwsh
         run: |
@@ -44,6 +50,24 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'dotnet publish завершился с ошибкой' }
           if (-not (Test-Path publish\WinOptimizer.exe)) { throw 'publish\WinOptimizer.exe не найден' }
           Compress-Archive -Path publish\* -DestinationPath WinOptimizer-win-x64.zip
+
+      - name: Smoke test (запуск собранного приложения)
+        shell: pwsh
+        run: |
+          # Распаковываем архив ровно так, как это делает обновление, и запускаем приложение.
+          Expand-Archive WinOptimizer-win-x64.zip -DestinationPath smoke -Force
+          $log = Join-Path $env:ProgramData 'WinOptimizer\log.txt'
+          Remove-Item $log -ErrorAction SilentlyContinue
+          $p = Start-Process (Resolve-Path smoke\WinOptimizer.exe) -PassThru
+          Start-Sleep -Seconds 15
+          $exited = $p.HasExited
+          $text = if (Test-Path $log) { Get-Content $log -Raw -Encoding UTF8 } else { '' }
+          Write-Host "---- log ----"; Write-Host $text
+          if (-not $exited) { Stop-Process -Id $p.Id -Force }
+          if ($exited) { throw "Приложение закрылось сразу после запуска, код $($p.ExitCode)" }
+          if ($text -match 'XamlParseException|TypeInitializationException|Необработанное исключение|Критическая ошибка') {
+            throw 'При запуске в логе есть критические ошибки'
+          }
 
       - name: Create release
         shell: pwsh

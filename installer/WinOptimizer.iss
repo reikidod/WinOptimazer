@@ -11,7 +11,7 @@
 ;   ISCC installer\WinOptimizer.iss
 
 #define MyAppName "WinOptimizer"
-#define MyAppVersion "0.3.1"
+#define MyAppVersion "0.4.0"
 #define MyAppPublisher "WinOptimizer Contributors"
 #define MyAppURL "https://github.com/"
 #define MyAppExeName "WinOptimizer.exe"

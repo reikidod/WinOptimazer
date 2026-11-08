@@ -127,7 +127,7 @@ public sealed class MainViewModel : ObservableObject
 
     public string AppVersion => _updates.CurrentVersion;
 
-    public string VersionLabel => $"v{AppVersion}";
+    public string VersionLabel => $"v{_updates.DisplayVersion}";
 
     private string _updateStatus = "";
     public string UpdateStatus

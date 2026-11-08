@@ -18,6 +18,7 @@ public sealed record UpdateCheckResult(
 public interface IUpdateService
 {
     string CurrentVersion { get; }
+    string DisplayVersion { get; }
     string GitHubRepo { get; }
     Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default);
     Task<(bool Ok, string Message)> DownloadAndInstallAsync(string downloadUrl, IProgress<string>? progress = null, CancellationToken ct = default);
@@ -47,6 +48,19 @@ public sealed class UpdateService : IUpdateService
             if (v is null) return "0.0.0";
             // 0.3.0.0 -> 0.3.0
             return $"{v.Major}.{v.Minor}.{v.Build}";
+        }
+    }
+
+    /// <summary>Версия для показа: с буквенной меткой канала (0.4.12-beta), если она задана при сборке.</summary>
+    public string DisplayVersion
+    {
+        get
+        {
+            var info = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            if (string.IsNullOrWhiteSpace(info)) return CurrentVersion;
+            var plus = info.IndexOf('+');
+            return plus >= 0 ? info[..plus] : info;
         }
     }
 
@@ -172,7 +186,7 @@ public sealed class UpdateService : IUpdateService
                     @echo off
                     chcp 65001 >nul
                     :wait
-                    tasklist /fi "PID eq {pid}" 2>nul | find "{pid}" >nul
+                    tasklist /fi "PID eq {pid}" 2>nul | find " {pid} " >nul
                     if not errorlevel 1 (
                         timeout /t 1 /nobreak >nul
                         goto wait
