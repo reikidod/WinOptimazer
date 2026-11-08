@@ -35,7 +35,6 @@ public partial class WelcomeWindow : Window
 
         try
         {
-            // Плавное появление
             var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(350))
             {
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
@@ -44,7 +43,6 @@ public partial class WelcomeWindow : Window
 
             await Task.Delay(1800);
 
-            // Плавное исчезновение
             var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(320))
             {
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
@@ -58,11 +56,7 @@ public partial class WelcomeWindow : Window
         {
             // Не блокируем запуск основного окна из-за анимации
         }
-        finally
-        {
-            if (IsVisible)
-                DialogResult = true;
-            Close();
-        }
+
+        Close();
     }
 }
