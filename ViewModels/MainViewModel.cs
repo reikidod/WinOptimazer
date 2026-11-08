@@ -252,11 +252,21 @@ public sealed class MainViewModel : ObservableObject
     public async Task InitializeAsync()
     {
         StatusText = "Проверяю текущее состояние…";
-        await RefreshTweakStatesAsync();
-        StatusText = "Готово";
-        await RefreshInfoAsync();
-        await Maintenance.InitializeAsync();
-        await Debloat.InitializeAsync();
+
+        // Независимые проверки идут параллельно: стартовый экран готов быстрее, чем при последовательной загрузке.
+        var info = RefreshInfoAsync();
+        var maintenance = Maintenance.InitializeAsync();
+        var debloat = Debloat.InitializeAsync();
+        try
+        {
+            await RefreshTweakStatesAsync();
+            StatusText = "Готово";
+        }
+        finally
+        {
+            // Дожидаемся остальных даже при ошибке, чтобы их исключения не остались неучтёнными.
+            await Task.WhenAll(info, maintenance, debloat);
+        }
     }
 
     public string BuildInfoReport() => SystemInfoService.ToPlainText(InfoSections);
