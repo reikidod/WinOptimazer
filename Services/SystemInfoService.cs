@@ -233,16 +233,25 @@ public sealed partial class SystemInfoService : ISystemInfoService
 
         foreach (var subKeyName in classKey.GetSubKeyNames())
         {
-            using var adapter = classKey.OpenSubKey(subKeyName, writable: false);
-            if (adapter?.GetValue("DriverDesc") as string != adapterName)
+            // Служебные подразделы класса (например, «Configuration») могут быть закрыты даже для администратора:
+            // один недоступный раздел не должен ломать весь блок «Видеокарта».
+            try
+            {
+                using var adapter = classKey.OpenSubKey(subKeyName, writable: false);
+                if (adapter?.GetValue("DriverDesc") as string != adapterName)
+                {
+                    continue;
+                }
+
+                var raw = adapter.GetValue("HardwareInformation.qwMemorySize");
+                if (raw is long signed and > 0)
+                {
+                    return (ulong)signed;
+                }
+            }
+            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
             {
                 continue;
-            }
-
-            var raw = adapter.GetValue("HardwareInformation.qwMemorySize");
-            if (raw is long signed and > 0)
-            {
-                return (ulong)signed;
             }
         }
 

@@ -201,3 +201,16 @@ public class RecommendedFilesTests
         Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 }
+
+public class SystemInfoTests
+{
+    [Fact]
+    public void Collect_DoesNotThrow()
+    {
+        var sections = new SystemInfoService().CollectAsync().GetAwaiter().GetResult();
+        Assert.NotEmpty(sections);
+        // Раздел, который не удалось собрать, содержит строку «Ошибка»: регрессия «Видеокарта» падала на закрытом разделе реестра.
+        foreach (var section in sections)
+            Assert.DoesNotContain(section.Lines, l => l.Label == "Ошибка" && section.Title == "Видеокарта");
+    }
+}
