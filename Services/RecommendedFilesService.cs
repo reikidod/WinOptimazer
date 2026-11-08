@@ -152,8 +152,8 @@ public sealed class RecommendedFilesService : IRecommendedFilesService
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var path in new[]
                      {
-                         @"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
-                         @"SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+                         @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                         @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
                      })
             {
                 using var key = Registry.LocalMachine.OpenSubKey(path);
