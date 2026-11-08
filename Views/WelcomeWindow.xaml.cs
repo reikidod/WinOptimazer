@@ -21,6 +21,11 @@ public partial class WelcomeWindow : Window
         "Всё под рукой",
     ];
 
+    // Общая длительность приветствия (включая fade in/out).
+    private static readonly TimeSpan TotalDuration = TimeSpan.FromSeconds(6.23);
+    private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(350);
+    private static readonly TimeSpan FadeOutDuration = TimeSpan.FromMilliseconds(320);
+
     public WelcomeWindow()
     {
         InitializeComponent();
@@ -35,15 +40,18 @@ public partial class WelcomeWindow : Window
 
         try
         {
-            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(350))
+            var fadeIn = new DoubleAnimation(0, 1, FadeInDuration)
             {
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
             };
             BeginAnimation(OpacityProperty, fadeIn);
 
-            await Task.Delay(1800);
+            var hold = TotalDuration - FadeInDuration - FadeOutDuration;
+            if (hold < TimeSpan.Zero)
+                hold = TimeSpan.Zero;
+            await Task.Delay(hold);
 
-            var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(320))
+            var fadeOut = new DoubleAnimation(1, 0, FadeOutDuration)
             {
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
             };
