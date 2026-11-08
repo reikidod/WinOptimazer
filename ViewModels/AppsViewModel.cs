@@ -116,10 +116,14 @@ public sealed class AppsViewModel : ObservableObject
         TgStartCommand = new AsyncRelayCommand(TgStartAsync, () => !IsBusy && TgInstalled, ReportError);
         TgStopCommand = new AsyncRelayCommand(TgStopAsync, () => !IsBusy && TgInstalled, ReportError);
         TgUninstallCommand = new AsyncRelayCommand(TgUninstallAsync, () => !IsBusy && TgInstalled, ReportError);
+        Recommended = new RecommendedFilesViewModel(new RecommendedFilesService(), dialogs);
         RefreshZapret();
         RefreshTg();
         _ = AutoDetectAsync();
     }
+
+    /// <summary>Рекомендуемые файлы: Visual C++ и DirectX.</summary>
+    public RecommendedFilesViewModel Recommended { get; }
 
     public ObservableCollection<AppItemViewModel> Apps { get; } = new();
     public ObservableCollection<ZapretBatItemViewModel> ZapretBats { get; } = new();

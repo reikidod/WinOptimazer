@@ -1,0 +1,2 @@
+2cf71d098c608c56e07f4655855a886c3102553f648df88458df616b26fd612f  recommended/dxwebsetup.exe
+d36996cb7f936a0ee55ee05de45fcfbff1e829f105bbfa1b2297f3da82d31bc9  recommended/vc-runtimes-aio-v56.exe
