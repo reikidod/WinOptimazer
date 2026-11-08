@@ -44,9 +44,19 @@ public partial class App : Application
             return;
         }
 
-        // Приветствие со случайной фразой и синим свечением — затем основное окно.
-        var welcome = new WelcomeWindow();
-        welcome.ShowDialog();
+        // Первое окно в WPF становится MainWindow. При ShutdownMode=OnMainWindowClose
+        // закрытие приветствия сразу гасило бы всё приложение — временно отключаем.
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        try
+        {
+            var welcome = new WelcomeWindow();
+            welcome.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Ошибка приветственного окна", ex);
+        }
 
         var dialogs = new DialogService();
         var updates = new UpdateService();
@@ -68,6 +78,7 @@ public partial class App : Application
 
         var window = new MainWindow(viewModel);
         MainWindow = window;
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
         window.Show();
         _ = viewModel.CheckForUpdatesOnStartupAsync();
         Logger.Info("WinOptimizer запущен");
