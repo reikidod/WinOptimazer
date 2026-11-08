@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
@@ -150,5 +152,53 @@ public static class Motion
         };
         sv.BeginAnimation(AnimatedOffsetProperty, anim);
         e.Handled = true;
+    }
+
+    // ---------- Ползунок прокрутки: виден только во время прокрутки ----------
+
+    public static readonly DependencyProperty AutoHideScrollBarProperty = DependencyProperty.RegisterAttached(
+        "AutoHideScrollBar", typeof(bool), typeof(Motion), new PropertyMetadata(false, OnAutoHideScrollBarChanged));
+
+    public static bool GetAutoHideScrollBar(DependencyObject d) => (bool)d.GetValue(AutoHideScrollBarProperty);
+    public static void SetAutoHideScrollBar(DependencyObject d, bool v) => d.SetValue(AutoHideScrollBarProperty, v);
+
+    private static void OnAutoHideScrollBarChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not ScrollViewer sv || e.NewValue is not true) return;
+        sv.Loaded += (_, _) => HookAutoHide(sv);
+    }
+
+    private static void HookAutoHide(ScrollViewer sv)
+    {
+        if (sv.Tag is "autohide") return; // Loaded срабатывает повторно при переключении страниц
+        sv.ApplyTemplate();
+        if (sv.Template?.FindName("PART_VerticalScrollBar", sv) is not ScrollBar bar) return;
+        sv.Tag = "autohide";
+
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (bar.IsMouseOver || bar.IsMouseCaptureWithin) { timer.Start(); return; }
+            FadeBar(bar, 0, 0.35);
+        };
+
+        void Show()
+        {
+            FadeBar(bar, 1, 0.12);
+            timer.Stop();
+            timer.Start();
+        }
+
+        sv.ScrollChanged += (_, a) => { if (a.VerticalChange != 0) Show(); };
+        sv.PreviewMouseWheel += (_, _) => Show();
+        bar.MouseEnter += (_, _) => { FadeBar(bar, 1, 0.12); timer.Stop(); };
+        bar.MouseLeave += (_, _) => { timer.Stop(); timer.Start(); };
+    }
+
+    private static void FadeBar(UIElement bar, double to, double seconds)
+    {
+        if (!Enabled) { bar.Opacity = to; return; }
+        bar.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(to, TimeSpan.FromSeconds(seconds)) { EasingFunction = EaseOut });
     }
 }

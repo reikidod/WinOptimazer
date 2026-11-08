@@ -219,7 +219,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl ItemsSource="{Binding FilteredTweaks}" Margin="0,0,16,8">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -355,7 +355,7 @@
                 <ProgressBar Grid.Row="1" IsIndeterminate="True" Margin="0,0,16,12"
                              Visibility="{Binding IsInfoLoading, Converter={StaticResource BoolToVis}}" />
 
-                <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="0,0,16,8">
                         <TextBlock Text="Не удалось получить сведения. Нажмите «Обновить»." Style="{StaticResource SecondaryText}"
                                    Visibility="{Binding HasNoInfo, Converter={StaticResource BoolToVis}}" />
@@ -490,8 +490,9 @@
                     </StackPanel>
                 </Border>
 
-                <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,12,8">
-                    <ItemsControl ItemsSource="{Binding Store.Results}">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,16,0" Padding="0,0,0,8">
+                    <!-- Правый отступ карточек (12) компенсируем: правый край сетки совпадает с краем плашки поиска -->
+                    <ItemsControl ItemsSource="{Binding Store.Results}" Margin="0,0,-12,0">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel ItemWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}, Converter={StaticResource CardWidth}}" />
@@ -580,7 +581,7 @@
                     </StackPanel>
                 </Border>
 
-                <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,12,8">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,12,8">
                     <ItemsControl ItemsSource="{Binding Games.FilteredGames}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -639,7 +640,7 @@
                     <TextBlock Text="Временные файлы, автозагрузка и откат системы" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                 </StackPanel>
 
-                <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="0,0,16,8" DataContext="{Binding Maintenance}">
                         <ProgressBar IsIndeterminate="True" Margin="0,0,0,12"
                                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
@@ -833,7 +834,7 @@
                                      Command="{Binding Debloat.SetFilterCommand}" CommandParameter="3" />
                     </StackPanel>
                 </Grid>
-                <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Debloat.View}" Margin="0,0,16,8">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -948,7 +949,7 @@
                     <TextBlock Text="{Binding Apps.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0"
                                Foreground="{StaticResource AccentBrush}" />
                 </StackPanel>
-                <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,16,8">
                         <TextBlock Text="Рекомендуемые файлы" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4" />
                         <TextBlock Text="Библиотеки и утилиты для тонкой настройки. Файл скачивается по кнопке и проверяется по контрольной сумме перед запуском."

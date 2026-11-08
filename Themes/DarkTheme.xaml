@@ -408,6 +408,29 @@
         </Setter>
     </Style>
 
+
+    <!-- Прокрутка поверх содержимого: ползунок прозрачен и появляется только при прокрутке (см. Motion.AutoHideScrollBar) -->
+    <Style x:Key="OverlayScroll" TargetType="ScrollViewer">
+        <Setter Property="local:Motion.AutoHideScrollBar" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid Background="{TemplateBinding Background}">
+                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                Margin="{TemplateBinding Padding}"
+                                                CanContentScroll="{TemplateBinding CanContentScroll}" />
+                        <ScrollBar x:Name="PART_VerticalScrollBar" Orientation="Vertical"
+                                   HorizontalAlignment="Right" Margin="0,0,-14,0" Opacity="0"
+                                   Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Maximum="{TemplateBinding ScrollableHeight}"
+                                   ViewportSize="{TemplateBinding ViewportHeight}"
+                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ===== Поле ввода ===== -->
     <Style TargetType="TextBox">
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />

@@ -10,7 +10,7 @@ namespace WinOptimizer.Views;
 public sealed class CardWidthConverter : IValueConverter
 {
     private const double MinCard = 300;
-    private const double Reserved = 30; // отступ ScrollViewer и полоса прокрутки
+    private const double Reserved = -12; // сетка шире области на 12: это правый отступ карточек, он не должен съедать место
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
