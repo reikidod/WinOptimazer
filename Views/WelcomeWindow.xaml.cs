@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Media.Animation;
-using WinOptimizer.Infrastructure;
 
 namespace WinOptimizer.Views;
 
@@ -30,35 +29,40 @@ public partial class WelcomeWindow : Window
         Loaded += OnLoaded;
     }
 
-    protected override void OnSourceInitialized(EventArgs e)
-    {
-        base.OnSourceInitialized(e);
-        NativeMethods.UseDarkTitleBar(this);
-    }
-
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnLoaded;
 
-        // Плавное появление
-        var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(350))
+        try
         {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
-        };
-        BeginAnimation(OpacityProperty, fadeIn);
+            // Плавное появление
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(350))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
+            };
+            BeginAnimation(OpacityProperty, fadeIn);
 
-        await Task.Delay(1800);
+            await Task.Delay(1800);
 
-        // Плавное исчезновение
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(320))
+            // Плавное исчезновение
+            var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(320))
+            {
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
+            };
+            var tcs = new TaskCompletionSource();
+            fadeOut.Completed += (_, _) => tcs.TrySetResult();
+            BeginAnimation(OpacityProperty, fadeOut);
+            await tcs.Task;
+        }
+        catch
         {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
-        };
-        var tcs = new TaskCompletionSource();
-        fadeOut.Completed += (_, _) => tcs.TrySetResult();
-        BeginAnimation(OpacityProperty, fadeOut);
-        await tcs.Task;
-
-        Close();
+            // Не блокируем запуск основного окна из-за анимации
+        }
+        finally
+        {
+            if (IsVisible)
+                DialogResult = true;
+            Close();
+        }
     }
 }
