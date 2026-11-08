@@ -17,7 +17,12 @@ public sealed record RecommendedFile(
     string Arguments,
     bool ShowInstallerWindow,
     string? ConfirmText = null,
-    IReadOnlyDictionary<string, string>? Environment = null);
+    IReadOnlyDictionary<string, string>? Environment = null,
+    /// <summary>Портативная утилита: скачивается, проверяется и запускается без установки.</summary>
+    bool IsTool = false)
+{
+    public string ButtonText => IsTool ? "Запустить" : "Установить";
+}
 
 public interface IRecommendedFilesService
 {
@@ -67,6 +72,61 @@ public sealed class RecommendedFilesService : IRecommendedFilesService
             "2cf71d098c608c56e07f4655855a886c3102553f648df88458df616b26fd612f",
             Arguments: "/Q",
             ShowInstallerWindow: false),
+
+        new("nvcleanstall",
+            "NVCleanstall: установка драйвера NVIDIA",
+            "Ставит драйвер NVIDIA без лишнего: можно убрать телеметрию, GeForce Experience и ненужные компоненты.",
+            "Портативная утилита, установки не требует. Нужна видеокарта NVIDIA.",
+            "nvcleanstall.exe",
+            "9dd36ef956af927cf41fa441f91b329a7973e13965e4e7d70e6fa9c1df1cade6",
+            Arguments: "",
+            ShowInstallerWindow: true,
+            IsTool: true),
+        new("nvidia-profile-inspector",
+            "NVIDIA Profile Inspector",
+            "Тонкие настройки драйверных профилей игр NVIDIA, недоступные в панели управления.",
+            "Неверные значения могут ухудшить игру. Меняйте по одному параметру и запоминайте исходный.",
+            "nvidia-profile-inspector.exe",
+            "dc784bd1acd222567fc1cef4a2e29d0ad10ba880c9ad5202687aadfc5bf5d9ef",
+            Arguments: "",
+            ShowInstallerWindow: true,
+            IsTool: true),
+        new("interrupt-affinity",
+            "Interrupt Affinity Policy Tool",
+            "Привязка прерываний устройств (видеокарта, сеть, USB) к выбранным ядрам процессора.",
+            "Эффект зависит от оборудования. Нужна перезагрузка; неудачная привязка снижает производительность.",
+            "interrupt-affinity-policy.exe",
+            "efb1ca93c6beef992b59ad8b4c8b83c418b418040514d8597d9e4ca0686b0e46",
+            Arguments: "",
+            ShowInstallerWindow: true,
+            IsTool: true),
+        new("msi-mode",
+            "MSI Mode Utility",
+            "Включает режим MSI для устройств (видеокарта, сеть, NVMe): меньше задержка прерываний.",
+            "Нужна перезагрузка. Сделайте точку восстановления: на старых драйверах MSI может вызвать сбои.",
+            "msi-mode-utility.exe",
+            "0142afc21fe61aa4209a4b0d994d724f743718f1f42ec07e41fc63cc43fb6ca6",
+            Arguments: "",
+            ShowInstallerWindow: true,
+            IsTool: true),
+        new("devmanview",
+            "DevManView",
+            "Расширенный диспетчер устройств: показывает скрытые устройства и позволяет отключать их пачкой.",
+            "Не отключайте контроллеры дисков, USB-концентраторы и устройства ввода — потеряете управление ПК.",
+            "devmanview.exe",
+            "a1be60039f125080560edf1eebee5b6d9e2d6039f5f5ac478e6273e05edadb4b",
+            Arguments: "",
+            ShowInstallerWindow: true,
+            IsTool: true),
+        new("devicecleanup",
+            "Device Cleanup Tool",
+            "Удаляет из системы «призрачные» устройства, которые давно отключены.",
+            "Удаляйте только серые (неподключённые) устройства.",
+            "devicecleanup.exe",
+            "5bf8ead8700cddb94e42c94224760028015547542488c22bfa804f4cd449c465",
+            Arguments: "",
+            ShowInstallerWindow: true,
+            IsTool: true),
     ];
 
     public string GetStatus(RecommendedFile file) => file.Id switch
@@ -142,7 +202,7 @@ public sealed class RecommendedFilesService : IRecommendedFilesService
                 return (false, "Контрольная сумма скачанного файла не совпала: файл повреждён или подменён, установка отменена.");
             }
 
-            progress?.Report(("Устанавливаю…", 100));
+            progress?.Report((file.IsTool ? "Запускаю…" : "Устанавливаю…", 100));
             var psi = new ProcessStartInfo
             {
                 FileName = path,
@@ -157,6 +217,12 @@ public sealed class RecommendedFilesService : IRecommendedFilesService
                     psi.Environment[k] = v;
 
             using var p = Process.Start(psi) ?? throw new InvalidOperationException("Не удалось запустить установщик.");
+            if (file.IsTool)
+            {
+                Logger.Info($"Утилита {file.Id} запущена");
+                return (true, $"{file.Name}: запущена.");
+            }
+
             await p.WaitForExitAsync(ct).ConfigureAwait(false);
 
             Logger.Info($"Рекомендуемый файл {file.Id}: код выхода {p.ExitCode}");

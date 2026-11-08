@@ -951,7 +951,7 @@
                 <ScrollViewer local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,16,8">
                         <TextBlock Text="Рекомендуемые файлы" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4" />
-                        <TextBlock Text="Библиотеки, без которых многие игры и программы не запускаются. Ставятся одной кнопкой, файл проверяется по контрольной сумме."
+                        <TextBlock Text="Библиотеки и утилиты для тонкой настройки. Файл скачивается по кнопке и проверяется по контрольной сумме перед запуском."
                                    Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,0,0,10" />
                         <ItemsControl ItemsSource="{Binding Apps.Recommended.Items}" Margin="0,0,0,10">
                             <ItemsControl.ItemTemplate>
@@ -977,7 +977,7 @@
                                                                Foreground="{StaticResource TextSecondaryBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
-                                            <Button Grid.Column="1" Content="Установить" Style="{StaticResource AccentButton}"
+                                            <Button Grid.Column="1" Content="{Binding File.ButtonText}" Style="{StaticResource AccentButton}"
                                                     VerticalAlignment="Center" Margin="16,0,0,0" MinWidth="120"
                                                     Command="{Binding DataContext.Apps.Recommended.InstallCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}" />

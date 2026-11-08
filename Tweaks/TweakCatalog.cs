@@ -10,6 +10,51 @@ public static class TweakCatalog
     private const string DeviceGuardKey = @"SYSTEM\CurrentControlSet\Control\DeviceGuard";
     private const string MultimediaProfile = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile";
 
+    private static int SvcHostThresholdKb()
+    {
+        // Порог должен быть больше объёма ОЗУ (в КБ), иначе службы всё равно разделятся.
+        var ramKb = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1024;
+        return (int)Math.Min(int.MaxValue, ramKb + 1_024_000);
+    }
+
+    private static RegistryTweak Reg(
+        string id, string title, string description, EvidenceLevel evidence, string note,
+        bool reboot, string category, BackupStore backup, string? warning, params RegistryEntry[] entries) =>
+        new(new TweakInfo(id, title, description, evidence, note, reboot, warning, category), entries, backup);
+
+    // Службы, которых нет в системе, не трогаем: запись Start создала бы «пустой» ключ службы.
+    private static ITweak[] BrowserUpdaterTweak(BackupStore backup)
+    {
+        (string Name, int Default)[] services =
+        [
+            ("MicrosoftEdgeElevationService", 3), ("edgeupdate", 2), ("edgeupdatem", 3),
+            ("GoogleChromeElevationService", 3), ("gupdate", 2), ("gupdatem", 3),
+        ];
+
+        var entries = new List<RegistryEntry>();
+        foreach (var (name, def) in services)
+        {
+            using var key = Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\Services\{name}");
+            if (key is not null)
+                entries.Add(new RegistryEntry(RegistryHive.LocalMachine, $@"SYSTEM\CurrentControlSet\Services\{name}",
+                    "Start", RegistryValueKind.DWord, 4, def));
+        }
+
+        if (entries.Count == 0) return [];
+
+        return
+        [
+            new RegistryTweak(
+                new TweakInfo("browser-updaters-off", "Отключить фоновые службы обновления Edge и Chrome",
+                    "Найденные в системе службы обновления и повышения прав Edge и Chrome переводятся в режим «Отключена».",
+                    EvidenceLevel.Reasoned, "Убирает фоновые процессы обновления; браузеры обновляются при запуске или вручную.",
+                    RequiresReboot: true,
+                    Warning: "Браузеры перестанут обновляться в фоне, в том числе патчами безопасности. Обновляйте их вручную.",
+                    Category: "Система"),
+                entries, backup),
+        ];
+    }
+
     public static IReadOnlyList<ITweak> Create(BackupStore backup) =>
     [
         // ─── Игры ───
@@ -41,6 +86,9 @@ public static class TweakCatalog
             [
                 new RegistryEntry(RegistryHive.CurrentUser, @"System\GameConfigStore", "GameDVR_FSEBehaviorMode", RegistryValueKind.DWord, 2, 0),
                 new RegistryEntry(RegistryHive.CurrentUser, @"System\GameConfigStore", "GameDVR_HonorUserFSEBehaviorMode", RegistryValueKind.DWord, 1, 0),
+                new RegistryEntry(RegistryHive.CurrentUser, @"System\GameConfigStore", "GameDVR_DSEBehavior", RegistryValueKind.DWord, 2, 0),
+                new RegistryEntry(RegistryHive.CurrentUser, @"System\GameConfigStore", "GameDVR_DXGIHonorFSEWindowsCompatible", RegistryValueKind.DWord, 1, 0),
+                new RegistryEntry(RegistryHive.CurrentUser, @"System\GameConfigStore", "GameDVR_EFSEFeatureFlags", RegistryValueKind.DWord, 0, 0),
             ],
             backup),
 
@@ -745,5 +793,186 @@ public static class TweakCatalog
                 new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "TaskbarEndTask", RegistryValueKind.DWord, 1, 0),
             ],
             backup),
+
+        // ─── Набор «Registry Tweak» (отобранное из пользовательских .reg/.bat) ───
+        Reg("cpu-priority-separation", "Приоритет фоновых задач: Win32PrioritySeparation = 0x26",
+            "Короткие фиксированные кванты и приоритет активного окна — типичная настройка для игр.",
+            EvidenceLevel.NoData, "Количественных замеров нет; на современных CPU разница обычно в пределах погрешности.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", RegistryValueKind.DWord, 0x26, 2)),
+
+        Reg("csrss-priority", "Повысить приоритет csrss.exe (CPU и ввод-вывод)",
+            "Ставит csrss.exe (обработка ввода и окон) в высокий приоритет через PerfOptions.",
+            EvidenceLevel.NoData, "Распространённая настройка из гайдов; независимых замеров не найдено.",
+            true, "Игры", backup, "Неверные значения PerfOptions могут ухудшить отзывчивость системы. Откат возвращает исходное состояние.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions", "CpuPriorityClass", RegistryValueKind.DWord, 3),
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions", "IoPriority", RegistryValueKind.DWord, 3)),
+
+        Reg("svchost-split-off", "Объединить службы в меньшее число svchost.exe",
+            "SvcHostSplitThresholdInKB больше объёма ОЗУ: службы не разносятся по отдельным процессам.",
+            EvidenceLevel.Reasoned, "Меньше процессов svchost и немного меньше памяти; отдельные сбои службы могут затронуть соседние.",
+            true, "Система", backup, "Одна упавшая служба может потянуть за собой остальные в том же svchost.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control", "SvcHostSplitThresholdInKB", RegistryValueKind.DWord, SvcHostThresholdKb(), 3670016)),
+
+        Reg("spectre-meltdown-off", "Отключить защиту от Spectre/Meltdown",
+            "FeatureSettingsOverride/Mask = 3: выключает программные митигации уязвимостей процессора.",
+            EvidenceLevel.Measured, "Прирост заметен в основном на старых процессорах без аппаратных исправлений; на новых — почти нулевой.",
+            true, "Система", backup, "Снижает защиту от атак на процессор (чтение чужой памяти). Не включайте на ПК, где открываете недоверенные программы и сайты.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "FeatureSettings", RegistryValueKind.DWord, 1),
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "FeatureSettingsOverride", RegistryValueKind.DWord, 3),
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "FeatureSettingsOverrideMask", RegistryValueKind.DWord, 3)),
+
+        Reg("maintenance-off", "Отключить автоматическое обслуживание Windows",
+            "MaintenanceDisabled = 1: не запускаются фоновые задачи обслуживания в простое.",
+            EvidenceLevel.Reasoned, "Убирает неожиданную фоновую нагрузку; обслуживание придётся запускать вручную.",
+            false, "Система", backup, "Дефрагментация/TRIM по расписанию и диагностика перестанут запускаться сами.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\Maintenance", "MaintenanceDisabled", RegistryValueKind.DWord, 1)),
+
+        Reg("telemetry-off", "Минимальная телеметрия (AllowTelemetry = 0)",
+            "Сообщает Windows, что диагностические данные отправлять не нужно.",
+            EvidenceLevel.Reasoned, "Полностью работает только в редакциях Pro/Enterprise/Education; в Home действует как «обязательные данные».",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection", "AllowTelemetry", RegistryValueKind.DWord, 0)),
+
+        Reg("gamedvr-policy-off", "Запретить Game DVR политикой",
+            "AllowGameDVR = 0 в политиках: запись игр отключена для всех пользователей.",
+            EvidenceLevel.Reasoned, "Дополняет отключение Game DVR на уровне пользователя.",
+            false, "Игры", backup, "Запись через Game Bar перестанет работать.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR", RegistryValueKind.DWord, 0)),
+
+        Reg("gamebar-nexus-off", "Отключить кнопку Game Bar на геймпаде",
+            "UseNexusForGameBarEnabled = 0: кнопка Xbox на контроллере не открывает Game Bar.",
+            EvidenceLevel.NoData, "Убирает случайные вызовы оверлея во время игры.",
+            false, "Игры", backup, null,
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "UseNexusForGameBarEnabled", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("hibernate-off", "Отключить гибернацию",
+            "HibernateEnabled = 0: освобождает место (hiberfil.sys ≈ 40% ОЗУ на диске).",
+            EvidenceLevel.Reasoned, "Освобождает несколько ГБ на системном диске.",
+            true, "Система", backup, "Режим гибернации станет недоступен. Быстрый запуск тоже работает через hiberfil.sys.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Power", "HibernateEnabled", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("menu-delay-0", "Меню без задержки (MenuShowDelay = 0)",
+            "Подменю открываются сразу, без паузы 400 мс.",
+            EvidenceLevel.Reasoned, "Ощущение быстрого интерфейса, на производительность не влияет.",
+            false, "Визуал", backup, null,
+            new RegistryEntry(RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", RegistryValueKind.String, "0", "400")),
+
+        Reg("autoplay-off", "Отключить автозапуск носителей",
+            "DisableAutoplay = 1: диски и флешки не запускаются автоматически.",
+            EvidenceLevel.Reasoned, "Закрывает типичный путь заражения со сменных носителей.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers", "DisableAutoplay", RegistryValueKind.DWord, 1, 0)),
+
+        Reg("track-progs-off", "Не отслеживать запуски программ для меню «Пуск»",
+            "Start_TrackProgs = 0: Windows не запоминает часто запускаемые программы.",
+            EvidenceLevel.Reasoned, "Приватность; на скорость почти не влияет.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Start_TrackProgs", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("input-personalization-off", "Не собирать данные рукописного и текстового ввода",
+            "Отключает сбор контактов и персонализацию ввода.",
+            EvidenceLevel.Reasoned, "Приватность; на скорость не влияет.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\InputPersonalization", "RestrictImplicitInkCollection", RegistryValueKind.DWord, 1, 0),
+            new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\InputPersonalization", "RestrictImplicitTextCollection", RegistryValueKind.DWord, 1, 0),
+            new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\InputPersonalization\TrainedDataStore", "HarvestContacts", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("llmnr-off", "Отключить LLMNR (многоадресный DNS)",
+            "EnableMulticast = 0: Windows не рассылает LLMNR-запросы по локальной сети.",
+            EvidenceLevel.Reasoned, "Снижает риск перехвата имён в сети; в домашней сети обычно ничего не ломает.",
+            false, "Сеть", backup, "Имена соседних устройств без DNS могут перестать находиться.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows NT\DNSClient", "EnableMulticast", RegistryValueKind.DWord, 0)),
+
+        Reg("remote-assistance-off", "Отключить удалённого помощника",
+            "fAllowToGetHelp = 0: запрещает приглашения Remote Assistance.",
+            EvidenceLevel.Reasoned, "Уменьшает поверхность атаки; нужен только если вам помогают удалённо.",
+            false, "Сеть", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Remote Assistance", "fAllowToGetHelp", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("maps-autoupdate-off", "Не обновлять офлайн-карты автоматически",
+            "AutoUpdateEnabled = 0 для офлайн-карт Windows.",
+            EvidenceLevel.Reasoned, "Убирает фоновые загрузки; важно только если карты скачаны.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\Maps", "AutoUpdateEnabled", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("store-autodownload-off", "Не обновлять приложения Microsoft Store автоматически",
+            "Политика AutoDownload = 2.",
+            EvidenceLevel.Reasoned, "Меньше фоновых загрузок; приложения Store придётся обновлять вручную.",
+            false, "Система", backup, "Обновления безопасности приложений Store не будут приходить сами.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "AutoDownload", RegistryValueKind.DWord, 2)),
+
+        Reg("feedback-prompts-off", "Не показывать запросы обратной связи",
+            "NumberOfSIUFInPeriod = 0: Windows не просит оценить систему.",
+            EvidenceLevel.Reasoned, "Убирает всплывающие опросы.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Siuf\Rules", "NumberOfSIUFInPeriod", RegistryValueKind.DWord, 0)),
+
+        // ─── Из набора пользователя: службы обновления браузеров, ввод, уведомления, приватность ───
+        .. BrowserUpdaterTweak(backup),
+
+        Reg("chrome-edge-background-off", "Chrome и Edge: без ускоренного запуска и фоновой работы",
+            "Политики StartupBoostEnabled = 0 и BackgroundModeEnabled = 0 для Chrome и Edge: браузер не висит в памяти после закрытия.",
+            EvidenceLevel.Reasoned, "Освобождает память и убирает фоновые процессы; первый запуск браузера станет чуть медленнее.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Google\Chrome", "StartupBoostEnabled", RegistryValueKind.DWord, 0),
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Google\Chrome", "BackgroundModeEnabled", RegistryValueKind.DWord, 0),
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "StartupBoostEnabled", RegistryValueKind.DWord, 0),
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "BackgroundModeEnabled", RegistryValueKind.DWord, 0)),
+
+        Reg("game-mode-auto-off", "Отключить автоматический игровой режим Windows",
+            "AllowAutoGameMode и AutoGameModeEnabled = 0, подсказки Game Bar не показываются.",
+            EvidenceLevel.NoData, "Игровой режим Windows спорен: на части систем даёт микрофризы. Проверьте на своих играх.",
+            false, "Игры", backup, "Игровой режим перестанет включаться сам.",
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "AllowAutoGameMode", RegistryValueKind.DWord, 0, 1),
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "AutoGameModeEnabled", RegistryValueKind.DWord, 0, 1),
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "ShowStartupPanel", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("multimedia-nolazymode", "MMCSS: NoLazyMode = 1",
+            "Планировщик мультимедиа не уходит в «ленивый» режим, пока идёт игра или аудио.",
+            EvidenceLevel.NoData, "Из распространённых гайдов; независимых замеров не найдено.",
+            false, "Игры", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, MultimediaProfile, "NoLazyMode", RegistryValueKind.DWord, 1)),
+
+        Reg("input-queue-size", "Очередь ввода клавиатуры и мыши: 50 событий (0x32)",
+            "KeyboardDataQueueSize и MouseDataQueueSize = 50 вместо 100 по умолчанию.",
+            EvidenceLevel.NoData, "Измеримого выигрыша в независимых тестах не найдено; при перегрузке системы события могут теряться раньше.",
+            true, "Игры", backup, "В исходном .reg у MouseDataQueueSize стоял лишний пробел в имени — здесь он исправлен, иначе значение Windows игнорирует.",
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", RegistryValueKind.DWord, 0x32, 0x64),
+            new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", RegistryValueKind.DWord, 0x32, 0x64)),
+
+        Reg("toast-notifications-off", "Отключить всплывающие уведомления Windows",
+            "ToastEnabled = 0 и запрет уведомлений на экране блокировки.",
+            EvidenceLevel.Reasoned, "Меньше отвлекающих окон во время игры.",
+            false, "Система", backup, "Уведомления приложений и системы показываться не будут.",
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\PushNotifications", "ToastEnabled", RegistryValueKind.DWord, 0, 1),
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\PushNotifications", "LockScreenToastEnabled", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("search-cortana-off", "Отключить Cortana и историю поиска на устройстве",
+            "CortanaEnabled, CortanaConsent и IsDeviceSearchHistoryEnabled = 0.",
+            EvidenceLevel.Reasoned, "Приватность; на скорость почти не влияет.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "CortanaEnabled", RegistryValueKind.DWord, 0, 1),
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", RegistryValueKind.DWord, 0, 1),
+            new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDeviceSearchHistoryEnabled", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("privacy-language-speech-off", "Не передавать список языков сайтам и отключить онлайн-распознавание речи",
+            "HttpAcceptLanguageOptOut = 1 и OnlineSpeechPrivacy HasAccepted = 0.",
+            EvidenceLevel.Reasoned, "Приватность; на скорость не влияет.",
+            false, "Система", backup, "Голосовой ввод через облако Windows перестанет работать.",
+            new RegistryEntry(RegistryHive.CurrentUser, @"Control Panel\International\User Profile", "HttpAcceptLanguageOptOut", RegistryValueKind.DWord, 1, 0),
+            new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy", "HasAccepted", RegistryValueKind.DWord, 0, 1)),
+
+        Reg("news-interests-off", "Отключить «Новости и интересы» политикой",
+            "AllowNewsAndInterests = 0.",
+            EvidenceLevel.Reasoned, "Убирает фоновую загрузку ленты на панели задач.",
+            false, "Визуал", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", RegistryValueKind.DWord, 0)),
+
+        Reg("device-metadata-offline", "Не загружать метаданные устройств из интернета",
+            "PreventDeviceMetadataFromNetwork = 1: Windows не скачивает значки и описания устройств.",
+            EvidenceLevel.Reasoned, "Убирает сетевые запросы при подключении устройств.",
+            false, "Система", backup, null,
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Device Metadata", "PreventDeviceMetadataFromNetwork", RegistryValueKind.DWord, 1, 0)),
     ];
 }
