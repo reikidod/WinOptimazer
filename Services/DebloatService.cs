@@ -125,7 +125,8 @@ public sealed class DebloatService : IDebloatService
                 : pkg.DisplayName;
             var desc = known
                 ? catalog.Desc
-                : "Приложение Microsoft Store" + (string.IsNullOrEmpty(pkg.Version) ? "" : " · версия " + pkg.Version);
+                : (IsMicrosoftName(pkg.Name) ? "Приложение Microsoft" : "Приложение из Microsoft Store")
+                  + (string.IsNullOrEmpty(pkg.Version) ? "" : " · версия " + pkg.Version);
 
             list.Add(new DebloatApp(
                 known ? catalog.Id! : "store:" + pkg.Name,
@@ -139,6 +140,7 @@ public sealed class DebloatService : IDebloatService
                 ResolvePackageIcon(pkg.InstallLocation),
                 AppKind.Store,
                 Version: pkg.Version,
+                Publisher: pkg.Publisher,
                 PackageFamilyName: pkg.Family));
         }
 
@@ -206,14 +208,14 @@ public sealed class DebloatService : IDebloatService
         }
     }
 
-    private sealed record InstalledPackage(string Name, string PackageFullName, string InstallLocation, string DisplayName, string Family, string Version);
+    private sealed record InstalledPackage(string Name, string PackageFullName, string InstallLocation, string DisplayName, string Family, string Version, string Publisher);
 
     private static List<InstalledPackage> GetInstalledPackages()
     {
         // CSV-подобная выдача: Name|FullName|InstallLocation
         const string script =
             "Get-AppxPackage | Where-Object { -not $_.IsFramework -and -not $_.IsResourcePackage -and -not $_.NonRemovable -and $_.SignatureKind -ne 'System' } | " +
-            "ForEach-Object { \"$($_.Name)|$($_.PackageFullName)|$($_.InstallLocation)|$($_.PackageFamilyName)|$($_.Version)\" }";
+            "ForEach-Object { \"$($_.Name)|$($_.PackageFullName)|$($_.InstallLocation)|$($_.PackageFamilyName)|$($_.Version)|$($_.Publisher)\" }";
         var result = RunPowerShell(script);
         var list = new List<InstalledPackage>();
 
@@ -226,13 +228,107 @@ public sealed class DebloatService : IDebloatService
             var loc = parts[2].Trim();
             var family = parts.Length > 3 ? parts[3].Trim() : "";
             var version = parts.Length > 4 ? parts[4].Trim() : "";
+            var publisher = parts.Length > 5 ? PublisherFromSubject(string.Join("|", parts.Skip(5))) : "";
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(loc)) continue;
 
-            var display = ReadDisplayName(loc) ?? name;
-            list.Add(new InstalledPackage(name, full, loc, display, family, version));
+            var display = ReadDisplayName(loc) ?? FriendlyName(name);
+            if (publisher.Length == 0 && IsMicrosoftName(name)) publisher = "Microsoft Corporation";
+            list.Add(new InstalledPackage(name, full, loc, display, family, version, publisher));
         }
 
         return list;
+    }
+
+    private static bool IsMicrosoftName(string n) =>
+        n.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) ||
+        n.StartsWith("Windows.", StringComparison.OrdinalIgnoreCase) ||
+        n.StartsWith("MicrosoftWindows.", StringComparison.OrdinalIgnoreCase);
+
+    private static string PublisherFromSubject(string subject)
+    {
+        var m = Regex.Match(subject, @"CN=(?:""([^""]+)""|([^,]+))");
+        var cn = m.Success ? (m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value).Trim() : "";
+        return cn;
+    }
+
+    private static readonly Dictionary<string, string> FriendlyNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Microsoft.WindowsCalculator"] = "Калькулятор",
+        ["Microsoft.WindowsCamera"] = "Камера",
+        ["Microsoft.WindowsAlarms"] = "Будильники и часы",
+        ["Microsoft.WindowsMaps"] = "Карты",
+        ["Microsoft.WindowsNotepad"] = "Блокнот",
+        ["Microsoft.WindowsTerminal"] = "Терминал Windows",
+        ["Microsoft.WindowsSoundRecorder"] = "Запись голоса",
+        ["Microsoft.WindowsFeedbackHub"] = "Центр отзывов",
+        ["Microsoft.WindowsCommunicationsApps"] = "Почта и Календарь",
+        ["Microsoft.Paint"] = "Paint",
+        ["Microsoft.ScreenSketch"] = "Набросок на фрагменте экрана",
+        ["Microsoft.Windows.Photos"] = "Фотографии",
+        ["Microsoft.Photos"] = "Фотографии",
+        ["Microsoft.ZuneMusic"] = "Медиаплеер",
+        ["Microsoft.ZuneVideo"] = "Кино и ТВ",
+        ["Microsoft.People"] = "Люди",
+        ["Microsoft.MicrosoftStickyNotes"] = "Записки",
+        ["Microsoft.MicrosoftSolitaireCollection"] = "Microsoft Solitaire Collection",
+        ["Microsoft.MicrosoftOfficeHub"] = "Microsoft 365 (Office)",
+        ["Microsoft.Office.OneNote"] = "OneNote",
+        ["Microsoft.OutlookForWindows"] = "Outlook (новый)",
+        ["Microsoft.Todos"] = "Microsoft To Do",
+        ["Microsoft.BingWeather"] = "Погода",
+        ["Microsoft.BingNews"] = "Новости",
+        ["Microsoft.BingSearch"] = "Поиск Bing",
+        ["Microsoft.GetHelp"] = "Техническая поддержка",
+        ["Microsoft.Getstarted"] = "Советы",
+        ["Microsoft.Copilot"] = "Copilot",
+        ["Microsoft.549981C3F5F10"] = "Cortana",
+        ["Microsoft.YourPhone"] = "Связь с телефоном",
+        ["Microsoft.MixedReality.Portal"] = "Портал смешанной реальности",
+        ["Microsoft.Microsoft3DViewer"] = "Просмотр 3D",
+        ["Microsoft.Print3D"] = "Print 3D",
+        ["Microsoft.3DBuilder"] = "3D Builder",
+        ["Microsoft.SkypeApp"] = "Skype",
+        ["Microsoft.Whiteboard"] = "Microsoft Whiteboard",
+        ["Microsoft.PowerAutomateDesktop"] = "Power Automate",
+        ["Microsoft.Teams"] = "Microsoft Teams",
+        ["MicrosoftTeams"] = "Microsoft Teams",
+        ["Microsoft.OneDriveSync"] = "OneDrive",
+        ["Microsoft.XboxApp"] = "Xbox",
+        ["Microsoft.GamingApp"] = "Xbox",
+        ["Microsoft.XboxGamingOverlay"] = "Xbox Game Bar",
+        ["Microsoft.XboxGameOverlay"] = "Xbox Game Overlay",
+        ["Microsoft.XboxIdentityProvider"] = "Поставщик удостоверений Xbox",
+        ["Microsoft.XboxSpeechToTextOverlay"] = "Xbox Speech To Text",
+        ["Microsoft.Xbox.TCUI"] = "Xbox TCUI",
+        ["Microsoft.DevHome"] = "Dev Home",
+        ["Microsoft.Edge.GameAssist"] = "Edge Game Assist",
+        ["Microsoft.MicrosoftEdge.Stable"] = "Microsoft Edge",
+        ["MicrosoftCorporationII.QuickAssist"] = "Быстрая помощь",
+        ["MicrosoftCorporationII.MicrosoftFamily"] = "Семья Microsoft",
+        ["Microsoft.StartExperiencesApp"] = "Начальные возможности Windows",
+        ["Microsoft.ApplicationCompatibilityEnhancements"] = "Улучшения совместимости приложений",
+        ["Microsoft.WidgetsPlatformRuntime"] = "Платформа виджетов",
+        ["MicrosoftWindows.Client.WebExperience"] = "Виджеты Windows",
+        ["Microsoft.MSPaint"] = "Paint 3D",
+    };
+
+    private static string FriendlyName(string packageName)
+    {
+        if (FriendlyNames.TryGetValue(packageName, out var n)) return n;
+
+        // Языковые пакеты: Microsoft.LanguageExperiencePackru-RU
+        var lang = Regex.Match(packageName, @"LanguageExperiencePack([a-z]{2,3}(?:-[A-Za-z0-9]+)*)$", RegexOptions.IgnoreCase);
+        if (lang.Success)
+        {
+            try { return "Языковой пакет: " + System.Globalization.CultureInfo.GetCultureInfo(lang.Groups[1].Value).DisplayName; }
+            catch { return "Языковой пакет " + lang.Groups[1].Value; }
+        }
+
+        var s = packageName;
+        foreach (var prefix in new[] { "MicrosoftCorporationII.", "MicrosoftWindows.", "Microsoft.Windows.", "Microsoft.", "Windows." })
+            if (s.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) { s = s[prefix.Length..]; break; }
+        s = Regex.Replace(s, @"(?<=[a-z0-9])(?=[A-Z])", " ").Replace('.', ' ').Trim();
+        return s.Length == 0 ? packageName : s;
     }
 
     private static string? ReadDisplayName(string installLocation)

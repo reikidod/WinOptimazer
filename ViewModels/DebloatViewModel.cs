@@ -35,7 +35,7 @@ public sealed class DebloatItemViewModel : ObservableObject
             ? $"Игра из {app.Launcher}: удаляется только через лаунчер"
             : app.IsRecommended
             ? "Рекомендуется удалить"
-            : app.Kind == AppKind.Store ? "Приложение Windows / Store" : "Программа";
+            : app.Kind == AppKind.Store ? (app.Publisher.Contains("Microsoft", StringComparison.OrdinalIgnoreCase) ? "Приложение Microsoft" : "Приложение Microsoft Store") : "Программа";
         _icon = LoadIcon(app.IconPath);
         Category = Categorize(app);
     }
