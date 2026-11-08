@@ -44,6 +44,10 @@ public partial class App : Application
             return;
         }
 
+        // Приветствие со случайной фразой и синим свечением — затем основное окно.
+        var welcome = new WelcomeWindow();
+        welcome.ShowDialog();
+
         var dialogs = new DialogService();
         var updates = new UpdateService();
         var backup = new BackupStore(AppPaths.BackupFile);
