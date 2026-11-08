@@ -53,7 +53,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="230" />
+            <ColumnDefinition Width="280" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -642,7 +642,7 @@
                                     Command="{Binding Games.ScanCommand}" />
                             <Button Content="Скачать OptiScaler" Margin="0,0,8,8"
                                     Command="{Binding Games.DownloadOptiCommand}" />
-                            <TextBox Width="220" Margin="0,0,8,8" Padding="10,8"
+                            <TextBox Width="260" Margin="0,0,8,8" Tag="Фильтр по названию…"
                                      Text="{Binding Games.Filter, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Фильтр по названию" />
                         </WrapPanel>
@@ -854,6 +854,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBox Text="{Binding Debloat.SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Tag="Поиск по названию и издателю…"
                              ToolTip="Поиск по названию и издателю" Margin="0,0,12,0"
                              AutomationProperties.Name="Поиск приложений" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
