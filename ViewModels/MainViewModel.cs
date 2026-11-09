@@ -18,6 +18,9 @@ public sealed class MainViewModel : ObservableObject
     private readonly IUpdateService _updates;
 
     private AppPage _page = AppPage.Tweaks;
+
+    public SettingsViewModel Settings { get; } = new();
+
     private bool _isBusy;
     private bool _isInfoLoading;
     private bool _rebootRequired;
@@ -301,6 +304,12 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    public bool IsSettingsPage
+    {
+        get => _page == AppPage.Settings;
+        set => SelectPage(AppPage.Settings, value);
+    }
+
     private void SelectPage(AppPage page, bool selected)
     {
         if (!selected || _page == page)
@@ -316,6 +325,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsAppsPage));
         OnPropertyChanged(nameof(IsStorePage));
         OnPropertyChanged(nameof(IsGamesPage));
+        OnPropertyChanged(nameof(IsSettingsPage));
     }
 
     private void OnTweakPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -391,7 +401,7 @@ public sealed class MainViewModel : ObservableObject
     private async Task<bool> EnsureRestorePointAsync(IReadOnlyList<TweakViewModel> changes)
     {
         var system = changes.Where(c => c.RequiresRestorePoint).ToList();
-        if (system.Count == 0)
+        if (system.Count == 0 || !AppSettings.Current.AskRestorePoint)
         {
             return true;
         }
@@ -635,4 +645,5 @@ public enum AppPage
     Apps,
     Store,
     Games,
+    Settings,
 }

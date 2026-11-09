@@ -35,7 +35,7 @@ public partial class DialogWindow : Window
         ApplyKind(kind, subtitle);
 
         // Мягкое появление; Esc закрывает окно.
-        Opacity = SystemParameters.ClientAreaAnimation ? 0 : 1;
+        Opacity = Motion.IsEnabled ? 0 : 1;
         Loaded += (_, _) => PlayOpenAnimation();
         PreviewKeyDown += (_, e) =>
         {
@@ -47,7 +47,7 @@ public partial class DialogWindow : Window
 
     private void PlayOpenAnimation()
     {
-        if (!SystemParameters.ClientAreaAnimation) return;
+        if (!Motion.IsEnabled) return;
         var scale = new ScaleTransform(0.95, 0.95);
         Root.RenderTransform = scale;
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };

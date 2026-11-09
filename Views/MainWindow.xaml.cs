@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.ViewModels;
 
@@ -18,6 +19,9 @@ public partial class MainWindow : Window
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
         FitToScreen();
+        ApplyScale();
+        AppSettings.Changed += ApplyScale;
+        Closed += (_, _) => AppSettings.Changed -= ApplyScale;
         DataContext = viewModel;
         Loaded += OnLoaded;
     }
@@ -30,6 +34,12 @@ public partial class MainWindow : Window
         Height = Math.Min(Height, Math.Floor(area.Height * 0.92));
         MinWidth = Math.Min(MinWidth, Width);
         MinHeight = Math.Min(MinHeight, Height);
+    }
+
+    private void ApplyScale()
+    {
+        var scale = AppSettings.Current.UiScale;
+        RootGrid.LayoutTransform = Math.Abs(scale - 1.0) < 0.001 ? Transform.Identity : new ScaleTransform(scale, scale);
     }
 
     protected override void OnSourceInitialized(EventArgs e)

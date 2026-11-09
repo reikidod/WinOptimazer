@@ -365,3 +365,80 @@ public class GameKnowledgeTests : IDisposable
     public void Analyze_MissingFolder_DoesNotThrow() =>
         Assert.Null(Record.Exception(() => GameKnowledge.Analyze("X", Path.Combine(_dir, "nope"))));
 }
+
+public class SettingsTests : IDisposable
+{
+    private readonly string _dir = Path.Combine(Path.GetTempPath(), "wo-settings-" + Guid.NewGuid().ToString("N"));
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_dir, true); } catch { /* не критично */ }
+    }
+
+    [Fact]
+    public void Defaults_WhenFileMissing()
+    {
+        var s = WinOptimizer.Infrastructure.AppSettings.Load(Path.Combine(_dir, "none.json"));
+        Assert.True(s.ShowWelcome);
+        Assert.True(s.CheckUpdatesOnStartup);
+        Assert.True(s.Animations);
+        Assert.Equal(100, s.UiScalePercent);
+    }
+
+    [Fact]
+    public void SaveLoad_RoundTrips()
+    {
+        var path = Path.Combine(_dir, "s.json");
+        var s = new WinOptimizer.Infrastructure.AppSettings { ShowWelcome = false, Animations = false, UiScalePercent = 125 };
+        s.Save(path);
+        var back = WinOptimizer.Infrastructure.AppSettings.Load(path);
+        Assert.False(back.ShowWelcome);
+        Assert.False(back.Animations);
+        Assert.Equal(125, back.UiScalePercent);
+    }
+
+    [Fact]
+    public void CorruptFile_FallsBackToDefaults()
+    {
+        Directory.CreateDirectory(_dir);
+        var path = Path.Combine(_dir, "bad.json");
+        File.WriteAllText(path, "{ не json");
+        Assert.True(WinOptimizer.Infrastructure.AppSettings.Load(path).ShowWelcome);
+    }
+
+    [Fact]
+    public void InvalidScale_IsNormalized()
+    {
+        Directory.CreateDirectory(_dir);
+        var path = Path.Combine(_dir, "scale.json");
+        File.WriteAllText(path, "{\"UiScalePercent\": 500}");
+        Assert.Equal(100, WinOptimizer.Infrastructure.AppSettings.Load(path).UiScalePercent);
+    }
+
+    [Theory]
+    [InlineData(512, "512 Б")]
+    [InlineData(2048, "2 КБ")]
+    [InlineData(5 * 1024 * 1024, "5 МБ")]
+    public void FormatSize(long bytes, string expected) =>
+        Assert.Equal(expected, WinOptimizer.ViewModels.SettingsViewModel.FormatSize(bytes));
+}
+
+public class AutostartTests
+{
+    [Fact]
+    public void CreateArguments_QuoteThePathAndRunElevated()
+    {
+        var args = WinOptimizer.Services.AutostartService.BuildCreateArguments(@"C:\Program Files\WinOptimizer\WinOptimizer.exe");
+        Assert.Contains("/rl highest", args);
+        Assert.Contains("/sc onlogon", args);
+        Assert.Contains("\\\"C:\\Program Files\\WinOptimizer\\WinOptimizer.exe\\\"", args);
+    }
+
+    [Fact]
+    public void RestorePointPrompt_IsOnByDefault_AndResets()
+    {
+        var s = new WinOptimizer.Infrastructure.AppSettings { AskRestorePoint = false };
+        s.ResetToDefaults();
+        Assert.True(s.AskRestorePoint);
+    }
+}

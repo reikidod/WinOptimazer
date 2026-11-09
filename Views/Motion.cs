@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
+using WinOptimizer.Infrastructure;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
@@ -16,7 +17,10 @@ public static class Motion
     private static readonly IEasingFunction EaseOut = new CubicEase { EasingMode = EasingMode.EaseOut };
     private static readonly IEasingFunction EaseOutSoft = new QuinticEase { EasingMode = EasingMode.EaseOut };
 
-    private static bool Enabled => SystemParameters.ClientAreaAnimation;
+    /// <summary>Анимации включены и в настройках приложения, и в Windows.</summary>
+    public static bool IsEnabled => AppSettings.Current.Animations && SystemParameters.ClientAreaAnimation;
+
+    private static bool Enabled => IsEnabled;
 
     // ---------- Появление страницы при переключении ----------
 

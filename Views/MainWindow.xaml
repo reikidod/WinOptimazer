@@ -51,7 +51,7 @@
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280" />
             <ColumnDefinition Width="*" />
@@ -164,6 +164,19 @@
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Очистка и автозагрузка" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsSettingsPage, Mode=TwoWay}"
+                                 AutomationProperties.Name="Страница «Настройки»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Настройки" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
                 </StackPanel>
@@ -1265,6 +1278,153 @@
                                 </ItemsControl>
                             </StackPanel>
                         </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Страница «Настройки» -->
+            <Grid Visibility="{Binding IsSettingsPage, Converter={StaticResource BoolToVis}}" local:Motion.PageTransition="True" Margin="32,28,16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Margin="0,0,16,16">
+                    <TextBlock Text="Настройки" Style="{StaticResource PageTitle}" />
+                    <TextBlock Style="{StaticResource SecondaryText}" Margin="0,4,0,0"
+                               Text="Поведение и внешний вид приложения. Изменения применяются сразу." />
+                </StackPanel>
+
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,0,8">
+                        <TextBlock Text="Запуск" FontSize="16" FontWeight="SemiBold" Margin="2,0,0,8" />
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Text="Запускать вместе с Windows" FontSize="14.5" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,0" Text="Приложение откроется после входа в систему с правами администратора, без окна подтверждения. Создаётся задача в планировщике Windows; выключите переключатель, чтобы её удалить." />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                          IsChecked="{Binding Settings.StartWithWindows, Mode=TwoWay}" AutomationProperties.Name="Запускать вместе с Windows" />
+                            </Grid>
+                        </Border>
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Text="Приветственное окно" FontSize="14.5" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,0" Text="Короткая заставка с приветствием при запуске. Отключите, если хотите открывать приложение сразу." />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                          IsChecked="{Binding Settings.ShowWelcome, Mode=TwoWay}" AutomationProperties.Name="Приветственное окно" />
+                            </Grid>
+                        </Border>
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Text="Проверять обновления при запуске" FontSize="14.5" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,0" Text="Приложение проверит GitHub Releases и предложит установить новую версию. Проверить вручную можно кнопкой слева внизу." />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                          IsChecked="{Binding Settings.CheckUpdatesOnStartup, Mode=TwoWay}" AutomationProperties.Name="Проверять обновления при запуске" />
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="Безопасность" FontSize="16" FontWeight="SemiBold" Margin="2,14,0,8" />
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Text="Предлагать точку восстановления" FontSize="14.5" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,0" Text="Перед системными твиками приложение спросит, создать ли снимок Windows. Отключайте, только если уверены: откат через снимок станет недоступным." />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                          IsChecked="{Binding Settings.AskRestorePoint, Mode=TwoWay}" AutomationProperties.Name="Предлагать точку восстановления" />
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="Внешний вид" FontSize="16" FontWeight="SemiBold" Margin="2,14,0,8" />
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Text="Плавные анимации" FontSize="14.5" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,0" Text="Переходы между страницами, появление карточек и плавная прокрутка. Отключите на слабом ПК или удалённом рабочем столе." />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                          IsChecked="{Binding Settings.Animations, Mode=TwoWay}" AutomationProperties.Name="Плавные анимации" />
+                            </Grid>
+                        </Border>
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <StackPanel>
+                                <TextBlock Text="Масштаб интерфейса" FontSize="14.5" FontWeight="SemiBold" />
+                                <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,10"
+                                           Text="Увеличьте, если текст мелкий, или уменьшите, чтобы на маленьком экране помещалось больше." />
+                                <WrapPanel>
+                                    <Button Content="90%" Margin="0,0,8,0" MinWidth="64" Command="{Binding Settings.SetScaleCommand}" CommandParameter="90" />
+                                    <Button Content="100%" Margin="0,0,8,0" MinWidth="64" Command="{Binding Settings.SetScaleCommand}" CommandParameter="100" />
+                                    <Button Content="110%" Margin="0,0,8,0" MinWidth="64" Command="{Binding Settings.SetScaleCommand}" CommandParameter="110" />
+                                    <Button Content="125%" Margin="0,0,8,0" MinWidth="64" Command="{Binding Settings.SetScaleCommand}" CommandParameter="125" />
+                                    <TextBlock Text="{Binding Settings.ScaleText}" VerticalAlignment="Center" Margin="8,0,0,0"
+                                               Foreground="{StaticResource AccentBrush}" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Данные и диагностика" FontSize="16" FontWeight="SemiBold" Margin="2,14,0,8" />
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <StackPanel>
+                                <TextBlock Text="Журнал и папка данных" FontSize="14.5" FontWeight="SemiBold" />
+                                <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,10"
+                                           Text="Если что-то работает не так, приложите журнал к сообщению об ошибке. Там же лежат резервные копии значений реестра для отката твиков." />
+                                <WrapPanel>
+                                    <Button Content="Открыть журнал" Margin="0,0,8,0" Command="{Binding Settings.OpenLogCommand}" />
+                                    <Button Content="Открыть папку данных" Margin="0,0,8,0" Command="{Binding Settings.OpenDataFolderCommand}" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <StackPanel>
+                                <TextBlock Text="Кэш" FontSize="14.5" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Settings.CacheText}" Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,10" />
+                                <Button Content="Очистить кэш" HorizontalAlignment="Left" Command="{Binding Settings.ClearCacheCommand}"
+                                        ToolTip="Резервные копии твиков и настройки не затрагиваются" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="О программе" FontSize="16" FontWeight="SemiBold" Margin="2,14,0,8" />
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding VersionLabel, StringFormat=WinOptimizer {0}}" FontSize="14.5" FontWeight="SemiBold" />
+                                <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,10"
+                                           Text="Открытый оптимизатор Windows с лицензией MIT. Исходный код, релизы и обсуждение ошибок — на GitHub." />
+                                <WrapPanel>
+                                    <Button Content="Страница проекта" Margin="0,0,8,0" Command="{Binding OpenLinkCommand}"
+                                            CommandParameter="https://github.com/reikidod/WinOptimazer" />
+                                    <Button Content="Все релизы" Margin="0,0,8,0" Command="{Binding OpenLinkCommand}"
+                                            CommandParameter="https://github.com/reikidod/WinOptimazer/releases" />
+                                    <Button Content="Сбросить настройки" Margin="0,0,8,0" Command="{Binding Settings.ResetCommand}" />
+                                </WrapPanel>
+                                <TextBlock Text="{Binding Settings.Status}" Margin="0,10,0,0" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

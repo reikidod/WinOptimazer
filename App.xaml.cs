@@ -50,8 +50,11 @@ public partial class App : Application
 
         try
         {
-            var welcome = new WelcomeWindow();
-            welcome.ShowDialog();
+            if (AppSettings.Current.ShowWelcome)
+            {
+                var welcome = new WelcomeWindow();
+                welcome.ShowDialog();
+            }
         }
         catch (Exception ex)
         {
@@ -80,7 +83,8 @@ public partial class App : Application
         MainWindow = window;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         window.Show();
-        _ = viewModel.CheckForUpdatesOnStartupAsync();
+        if (AppSettings.Current.CheckUpdatesOnStartup)
+            _ = viewModel.CheckForUpdatesOnStartupAsync();
         Logger.Info("WinOptimizer запущен");
     }
 
