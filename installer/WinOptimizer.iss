@@ -4,10 +4,10 @@
 ; (файл redist\windowsdesktop-runtime-win-x64.exe; в CI он скачивается автоматически).
 ;
 ; Локальная сборка: build-setup.bat (скачивает runtime, публикует приложение, собирает установщик).
-; Вручную: ISCC /DMyAppVersion=0.4.52 installer\WinOptimizer.iss
+; Вручную: ISCC /DMyAppVersion=0.6.0 installer\WinOptimizer.iss
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.4.0"
+  #define MyAppVersion "0.6.0"
 #endif
 #define MyAppName "WinOptimizer"
 #define MyAppPublisher "WinOptimizer Contributors"
