@@ -53,6 +53,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="modules\WinOptimizer.Settings\WinOptimizer.Settings.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\app.ico" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
