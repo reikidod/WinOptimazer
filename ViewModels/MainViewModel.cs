@@ -360,8 +360,19 @@ public sealed class MainViewModel : ObservableObject
 
     private void Navigate(string? pageName)
     {
-        if (Enum.TryParse<AppPage>(pageName, ignoreCase: true, out var page))
-            SelectPage(page, true);
+        if (!Enum.TryParse<AppPage>(pageName, ignoreCase: true, out var page))
+            return;
+
+        // Если пользователь скрыл установку, но оставил удаление или Store,
+        // кнопка группы открывает первый доступный подраздел.
+        if (page == AppPage.Apps && !AppSettings.Current.IsTabVisible("Apps"))
+        {
+            page = AppSettings.Current.IsTabVisible("Debloat")
+                ? AppPage.Debloat
+                : AppSettings.Current.IsTabVisible("Store") ? AppPage.Store : AppPage.Settings;
+        }
+
+        SelectPage(page, true);
     }
 
     private async Task InitializePageAsync(AppPage page)
