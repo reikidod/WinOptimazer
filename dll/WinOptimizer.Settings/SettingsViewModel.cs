@@ -428,7 +428,7 @@ public sealed class SettingsViewModel : ObservableObject
     {
         _settings.ResetToDefaults();
         _settings.Save();
-        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText), nameof(BackgroundBlur), nameof(BackgroundDim), nameof(CardOpacity), nameof(TransparencyEffectsEnabled), nameof(HasBackground), nameof(BackgroundName) })
+        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowApplicationsGroup), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText), nameof(BackgroundBlur), nameof(BackgroundDim), nameof(CardOpacity), nameof(TransparencyEffectsEnabled), nameof(HasBackground), nameof(BackgroundName) })
             OnPropertyChanged(p);
         DeleteBackgroundFiles(keep: null);
         RefreshSelection();
