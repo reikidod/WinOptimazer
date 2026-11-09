@@ -64,7 +64,7 @@ public sealed class DiagnosticsService
 
         findings.Add(snapshot.NetworkAvailable
             ? new("Сеть", "Windows сообщает об активном сетевом подключении.", "Проверка доступности интернета не выполняется.", DiagnosticLevel.Info)
-            : new("Нет активного сетевого подключения", "Сетевые интерфейсы не сообщают об активном подключении.", "Проверьте Wi-Fi, Ethernet или режим «в самолёте».", DiagnosticLevel.Warning));
+            : new("Сеть: нет активного подключения", "Сетевые интерфейсы не сообщают об активном подключении.", "Проверьте Wi-Fi, Ethernet или режим «в самолёте».", DiagnosticLevel.Warning));
 
         findings.Add(IsAdministrator()
             ? new("Права доступа", "Приложение запущено с правами администратора.", "Подтверждайте только те системные изменения, которые понимаете.", DiagnosticLevel.Info)
