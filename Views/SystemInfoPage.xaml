@@ -1,0 +1,76 @@
+<UserControl x:Class="WinOptimizer.Views.SystemInfoPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WinOptimizer.Views">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+<Grid local:Motion.PageTransition="True" Margin="32,28,16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Margin="0,0,16,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Характеристики ПК" Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Система, температуры, процессор, видеокарта, память, накопители" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Сохранить в файл" Margin="0,0,8,0" Click="OnSaveReport"
+                                ToolTip="Сохранить характеристики в текстовый файл" />
+                        <Button Content="Копировать" Margin="0,0,8,0" Click="OnCopyReport"
+                                ToolTip="Скопировать характеристики в буфер обмена текстом" />
+                        <Button Content="Обновить" Style="{StaticResource AccentButton}"
+                                Command="{Binding RefreshInfoCommand}" />
+                    </StackPanel>
+                </Grid>
+
+                <ProgressBar Grid.Row="1" IsIndeterminate="True" Margin="0,0,16,12"
+                             Visibility="{Binding IsInfoLoading, Converter={StaticResource BoolToVis}}" />
+
+                <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,0,16,8">
+                        <TextBlock Text="Не удалось получить сведения. Нажмите «Обновить»." Style="{StaticResource SecondaryText}"
+                                   Visibility="{Binding HasInfoError, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12" />
+                        <ItemsControl ItemsSource="{Binding InfoSections}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <local:MasonryPanel MinColumnWidth="340" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ContentControl Style="{StaticResource HoverCard}" Margin="0,0,12,12" VerticalAlignment="Top">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,6" />
+                                            <ItemsControl ItemsSource="{Binding Lines}" FontSize="12.5">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,1.5">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="112" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                       TextWrapping="Wrap" Margin="0,0,8,0" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </ContentControl>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+</UserControl>
