@@ -80,7 +80,9 @@ public static class ThemeManager
         {
             // Размытие/затемнение фона не меняют кисти — не пересоздаём их на каждый тик ползунка.
             var hasBackground = !string.IsNullOrEmpty(s.BackgroundImage);
-            var cardAlpha = hasBackground ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0) : (byte)255;
+            var cardAlpha = hasBackground && s.TransparencyEffectsEnabled
+                ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0)
+                : (byte)255;
             var themeKey = $"{s.ThemeId}|{s.AccentId}|{hasBackground}";
             var key = $"{themeKey}|{cardAlpha}";
             if (key == _appliedKey) return;

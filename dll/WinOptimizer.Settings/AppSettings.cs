@@ -38,7 +38,10 @@ public sealed class AppSettings
     /// <summary>Затемнение фона, 0–90 %: чем больше, тем лучше читается текст.</summary>
     public int BackgroundDimPercent { get; set; } = 45;
 
-    /// <summary>Непрозрачность карточек поверх фона, 50–100 %.</summary>
+    /// <summary>Включить прозрачность модулей и боковой панели поверх пользовательского фона.</summary>
+    public bool TransparencyEffectsEnabled { get; set; } = true;
+
+    /// <summary>Непрозрачность модулей поверх фона, 50–100 %.</summary>
     public int CardOpacityPercent { get; set; } = 88;
 
     public const string StableChannel = "stable";
@@ -150,5 +153,6 @@ public sealed class AppSettings
         BackgroundBlurPercent = 40;
         BackgroundDimPercent = 45;
         CardOpacityPercent = 88;
+        TransparencyEffectsEnabled = true;
     }
 }

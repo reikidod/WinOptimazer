@@ -295,6 +295,17 @@ public sealed class SettingsViewModel : ObservableObject
         set => SetLive(_settings.BackgroundDimPercent, Math.Clamp(value, 0, 90), v => _settings.BackgroundDimPercent = v, nameof(BackgroundDim));
     }
 
+    public bool TransparencyEffectsEnabled
+    {
+        get => _settings.TransparencyEffectsEnabled;
+        set
+        {
+            if (_settings.TransparencyEffectsEnabled == value) return;
+            _settings.TransparencyEffectsEnabled = value;
+            Commit(nameof(TransparencyEffectsEnabled));
+        }
+    }
+
     public int CardOpacity
     {
         get => _settings.CardOpacityPercent;
@@ -354,12 +365,14 @@ public sealed class SettingsViewModel : ObservableObject
             Directory.CreateDirectory(AppPaths.DataDirectory);
             var ext = info.Extension.ToLowerInvariant();
             if (ext is not (".png" or ".jpg" or ".jpeg" or ".bmp")) ext = ".jpg";
-            var dest = Path.Combine(AppPaths.DataDirectory, "background" + ext);
-            DeleteBackgroundFiles(keep: null);
-            File.Copy(dialog.FileName, dest, overwrite: true);
+            // Уникальный путь заставляет WPF загрузить новую картинку даже при том же расширении.
+            // Перезапись файла по прежнему URI могла оставлять старый кадр в кеше Image.
+            var dest = Path.Combine(AppPaths.DataDirectory, $"background-{Guid.NewGuid():N}{ext}");
+            File.Copy(dialog.FileName, dest, overwrite: false);
 
             _settings.BackgroundImage = dest;
             _settings.Save();
+            DeleteBackgroundFiles(keep: dest);
             OnPropertyChanged(nameof(HasBackground));
             OnPropertyChanged(nameof(BackgroundName));
             CommandManager.InvalidateRequerySuggested();
@@ -410,7 +423,7 @@ public sealed class SettingsViewModel : ObservableObject
     {
         _settings.ResetToDefaults();
         _settings.Save();
-        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText), nameof(BackgroundBlur), nameof(BackgroundDim), nameof(CardOpacity), nameof(HasBackground), nameof(BackgroundName) })
+        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText), nameof(BackgroundBlur), nameof(BackgroundDim), nameof(CardOpacity), nameof(TransparencyEffectsEnabled), nameof(HasBackground), nameof(BackgroundName) })
             OnPropertyChanged(p);
         DeleteBackgroundFiles(keep: null);
         RefreshSelection();
