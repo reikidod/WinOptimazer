@@ -36,7 +36,7 @@ public sealed class AppSettingsTests : IDisposable
         Assert.Equal(100, settings.BackgroundBlurPercent);
         Assert.Equal(0, settings.BackgroundDimPercent);
         Assert.Equal(50, settings.CardOpacityPercent);
-        Assert.Equal(["Apps"], settings.HiddenTabs);
+        Assert.Equal(new[] { "Apps" }, settings.HiddenTabs);
         Assert.Equal(AppSettings.StableChannel, settings.UpdateChannel);
     }
 
