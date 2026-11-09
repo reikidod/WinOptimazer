@@ -60,13 +60,13 @@
 
     <!-- ===== Карточка с лёгким hover ===== -->
     <Style x:Key="HoverCard" TargetType="ContentControl">
-        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="Margin" Value="0,0,0,8" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContentControl">
                     <Border x:Name="Card" Background="{DynamicResource BgCardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="12" Padding="16,14" SnapsToDevicePixels="True">
+                            CornerRadius="14" Padding="16,12" SnapsToDevicePixels="True">
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
