@@ -766,3 +766,22 @@ public class TemperatureReaderTests
     public void ZoneName_IsShortened(string raw, string expected) =>
         Assert.Equal(expected, TemperatureReader.ZoneName(raw));
 }
+
+public class MasonryLayoutTests
+{
+    [Theory]
+    [InlineData(0, 340, 1)]
+    [InlineData(300, 340, 1)]
+    [InlineData(700, 340, 2)]
+    [InlineData(1110, 340, 3)]
+    [InlineData(1110, 0, 1)]
+    public void ColumnCount_FitsWidth(double width, double min, int expected) =>
+        Assert.Equal(expected, WinOptimizer.Views.MasonryPanel.ColumnCount(width, min));
+
+    [Fact]
+    public void ShortestColumn_PicksFirstMinimum()
+    {
+        Assert.Equal(1, WinOptimizer.Views.MasonryPanel.ShortestColumn([120, 80, 80]));
+        Assert.Equal(0, WinOptimizer.Views.MasonryPanel.ShortestColumn([0, 0]));
+    }
+}

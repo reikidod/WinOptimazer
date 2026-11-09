@@ -430,11 +430,12 @@
                         <TextBlock Text="Не удалось получить сведения. Нажмите «Обновить»." Style="{StaticResource SecondaryText}"
                                    Visibility="{Binding HasNoInfo, Converter={StaticResource BoolToVis}}" />
 
-                        <!-- Компактная сетка: карточки в 2+ колонки по ширине окна, строки плотнее -->
+                        <!-- Компактная сетка: колонки по ширине окна, карточки без провалов (в самую короткую колонку).
+                             Правый отступ карточек (12) компенсируем, чтобы край сетки совпал с кнопками сверху -->
                         <ItemsControl ItemsSource="{Binding InfoSections}" Margin="0,0,-12,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel ItemWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}, Converter={StaticResource CardWidth}}" />
+                                    <local:MasonryPanel MinColumnWidth="340" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
