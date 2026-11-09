@@ -25,7 +25,7 @@ public sealed class OperationHistoryService
             "WinOptimizer", "history.jsonl");
     }
 
-    public void Record(string category, string operation, string result)
+    public OperationHistoryEntry Record(string category, string operation, string result)
     {
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentException("Категория обязательна.", nameof(category));
         if (string.IsNullOrWhiteSpace(operation)) throw new ArgumentException("Операция обязательна.", nameof(operation));
@@ -43,6 +43,8 @@ public sealed class OperationHistoryService
             File.AppendAllText(_path, JsonSerializer.Serialize(entry) + Environment.NewLine);
             TrimIfNeeded();
         }
+
+        return entry;
     }
 
     public IReadOnlyList<OperationHistoryEntry> GetRecent(int count = 20)
