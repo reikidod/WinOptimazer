@@ -55,6 +55,24 @@ public static class TweakCatalog
         ];
     }
 
+    private static PageFileTweak PageFile(BackupStore backup)
+    {
+        var sizeMb = PageFileTweak.RecommendedSizeMb(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes);
+        var sizeGb = sizeMb / 1024.0;
+        return new PageFileTweak(
+            new TweakInfo(
+                "pagefile-fixed",
+                "Файл подкачки фиксированного размера",
+                $"Размер подкачки задаётся один раз ({sizeGb:0.#} ГБ на системном диске) и больше не меняется. Windows не тратит время на её расширение и сжатие.",
+                EvidenceLevel.NoData,
+                "Выигрыш в играх независимыми замерами не подтверждён; фиксированный размер просто убирает динамическое изменение файла.",
+                RequiresReboot: true,
+                Warning: $"Под файл сразу занимается {sizeGb:0.#} ГБ на системном диске. При нехватке памяти в тяжёлых программах фиксированного размера может не хватить. Откат возвращает прежние настройки.",
+                Category: "Система"),
+            backup,
+            sizeMb);
+    }
+
     public static IReadOnlyList<ITweak> Create(BackupStore backup) =>
     [
         // ─── Игры ───
@@ -495,7 +513,8 @@ public static class TweakCatalog
                 Category: "Система"),
             backup),
 
-        
+        PageFile(backup),
+
         // ─── Обновления и брандмауэр ───
         new RegistryTweak(
             new TweakInfo(
@@ -967,7 +986,10 @@ public static class TweakCatalog
             "Лента новостей и погоды на панели задач отключена на уровне системы.",
             EvidenceLevel.Reasoned, "Убирает фоновую загрузку ленты на панели задач.",
             false, "Визуал", backup, null,
-            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", RegistryValueKind.DWord, 0)),
+            // Windows 11: ключ Dsh защищён от записи — RegistryAccess сам выдаёт «Администраторам» права на него.
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", RegistryValueKind.DWord, 0),
+            // Windows 10: та же лента управляется политикой Windows Feeds.
+            new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Windows Feeds", "EnableFeeds", RegistryValueKind.DWord, 0)),
 
         Reg("device-metadata-offline", "Не качать описания устройств из интернета",
             "Windows не загружает значки и названия подключённых устройств.",

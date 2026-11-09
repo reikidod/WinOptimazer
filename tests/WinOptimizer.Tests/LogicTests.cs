@@ -681,3 +681,51 @@ public class ThemeTests
         finally { File.Delete(path); }
     }
 }
+
+public class PageFileTweakTests
+{
+    [Theory]
+    [InlineData(2L * 1024 * 1024 * 1024, 4096)]    // мало ОЗУ — нижняя граница
+    [InlineData(8L * 1024 * 1024 * 1024, 4096)]
+    [InlineData(12L * 1024 * 1024 * 1024, 6144)]
+    [InlineData(16L * 1024 * 1024 * 1024, 8192)]
+    [InlineData(64L * 1024 * 1024 * 1024, 8192)]   // много ОЗУ — верхняя граница
+    [InlineData(-1L, 4096)]
+    public void RecommendedSize_IsClampedAndAligned(long ramBytes, int expectedMb)
+    {
+        var size = PageFileTweak.RecommendedSizeMb(ramBytes);
+        Assert.Equal(expectedMb, size);
+        Assert.Equal(0, size % 256);
+    }
+
+    [Theory]
+    [InlineData("C:", 4096, @"C:\pagefile.sys 4096 4096")]
+    [InlineData(@"d:\", 8192, @"D:\pagefile.sys 8192 8192")]
+    public void BuildEntry_FormatsPagingFilesLine(string drive, int mb, string expected) =>
+        Assert.Equal(expected, PageFileTweak.BuildEntry(drive, mb));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("CD:")]
+    [InlineData("1:")]
+    public void BuildEntry_RejectsBadDrive(string drive) =>
+        Assert.Throws<ArgumentException>(() => PageFileTweak.BuildEntry(drive, 4096));
+}
+
+public class NewsInterestsTweakTests : IDisposable
+{
+    private readonly string _dir = Path.Combine(Path.GetTempPath(), "wo-tests-" + Guid.NewGuid().ToString("N"));
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_dir, true); } catch { /* не критично */ }
+    }
+
+    [Fact]
+    public void Catalog_HasPageFileAndNewsTweaks()
+    {
+        var ids = TweakCatalog.Create(new BackupStore(Path.Combine(_dir, "b.json"))).Select(t => t.Info.Id).ToList();
+        Assert.Contains("pagefile-fixed", ids);
+        Assert.Contains("news-interests-off", ids);
+    }
+}

@@ -25,14 +25,10 @@
         </Grid.ColumnDefinitions>
 
         <!-- Пользовательский фон: картинка с размытием и затемняющий слой цвета темы (под всеми страницами) -->
-        <!-- Клип, чтобы blur не «зумил» картинку: изображение чуть увеличено под радиус, края обрезаны -->
+        <!-- Картинка всегда в исходном масштабе: blur её не увеличивает, края просто обрезаются клипом -->
         <Grid Grid.ColumnSpan="2" ClipToBounds="True" IsHitTestVisible="False">
             <Image x:Name="BackgroundImage" Stretch="UniformToFill" Visibility="Collapsed"
-                   RenderOptions.BitmapScalingMode="HighQuality"
-                   RenderTransformOrigin="0.5,0.5">
-                <Image.RenderTransform>
-                    <ScaleTransform x:Name="BackgroundScale" ScaleX="1" ScaleY="1" />
-                </Image.RenderTransform>
+                   RenderOptions.BitmapScalingMode="HighQuality">
                 <Image.Effect>
                     <BlurEffect x:Name="BackgroundBlur" Radius="0" KernelType="Gaussian" RenderingBias="Performance" />
                 </Image.Effect>

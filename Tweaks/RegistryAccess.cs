@@ -43,13 +43,48 @@ internal static class RegistryAccess
 
     public static void Write(RegistryEntry entry, RegistryValueKind kind, object value)
     {
+        try
+        {
+            WriteCore(entry, kind, value);
+        }
+        catch (UnauthorizedAccessException) when (RegistryAcl.CanRepair(entry))
+        {
+            // Защищённый ключ политик (Windows 11): выдаём «Администраторам» права и пробуем ещё раз.
+            if (!RegistryAcl.TryGrantAdministrators(entry))
+            {
+                throw;
+            }
+
+            WriteCore(entry, kind, value);
+        }
+    }
+
+    public static void Delete(RegistryEntry entry)
+    {
+        try
+        {
+            DeleteCore(entry);
+        }
+        catch (UnauthorizedAccessException) when (RegistryAcl.CanRepair(entry))
+        {
+            if (!RegistryAcl.TryGrantAdministrators(entry))
+            {
+                throw;
+            }
+
+            DeleteCore(entry);
+        }
+    }
+
+    private static void WriteCore(RegistryEntry entry, RegistryValueKind kind, object value)
+    {
         using var baseKey = RegistryKey.OpenBaseKey(entry.Hive, RegistryView.Registry64);
         using var key = baseKey.CreateSubKey(entry.SubKey, writable: true)
                         ?? throw new InvalidOperationException($"Не удалось открыть раздел {entry.FullKey} на запись.");
         key.SetValue(entry.Name, value, kind);
     }
 
-    public static void Delete(RegistryEntry entry)
+    private static void DeleteCore(RegistryEntry entry)
     {
         using var baseKey = RegistryKey.OpenBaseKey(entry.Hive, RegistryView.Registry64);
         using var key = baseKey.OpenSubKey(entry.SubKey, writable: true);

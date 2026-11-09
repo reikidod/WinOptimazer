@@ -55,7 +55,7 @@ public partial class MainWindow : Window
     /// <summary>
     /// Фон-картинка с размытием и затемнением.
     /// Картинка декодируется один раз (адаптивное разрешение), blur/dim обновляются точечно без лишних layout-проходов.
-    /// Scale + margin компенсируют визуальное «сжатие» от Gaussian blur, чтобы кадр не зумился при движении ползунка.
+    /// Масштаб и положение картинки от размытия не зависят: при движении ползунка кадр не зумится.
     /// </summary>
     private void ApplyBackground()
     {
@@ -116,22 +116,12 @@ public partial class MainWindow : Window
             {
                 // Без размытия эффект снимаем — GPU не гоняет gaussian впустую.
                 BackgroundImage.Effect = null;
-                BackgroundScale.ScaleX = 1;
-                BackgroundScale.ScaleY = 1;
-                BackgroundImage.Margin = new Thickness(0);
             }
             else
             {
                 if (BackgroundImage.Effect is not BlurEffect)
                     BackgroundImage.Effect = BackgroundBlur;
                 BackgroundBlur.Radius = radius;
-                // Blur «съедает» края и визуально уменьшает картинку — компенсируем scale + margin.
-                // Коэффициент подобран так, чтобы центр кадра не прыгал при движении ползунка.
-                var scale = 1.0 + radius / 120.0;
-                BackgroundScale.ScaleX = scale;
-                BackgroundScale.ScaleY = scale;
-                var pad = radius + 8;
-                BackgroundImage.Margin = new Thickness(-pad);
             }
             _lastBlurPct = s.BackgroundBlurPercent;
         }
