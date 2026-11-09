@@ -238,7 +238,10 @@ public sealed class MainViewModel : ObservableObject
     public bool IsApplicationsGroupPage
     {
         get => _page is AppPage.Apps or AppPage.Debloat or AppPage.Store;
-        set => SelectPage(AppPage.Apps, value);
+        set
+        {
+            if (value) Navigate(nameof(AppPage.Apps));
+        }
     }
 
     public bool IsAppsPage
