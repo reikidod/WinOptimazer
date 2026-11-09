@@ -94,7 +94,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsDebloatPage, Mode=TwoWay}"
-                                 Visibility="{Binding Settings.ShowDebloatTab, Converter={StaticResource BoolToVis}}"
+                                 Visibility="Collapsed"
                                  AutomationProperties.Name="Страница «Лишние приложения»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -108,7 +108,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsAppsPage, Mode=TwoWay}"
-                                 Visibility="{Binding Settings.ShowAppsTab, Converter={StaticResource BoolToVis}}"
+                                 Visibility="{Binding Settings.ShowApplicationsGroup, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Приложения»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -117,12 +117,12 @@
                                           Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Установка программ" VerticalAlignment="Center"/>
+                            <TextBlock Text="Приложения" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsStorePage, Mode=TwoWay}"
-                                 Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
+                                 Visibility="Collapsed"
                                  AutomationProperties.Name="Страница «MS Store»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
