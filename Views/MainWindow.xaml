@@ -579,8 +579,10 @@
                         <TextBlock Text="Система, температуры, процессор, видеокарта, память, накопители" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="Сохранить в файл" Margin="0,0,8,0" Click="OnSaveReport"
+                        <Button Content="Сохранить TXT" Margin="0,0,8,0" Click="OnSaveReport"
                                 ToolTip="Сохранить характеристики в текстовый файл" />
+                        <Button Content="Сохранить JSON" Margin="0,0,8,0" Click="OnSaveJsonReport"
+                                ToolTip="Экспортировать характеристики в структурированный JSON" />
                         <Button Content="Копировать" Margin="0,0,8,0" Click="OnCopyReport"
                                 ToolTip="Скопировать характеристики в буфер обмена текстом" />
                         <Button Content="Обновить" Style="{StaticResource AccentButton}"
