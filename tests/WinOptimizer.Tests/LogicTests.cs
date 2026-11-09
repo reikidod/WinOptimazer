@@ -518,3 +518,59 @@ public class UpdateChannelTests
         Assert.Equal("stable", s.UpdateChannel);
     }
 }
+
+public class TabVisibilityAndStoreTests
+{
+    [Fact]
+    public void HidingAndRestoringTab()
+    {
+        var s = new WinOptimizer.Infrastructure.AppSettings();
+        Assert.True(s.IsTabVisible("Store"));
+        s.SetTabVisible("Store", false);
+        Assert.False(s.IsTabVisible("Store"));
+        s.SetTabVisible("Store", false);
+        Assert.Single(s.HiddenTabs);
+        s.SetTabVisible("Store", true);
+        Assert.True(s.IsTabVisible("Store"));
+    }
+
+    [Fact]
+    public void UnknownOrSettingsTab_CannotBeHidden()
+    {
+        var s = new WinOptimizer.Infrastructure.AppSettings();
+        s.SetTabVisible("Settings", false);
+        s.SetTabVisible("Nope", false);
+        Assert.Empty(s.HiddenTabs);
+    }
+
+    [Fact]
+    public void Normalize_DropsUnknownAndDuplicates_AndRoundTrips()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "wo-settings-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            var s = new WinOptimizer.Infrastructure.AppSettings { HiddenTabs = new() { "Store", "Store", "Bogus", "Settings", "Games" } };
+            s.Save(path);
+            var loaded = WinOptimizer.Infrastructure.AppSettings.Load(path);
+            Assert.Equal(new[] { "Store", "Games" }, loaded.HiddenTabs);
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void Reset_ShowsAllTabs()
+    {
+        var s = new WinOptimizer.Infrastructure.AppSettings();
+        s.SetTabVisible("Games", false);
+        s.ResetToDefaults();
+        Assert.Empty(s.HiddenTabs);
+    }
+
+    [Fact]
+    public void SpotifyHasWingetFallback()
+    {
+        var spotify = new StoreAppInfo("9NCBCSZSJRSB", "Spotify", "Spotify AB", "msstore", ProductId: "9NCBCSZSJRSB");
+        Assert.Equal("Spotify.Spotify", MsStoreService.AlternativeWingetId(spotify));
+        Assert.Null(MsStoreService.AlternativeWingetId(new StoreAppInfo("X", "Unknown", "p", "msstore")));
+    }
+}

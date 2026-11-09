@@ -65,6 +65,8 @@ public sealed class MainViewModel : ObservableObject
         ToggleGroupCommand = new RelayCommand<TweakViewModel>(ToggleGroup);
         OpenLinkCommand = new RelayCommand<string>(OpenLink);
         CheckUpdateCommand = new AsyncRelayCommand(CheckUpdateAsync, () => !IsBusy, ReportUnexpected);
+        Settings.PropertyChanged += (_, _) => EnsurePageVisible();
+        EnsurePageVisible();
         ApplyUpdateCommand = new AsyncRelayCommand(ApplyUpdateAsync, () => !IsBusy && _pendingDownloadUrl is not null, ReportUnexpected);
 
     }
@@ -308,6 +310,13 @@ public sealed class MainViewModel : ObservableObject
     {
         get => _page == AppPage.Settings;
         set => SelectPage(AppPage.Settings, value);
+    }
+
+    /// <summary>Если открытую вкладку скрыли в настройках, переходим в «Настройки».</summary>
+    private void EnsurePageVisible()
+    {
+        if (_page != AppPage.Settings && !AppSettings.Current.IsTabVisible(_page.ToString()))
+            SelectPage(AppPage.Settings, true);
     }
 
     private void SelectPage(AppPage page, bool selected)

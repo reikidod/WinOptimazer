@@ -77,6 +77,7 @@
                 <StackPanel Grid.Row="1">
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsTweaksPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowTweaksTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Твики»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -90,6 +91,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsDebloatPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowDebloatTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Лишние приложения»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -103,6 +105,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsAppsPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowAppsTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Приложения»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -116,6 +119,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsStorePage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «MS Store»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -129,6 +133,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsGamesPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowGamesTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Игры»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -142,6 +147,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsSystemPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowSystemTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Характеристики ПК»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -155,6 +161,7 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsMaintenancePage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowMaintenanceTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Обслуживание»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
@@ -1375,6 +1382,78 @@
                                 <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
                                           IsChecked="{Binding Settings.AskRestorePoint, Mode=TwoWay}" AutomationProperties.Name="Предлагать точку восстановления" />
                             </Grid>
+                        </Border>
+
+                        <TextBlock Text="Вкладки" FontSize="16" FontWeight="SemiBold" Margin="2,14,0,8" />
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <StackPanel>
+                                <TextBlock Text="Какие вкладки показывать" FontSize="14.5" FontWeight="SemiBold" />
+                                <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,6" TextWrapping="Wrap"
+                                           Text="Уберите ненужные разделы из боковой панели. Включите переключатель, чтобы вкладка вернулась. «Настройки» скрыть нельзя." />
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Оптимизация системы" FontSize="13.5" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12" Text="Твики реестра, служб и схемы питания" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Settings.ShowTweaksTab, Mode=TwoWay}" AutomationProperties.Name="Показывать вкладку «Оптимизация системы»" />
+                                </Grid>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Удаление программ" FontSize="13.5" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12" Text="Удаление лишних приложений Windows" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Settings.ShowDebloatTab, Mode=TwoWay}" AutomationProperties.Name="Показывать вкладку «Удаление программ»" />
+                                </Grid>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Установка программ" FontSize="13.5" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12" Text="Каталог программ для установки" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Settings.ShowAppsTab, Mode=TwoWay}" AutomationProperties.Name="Показывать вкладку «Установка программ»" />
+                                </Grid>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Microsoft Store" FontSize="13.5" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12" Text="Приложения из магазина через winget" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Settings.ShowStoreTab, Mode=TwoWay}" AutomationProperties.Name="Показывать вкладку «Microsoft Store»" />
+                                </Grid>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Игры" FontSize="13.5" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12" Text="Поиск игр и подбор настроек" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Settings.ShowGamesTab, Mode=TwoWay}" AutomationProperties.Name="Показывать вкладку «Игры»" />
+                                </Grid>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Мой ПК" FontSize="13.5" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12" Text="Характеристики компьютера" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Settings.ShowSystemTab, Mode=TwoWay}" AutomationProperties.Name="Показывать вкладку «Мой ПК»" />
+                                </Grid>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Очистка и автозагрузка" FontSize="13.5" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12" Text="Очистка диска и управление автозагрузкой" />
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                              IsChecked="{Binding Settings.ShowMaintenanceTab, Mode=TwoWay}" AutomationProperties.Name="Показывать вкладку «Очистка и автозагрузка»" />
+                                </Grid>
+                            </StackPanel>
                         </Border>
 
                         <TextBlock Text="Внешний вид" FontSize="16" FontWeight="SemiBold" Margin="2,14,0,8" />

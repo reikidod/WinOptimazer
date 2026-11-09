@@ -7,6 +7,21 @@ public sealed class AppSettings
 {
     public static readonly int[] ScaleOptions = { 90, 100, 110, 125 };
 
+    /// <summary>Вкладки, которые можно скрыть (имена элементов AppPage). «Настройки» скрыть нельзя.</summary>
+    public static readonly string[] HideableTabs = { "Tweaks", "Debloat", "Apps", "Store", "Games", "System", "Maintenance" };
+
+    /// <summary>Скрытые пользователем вкладки боковой панели.</summary>
+    public List<string> HiddenTabs { get; set; } = new();
+
+    public bool IsTabVisible(string tab) => !HiddenTabs.Contains(tab);
+
+    public void SetTabVisible(string tab, bool visible)
+    {
+        if (!HideableTabs.Contains(tab)) return;
+        HiddenTabs.RemoveAll(t => t == tab);
+        if (!visible) HiddenTabs.Add(tab);
+    }
+
     public const string StableChannel = "stable";
     public const string BetaChannel = "beta";
 
@@ -82,6 +97,7 @@ public sealed class AppSettings
     internal void Normalize()
     {
         if (!ScaleOptions.Contains(UiScalePercent)) UiScalePercent = 100;
+        HiddenTabs = (HiddenTabs ?? new()).Where(HideableTabs.Contains).Distinct().ToList();
         if (UpdateChannel != StableChannel && UpdateChannel != BetaChannel) UpdateChannel = StableChannel;
     }
 
@@ -93,5 +109,6 @@ public sealed class AppSettings
         Animations = true;
         UiScalePercent = 100;
         UpdateChannel = StableChannel;
+        HiddenTabs.Clear();
     }
 }

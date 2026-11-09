@@ -46,6 +46,22 @@ public interface IMsStoreService
 /// </summary>
 public sealed class MsStoreService : IMsStoreService
 {
+    // Идентификаторы тех же программ в общем репозитории winget: запасной путь, если Microsoft Store
+    // в регионе или на этом ПК не отдаёт пакет (например, Spotify в Store недоступен в ряде стран).
+    private static readonly Dictionary<string, string> WingetAlternatives = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["9NCBCSZSJRSB"] = "Spotify.Spotify",
+        ["9NKSQGP7F2NH"] = "WhatsApp.WhatsApp",
+        ["9N0DX20HK701"] = "Microsoft.WindowsTerminal",
+        ["9PB2MZ1ZMB1S"] = "Apple.iTunes",
+        ["9NCVDN91XZQP"] = "Python.Python.3.12",
+        ["9NBLGGH4NNS1"] = "Microsoft.AppInstaller",
+        ["9NFTCH6J7FHV"] = "Microsoft.PowerAutomateDesktop",
+    };
+
+    internal static string? AlternativeWingetId(StoreAppInfo app) =>
+        WingetAlternatives.TryGetValue(app.ProductId ?? app.Id, out var id) ? id : null;
+
     public IReadOnlyList<StoreAppInfo> Featured { get; } =
     [
         new("9N0DX20HK701", "Windows Terminal", "Microsoft Corporation", "msstore",
@@ -347,8 +363,22 @@ public sealed class MsStoreService : IMsStoreService
                     return (true, SuccessMessage(app, code, output));
             }
 
+            // Store не отдал пакет — пробуем тот же пакет из репозитория winget.
+            var alt = AlternativeWingetId(app);
+            if (alt is not null && NotFound(output))
+            {
+                progress?.Report($"{app.Name}: в Store не найдено, ищу в репозитории winget…");
+                (code, output) = await RunWingetAsync(
+                    $"install --id \"{alt}\" --exact --source winget{common}", ct, 900_000, OnLine).ConfigureAwait(false);
+                if (IsInstallSuccess(code, output))
+                    return (true, SuccessMessage(app, code, output));
+            }
+
             Logger.Error($"winget install {app.Id}: код {code}\n{TrimOutput(output)}");
-            return (false, $"Не удалось установить «{app.Name}» через winget (код {code}).\n\n{TrimOutput(output)}");
+            var hint = NotFound(output)
+                ? "\n\nПакет недоступен в Microsoft Store для вашего региона или аккаунта. Нажмите «Открыть в Microsoft Store» или скачайте программу с сайта разработчика."
+                : "";
+            return (false, $"Не удалось установить «{app.Name}» через winget (код {code}).\n\n{TrimOutput(output)}{hint}");
         }
         catch (OperationCanceledException)
         {

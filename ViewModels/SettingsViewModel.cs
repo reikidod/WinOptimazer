@@ -57,6 +57,49 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+
+    public bool ShowTweaksTab
+    {
+        get => _settings.IsTabVisible("Tweaks");
+        set { if (_settings.IsTabVisible("Tweaks") != value) { _settings.SetTabVisible("Tweaks", value); Commit(nameof(ShowTweaksTab)); } }
+    }
+
+    public bool ShowDebloatTab
+    {
+        get => _settings.IsTabVisible("Debloat");
+        set { if (_settings.IsTabVisible("Debloat") != value) { _settings.SetTabVisible("Debloat", value); Commit(nameof(ShowDebloatTab)); } }
+    }
+
+    public bool ShowAppsTab
+    {
+        get => _settings.IsTabVisible("Apps");
+        set { if (_settings.IsTabVisible("Apps") != value) { _settings.SetTabVisible("Apps", value); Commit(nameof(ShowAppsTab)); } }
+    }
+
+    public bool ShowStoreTab
+    {
+        get => _settings.IsTabVisible("Store");
+        set { if (_settings.IsTabVisible("Store") != value) { _settings.SetTabVisible("Store", value); Commit(nameof(ShowStoreTab)); } }
+    }
+
+    public bool ShowGamesTab
+    {
+        get => _settings.IsTabVisible("Games");
+        set { if (_settings.IsTabVisible("Games") != value) { _settings.SetTabVisible("Games", value); Commit(nameof(ShowGamesTab)); } }
+    }
+
+    public bool ShowSystemTab
+    {
+        get => _settings.IsTabVisible("System");
+        set { if (_settings.IsTabVisible("System") != value) { _settings.SetTabVisible("System", value); Commit(nameof(ShowSystemTab)); } }
+    }
+
+    public bool ShowMaintenanceTab
+    {
+        get => _settings.IsTabVisible("Maintenance");
+        set { if (_settings.IsTabVisible("Maintenance") != value) { _settings.SetTabVisible("Maintenance", value); Commit(nameof(ShowMaintenanceTab)); } }
+    }
+
     public bool AskRestorePoint
     {
         get => _settings.AskRestorePoint;
@@ -146,7 +189,7 @@ public sealed class SettingsViewModel : ObservableObject
     {
         _settings.ResetToDefaults();
         _settings.Save();
-        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText) })
+        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText) })
             OnPropertyChanged(p);
         Status = "Настройки сброшены к значениям по умолчанию.";
     }
