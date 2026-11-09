@@ -90,15 +90,40 @@ public sealed class AppSettings
 
     internal void Save(string path)
     {
+        string? temporaryPath = null;
         try
         {
             Normalize();
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            // Сначала записываем полный JSON во временный файл рядом с settings.json.
+            // Если приложение завершится во время записи, предыдущие настройки останутся целыми.
+            temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(temporaryPath, json);
+
+            // Замена в пределах одного тома: читатели увидят либо старый, либо новый файл,
+            // но не частично записанный JSON.
+            File.Move(temporaryPath, path, overwrite: true);
+            temporaryPath = null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Logger.Error("Не удалось сохранить настройки", ex);
+        }
+        finally
+        {
+            if (temporaryPath is not null)
+            {
+                try { File.Delete(temporaryPath); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    Logger.Error("Не удалось удалить временный файл настроек", ex);
+                }
+            }
         }
     }
 
