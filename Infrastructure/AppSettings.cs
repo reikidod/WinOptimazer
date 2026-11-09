@@ -5,6 +5,7 @@ namespace WinOptimizer.Infrastructure;
 /// <summary>Пользовательские настройки приложения. Хранятся в settings.json рядом с остальными данными.</summary>
 public sealed class AppSettings
 {
+    public static readonly int[] TargetFpsOptions = { 0, 30, 60, 90, 120, 144, 240 };
     public static readonly int[] ScaleOptions = { 90, 100, 110, 125 };
 
     /// <summary>Вкладки, которые можно скрыть (имена элементов AppPage). «Настройки» скрыть нельзя.</summary>
@@ -36,6 +37,9 @@ public sealed class AppSettings
 
     /// <summary>Проверять обновления при запуске.</summary>
     public bool CheckUpdatesOnStartup { get; set; } = true;
+
+    /// <summary>Целевой FPS для подбора настроек игр: 0 — по частоте монитора.</summary>
+    public int GamesTargetFps { get; set; }
 
     /// <summary>Плавные анимации интерфейса (дополнительно к системной настройке Windows).</summary>
     public bool Animations { get; set; } = true;
@@ -98,6 +102,7 @@ public sealed class AppSettings
     {
         if (!ScaleOptions.Contains(UiScalePercent)) UiScalePercent = 100;
         HiddenTabs = (HiddenTabs ?? new()).Where(HideableTabs.Contains).Distinct().ToList();
+        if (!TargetFpsOptions.Contains(GamesTargetFps)) GamesTargetFps = 0;
         if (UpdateChannel != StableChannel && UpdateChannel != BetaChannel) UpdateChannel = StableChannel;
     }
 
@@ -110,5 +115,6 @@ public sealed class AppSettings
         UiScalePercent = 100;
         UpdateChannel = StableChannel;
         HiddenTabs.Clear();
+        GamesTargetFps = 0;
     }
 }

@@ -123,12 +123,12 @@ public sealed class GamesViewModel : ObservableObject
                                || g.Platform.Contains(Filter, StringComparison.CurrentCultureIgnoreCase));
 
     /// <summary>Варианты целевого FPS: 0 — подобрать по частоте монитора.</summary>
-    public static readonly int[] TargetFpsValues = { 0, 30, 60, 90, 120, 144, 240 };
+    public static readonly int[] TargetFpsValues = AppSettings.TargetFpsOptions;
 
     public IReadOnlyList<string> TargetFpsLabels { get; } =
         TargetFpsValues.Select(v => v == 0 ? "Авто (по монитору)" : v + " FPS").ToArray();
 
-    private int _targetFpsIndex;
+    private int _targetFpsIndex = Math.Max(0, Array.IndexOf(TargetFpsValues, AppSettings.Current.GamesTargetFps));
 
     public int TargetFpsIndex
     {
@@ -136,7 +136,10 @@ public sealed class GamesViewModel : ObservableObject
         set
         {
             if (value < 0 || value >= TargetFpsValues.Length) return;
-            if (SetField(ref _targetFpsIndex, value)) RecalculateAll();
+            if (!SetField(ref _targetFpsIndex, value)) return;
+            AppSettings.Current.GamesTargetFps = TargetFpsValues[value];
+            AppSettings.Current.Save();
+            RecalculateAll();
         }
     }
 

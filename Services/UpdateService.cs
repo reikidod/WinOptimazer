@@ -64,6 +64,20 @@ public sealed class UpdateService : IUpdateService
         }
     }
 
+    /// <summary>Приложение поставлено установщиком (рядом лежит unins000.exe), а не распаковано из архива.</summary>
+    internal static bool InstalledByInstaller => File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
+
+    /// <summary>Установленной версии отдаём установщик (он ещё и проверит .NET), портативной — zip, чтобы обновить её на месте.</summary>
+    internal static string? PickAsset(IReadOnlyList<(string Name, string Url)> assets, bool installerInstall)
+    {
+        string? Find(Func<string, bool> match) => assets.FirstOrDefault(a => match(a.Name)).Url;
+        var setup = Find(n => n.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                              && n.Contains("Setup", StringComparison.OrdinalIgnoreCase));
+        var zip = Find(n => n.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+        var anyExe = Find(n => n.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+        return installerInstall ? setup ?? zip ?? anyExe : zip ?? setup ?? anyExe;
+    }
+
     /// <summary>Канал, из которого собрана запущенная версия: «beta» по метке в версии, иначе «stable».</summary>
     internal string InstalledChannel => ChannelOfLabel(DisplayVersion);
 
@@ -124,24 +138,14 @@ public sealed class UpdateService : IUpdateService
             string? download = null;
             if (root.TryGetProperty("assets", out var assets))
             {
+                var list = new List<(string Name, string Url)>();
                 foreach (var a in assets.EnumerateArray())
                 {
                     var name = a.GetProperty("name").GetString() ?? "";
                     var dl = a.GetProperty("browser_download_url").GetString();
-                    if (dl is null) continue;
-                    // предпочитаем установщик / setup / publish zip
-                    if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-                        && (name.Contains("Setup", StringComparison.OrdinalIgnoreCase)
-                            || name.Contains("WinOptimizer", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        download = dl;
-                        break;
-                    }
-                    if (download is null && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                        download = dl;
-                    if (download is null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                        download = dl;
+                    if (dl is not null) list.Add((name, dl));
                 }
+                download = PickAsset(list, InstalledByInstaller);
             }
 
             if (string.IsNullOrEmpty(latest))
@@ -204,7 +208,7 @@ public sealed class UpdateService : IUpdateService
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = path,
-                    Arguments = "/VERYSILENT /NORESTART /CLOSEAPPLICATIONS",
+                    Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS",
                     UseShellExecute = true,
                 });
                 // закрыть текущее приложение через небольшой bat

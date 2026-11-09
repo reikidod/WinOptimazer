@@ -574,3 +574,40 @@ public class TabVisibilityAndStoreTests
         Assert.Null(MsStoreService.AlternativeWingetId(new StoreAppInfo("X", "Unknown", "p", "msstore")));
     }
 }
+
+public class InstallerAndPersistenceTests
+{
+    private static readonly (string Name, string Url)[] Assets =
+    {
+        ("WinOptimizer-win-x64.zip", "zip-url"), ("WinOptimizer-Setup.exe", "setup-url"),
+    };
+
+    [Fact] public void InstalledCopy_GetsInstaller() => Assert.Equal("setup-url", UpdateService.PickAsset(Assets, true));
+    [Fact] public void PortableCopy_GetsZip() => Assert.Equal("zip-url", UpdateService.PickAsset(Assets, false));
+    [Fact] public void OnlyZip_UsedEvenForInstalledCopy() => Assert.Equal("zip-url", UpdateService.PickAsset(new[] { Assets[0] }, true));
+    [Fact] public void NoAssets_ReturnsNull() => Assert.Null(UpdateService.PickAsset(Array.Empty<(string, string)>(), true));
+
+    [Fact]
+    public void TargetFpsAndTabs_SurviveRestart()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "wo-persist-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            var s = new WinOptimizer.Infrastructure.AppSettings { GamesTargetFps = 120 };
+            s.SetTabVisible("Store", false);
+            s.Save(path);
+            var loaded = WinOptimizer.Infrastructure.AppSettings.Load(path);
+            Assert.Equal(120, loaded.GamesTargetFps);
+            Assert.False(loaded.IsTabVisible("Store"));
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void InvalidTargetFps_FallsBackToAuto()
+    {
+        var s = new WinOptimizer.Infrastructure.AppSettings { GamesTargetFps = 77 };
+        s.Normalize();
+        Assert.Equal(0, s.GamesTargetFps);
+    }
+}

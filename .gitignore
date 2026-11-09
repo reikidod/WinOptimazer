@@ -6,3 +6,4 @@ certs/*.key
 *.user
 .vs/
 dist/
+redist/

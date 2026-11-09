@@ -20,8 +20,14 @@ $iscc = @(
 
 if (-not $iscc) { throw "ISCC.exe not found. Install Inno Setup 6." }
 
-New-Item -ItemType Directory -Force -Path dist | Out-Null
-& $iscc "$PWD\installer\WinOptimizer.iss"
+New-Item -ItemType Directory -Force -Path redist, dist | Out-Null
+$runtime = "redist\windowsdesktop-runtime-win-x64.exe"
+if (-not (Test-Path $runtime)) {
+    Write-Host "Downloading .NET 8 Desktop Runtime..."
+    Invoke-WebRequest -Uri "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe" -OutFile $runtime
+}
+$ver = ([xml](Get-Content WinOptimizer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+& $iscc "/DMyAppVersion=$ver" "$PWD\installer\WinOptimizer.iss"
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
 
-Get-ChildItem dist\WinOptimizer-Setup-*.exe | ForEach-Object { Write-Host "OK: $($_.FullName)" }
+Get-ChildItem dist\WinOptimizer-Setup.exe | ForEach-Object { Write-Host "OK: $($_.FullName)" }

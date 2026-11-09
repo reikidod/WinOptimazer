@@ -55,6 +55,33 @@ jobs:
           if (-not (Test-Path publish\WinOptimizer.exe)) { throw 'publish\WinOptimizer.exe не найден' }
           Compress-Archive -Path publish\* -DestinationPath WinOptimizer-win-x64.zip
 
+      - name: Installer (Inno Setup + .NET Desktop Runtime)
+        shell: pwsh
+        run: |
+          # Runtime кладём внутрь установщика: на чистой Windows программа запустится без ручных зависимостей.
+          New-Item -ItemType Directory -Force redist | Out-Null
+          Invoke-WebRequest -Uri 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe' -OutFile redist\windowsdesktop-runtime-win-x64.exe
+          if ((Get-Item redist\windowsdesktop-runtime-win-x64.exe).Length -lt 40MB) { throw 'Runtime скачан некорректно' }
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            if (-not (Test-Path $iscc)) { throw 'Inno Setup не найден' }
+          }
+          & $iscc "/DMyAppVersion=$env:VERSION" installer\WinOptimizer.iss
+          if ($LASTEXITCODE -ne 0) { throw 'ISCC завершился с ошибкой' }
+          if (-not (Test-Path dist\WinOptimizer-Setup.exe)) { throw 'dist\WinOptimizer-Setup.exe не найден' }
+
+      - name: Installer smoke test (тихая установка и удаление)
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP 'wo-install'
+          $p = Start-Process dist\WinOptimizer-Setup.exe -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=`"$dir`" /LOG=`"$env:RUNNER_TEMP\setup.log`"" -Wait -PassThru
+          if (Test-Path "$env:RUNNER_TEMP\setup.log") { Get-Content "$env:RUNNER_TEMP\setup.log" -Tail 25 }
+          if ($p.ExitCode -ne 0) { throw "Установщик завершился с кодом $($p.ExitCode)" }
+          if (-not (Test-Path "$dir\WinOptimizer.exe")) { throw 'После установки нет WinOptimizer.exe' }
+          $u = Start-Process "$dir\unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($u.ExitCode -ne 0) { throw "Удаление завершилось с кодом $($u.ExitCode)" }
+
       - name: Smoke test (запуск собранного приложения)
         shell: pwsh
         run: |
@@ -81,9 +108,9 @@ jobs:
           git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
           if ($env:CHANNEL -eq 'beta') {
             $tag = "v$env:VERSION-beta"
-            gh release create $tag WinOptimizer-win-x64.zip --target ${{ github.sha }} --title "$tag (бета)" --notes-file notes.md --prerelease
+            gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title "$tag (бета)" --notes-file notes.md --prerelease
           } else {
             $tag = "v$env:VERSION"
-            gh release create $tag WinOptimizer-win-x64.zip --target ${{ github.sha }} --title $tag --notes-file notes.md --latest
+            gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title $tag --notes-file notes.md --latest
           }
           if ($LASTEXITCODE -ne 0) { throw 'Не удалось создать релиз' }
