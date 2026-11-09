@@ -145,6 +145,16 @@
                         <TextBlock Text="Удаление приложений" Style="{StaticResource PageTitle}" />
                         <TextBlock Text="Все установленные программы и приложения Windows. Удаляйте штатным деинсталлятором и сразу стирайте остатки: папки, ярлыки, записи реестра — как в Geek Uninstaller. Если программа не удаляется, её можно снести принудительно."
                                    Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Button Content="Установка" Margin="0,0,8,0"
+                                    Visibility="{Binding Settings.ShowAppsTab, Converter={StaticResource BoolToVis}}"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Apps"/>
+                            <Button Content="Удаление" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Debloat"/>
+                            <Button Content="Microsoft Store"
+                                    Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Store"/>
+                        </WrapPanel>
                         <TextBlock Text="{Binding Debloat.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0"
                                    Foreground="{DynamicResource AccentBrush}" />
                     </StackPanel>
@@ -325,6 +335,16 @@
                     <TextBlock Text="Приложения и Zapret" Style="{StaticResource PageTitle}" />
                     <TextBlock Text="Установка популярных программ и Zapret (Flowseal) как службы"
                                Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                    <WrapPanel Margin="0,10,0,0">
+                        <Button Content="Установка" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
+                                Command="{Binding NavigateCommand}" CommandParameter="Apps"/>
+                        <Button Content="Удаление" Margin="0,0,8,0"
+                                Visibility="{Binding Settings.ShowDebloatTab, Converter={StaticResource BoolToVis}}"
+                                Command="{Binding NavigateCommand}" CommandParameter="Debloat"/>
+                        <Button Content="Microsoft Store"
+                                Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
+                                Command="{Binding NavigateCommand}" CommandParameter="Store"/>
+                    </WrapPanel>
                     <TextBlock Text="{Binding Apps.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0"
                                Foreground="{DynamicResource AccentBrush}" />
                 </StackPanel>
