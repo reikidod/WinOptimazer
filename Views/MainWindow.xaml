@@ -181,6 +181,10 @@
         <Grid Grid.Column="1">
             <local:DashboardPage Visibility="{Binding IsHomePage, Converter={StaticResource BoolToVis}}"
                                  local:Motion.PageTransition="True" />
+            <local:TweaksPage Visibility="{Binding IsTweaksPage, Converter={StaticResource BoolToVis}}" />
+            <local:SystemInfoPage Visibility="{Binding IsSystemPage, Converter={StaticResource BoolToVis}}" />
+            <local:GamesPage Visibility="{Binding IsGamesPage, Converter={StaticResource BoolToVis}}" />
+            <local:StorePage Visibility="{Binding IsStorePage, Converter={StaticResource BoolToVis}}" />
             <local:MainWindowPages />
         </Grid>
     </Grid>
