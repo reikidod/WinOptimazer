@@ -76,6 +76,6 @@ public sealed class OperationHistoryService
         if (info.Length < 1024 * 1024) return;
 
         var entries = GetRecent(MaxEntries).Reverse().ToArray();
-        File.WriteAllLines(_path, entries.Select(JsonSerializer.Serialize));
+        File.WriteAllLines(_path, entries.Select(entry => JsonSerializer.Serialize(entry)));
     }
 }
