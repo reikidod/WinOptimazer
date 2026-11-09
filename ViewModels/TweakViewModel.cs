@@ -59,6 +59,15 @@ public sealed class TweakViewModel : ObservableObject
         _ => "Нет данных",
     };
 
+    public RiskLevel Risk => Tweak.Info.Risk;
+
+    public string RiskLabel => Risk switch
+    {
+        RiskLevel.High => "Высокий риск",
+        RiskLevel.Medium => "Средний риск",
+        _ => "Низкий риск",
+    };
+
     /// <summary>Текст подсказки «?» при наведении.</summary>
     public string HelpTip
     {
@@ -67,6 +76,7 @@ public sealed class TweakViewModel : ObservableObject
             var sb = new System.Text.StringBuilder();
             sb.AppendLine(Description);
             sb.AppendLine();
+            sb.Append("Риск: ").Append(RiskLabel).AppendLine(".");
             sb.Append("Насколько помогает: ").Append(EvidenceLabel).AppendLine(".");
             if (!string.IsNullOrWhiteSpace(EvidenceNote))
                 sb.AppendLine(EvidenceNote);
@@ -88,35 +98,28 @@ public sealed class TweakViewModel : ObservableObject
 
     public bool RequiresRestorePoint => Tweak.RequiresRestorePoint;
 
-    /// <summary>Применён ли твик в системе прямо сейчас.</summary>
     public bool IsApplied
     {
         get => _isApplied;
         private set
         {
             if (SetField(ref _isApplied, value))
-            {
                 OnPropertyChanged(nameof(IsChanged));
-            }
         }
     }
 
-    /// <summary>Желаемое состояние (положение переключателя).</summary>
     public bool IsSelected
     {
         get => _isSelected;
         set
         {
             if (SetField(ref _isSelected, value))
-            {
                 OnPropertyChanged(nameof(IsChanged));
-            }
         }
     }
 
     public bool IsChanged => IsSelected != IsApplied;
 
-    /// <summary>False, если состояние твика прочитать не удалось: переключатель блокируется.</summary>
     public bool IsAvailable
     {
         get => _isAvailable;
@@ -129,15 +132,12 @@ public sealed class TweakViewModel : ObservableObject
         set
         {
             if (SetField(ref _errorText, value))
-            {
                 OnPropertyChanged(nameof(HasError));
-            }
         }
     }
 
     public bool HasError => !string.IsNullOrEmpty(_errorText);
 
-    /// <summary>Обновляет состояние после чтения из системы и сбрасывает ожидающее изменение.</summary>
     public void SetState(bool? applied, string? error)
     {
         IsAvailable = applied.HasValue;

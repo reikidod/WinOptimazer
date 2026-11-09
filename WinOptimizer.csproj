@@ -9,16 +9,13 @@
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
-    <!-- Оставляем стандартные настройки GC/JIT .NET: concurrent GC уменьшает паузы UI,
-         а Tiered PGO помогает оптимизировать горячие участки кода после прогрева. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AssemblyName>WinOptimizer</AssemblyName>
     <RootNamespace>WinOptimizer</RootNamespace>
-    <Version>0.5.0</Version>
-    <AssemblyVersion>0.4.25.0</AssemblyVersion>
-    <FileVersion>0.4.25.0</FileVersion>
-    <!-- Метка канала: CI передаёт stable (ветка main) или beta (ветка beta); локальная сборка — dev. Показывается в приложении: v0.5.x-beta. -->
+    <Version>0.6.0</Version>
+    <AssemblyVersion>0.6.0.0</AssemblyVersion>
+    <FileVersion>0.6.0.0</FileVersion>
     <ReleaseChannel Condition="'$(ReleaseChannel)' == ''">dev</ReleaseChannel>
     <InformationalVersion Condition="'$(ReleaseChannel)' != ''">$(Version)-$(ReleaseChannel)</InformationalVersion>
     <InformationalVersion Condition="'$(ReleaseChannel)' == ''">$(Version)</InformationalVersion>
@@ -34,12 +31,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Тесты лежат внутри папки проекта: не даём SDK собрать их в само приложение. -->
     <Compile Remove="tests\**" />
     <EmbeddedResource Remove="tests\**" />
     <None Remove="tests\**" />
     <Page Remove="tests\**" />
-    <!-- Исходники DLL-проектов собираются отдельно (ProjectReference), иначе будут дубли типов. -->
     <Compile Remove="dll\**" />
     <EmbeddedResource Remove="dll\**" />
     <None Remove="dll\**" />
@@ -47,7 +42,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- В WPF-проектах SDK исключает System.IO из неявных using (конфликт Path с System.Windows.Shapes.Path), возвращаем его. -->
     <Using Include="System.IO" />
   </ItemGroup>
 
