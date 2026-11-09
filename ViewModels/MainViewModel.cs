@@ -79,6 +79,8 @@ public sealed class MainViewModel : ObservableObject
         NavigateCommand = new RelayCommand<string>(Navigate);
         RefreshHistoryCommand = new RelayCommand(RefreshRecentOperations);
         RefreshRecentOperations();
+        SaveProfileCommand = new RelayCommand(SaveProfile);
+        LoadProfileCommand = new RelayCommand(LoadProfile);
 
     }
 
@@ -108,6 +110,8 @@ public sealed class MainViewModel : ObservableObject
     public ICommand RunDiagnosticsCommand { get; }
     public ICommand NavigateCommand { get; }
     public ICommand RefreshHistoryCommand { get; }
+    public ICommand SaveProfileCommand { get; }
+    public ICommand LoadProfileCommand { get; }
 
     public IEnumerable<TweakViewModel> FilteredTweaks
     {
@@ -355,6 +359,68 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             Logger.Error("Не удалось сохранить историю операций", ex);
+        }
+    }
+
+    private void SaveProfile()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Сохранить профиль оптимизации",
+            Filter = "Профиль WinOptimizer (*.json)|*.json",
+            FileName = "WinOptimizer-profile.json",
+            DefaultExt = ".json",
+            AddExtension = true,
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var profile = OptimizationProfileService.Create(
+                Path.GetFileNameWithoutExtension(dialog.FileName),
+                Tweaks.Where(t => t.IsSelected).Select(t => t.Tweak.Info.Id));
+            OptimizationProfileService.Save(dialog.FileName, profile);
+            StatusText = $"Профиль сохранён: {profile.Name}.";
+            _dialogs.Info("Профиль сохранён",
+                $"Сохранено выбранных твиков: {profile.SelectedTweakIds.Count}. Профиль не применяет изменения автоматически.",
+                DialogKind.Success);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            Logger.Error("Не удалось сохранить профиль оптимизации", ex);
+            _dialogs.Info("Ошибка профиля", ex.Message, DialogKind.Warning);
+        }
+    }
+
+    private void LoadProfile()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Загрузить профиль оптимизации",
+            Filter = "Профиль WinOptimizer (*.json)|*.json",
+            DefaultExt = ".json",
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var profile = OptimizationProfileService.Load(dialog.FileName);
+            var selected = new HashSet<string>(profile.SelectedTweakIds, StringComparer.OrdinalIgnoreCase);
+            foreach (var tweak in Tweaks)
+                tweak.IsSelected = selected.Contains(tweak.Tweak.Info.Id);
+
+            var known = Tweaks.Select(t => t.Tweak.Info.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var unknown = selected.Count(id => !known.Contains(id));
+            StatusText = $"Профиль «{profile.Name}» загружен. Изменений к применению: {PendingCount}.";
+            _dialogs.Info("Профиль загружен",
+                $"Выбрано твиков: {selected.Count - unknown}. Неизвестных идентификаторов: {unknown}. Изменения ещё не применены — проверьте список и нажмите «Применить».",
+                DialogKind.Success);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
+        {
+            Logger.Error("Не удалось загрузить профиль оптимизации", ex);
+            _dialogs.Info("Ошибка профиля", ex.Message, DialogKind.Warning);
         }
     }
 
