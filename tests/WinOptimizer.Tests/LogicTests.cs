@@ -442,3 +442,29 @@ public class AutostartTests
         Assert.True(s.AskRestorePoint);
     }
 }
+
+public class TargetFpsTests
+{
+    private static readonly WinOptimizer.Services.HardwareProfile Hw =
+        new("CPU", 8, 16, 4.5, 16, "NVIDIA GeForce RTX 3060", 12, 1920, 1080, 144);
+    private static readonly WinOptimizer.Services.HardwareScores Sc = new(17000, "test", 20000, "test");
+    private static readonly WinOptimizer.Services.GameTraits Game =
+        new("Game", WinOptimizer.Services.GameClass.Heavy, "test", true, false, true, false, false, null, null);
+
+    [Fact]
+    public void ManualTarget_OverridesAuto()
+    {
+        var auto = WinOptimizer.Services.GameOptimizer.Recommend(Game, Hw, Sc);
+        var manual = WinOptimizer.Services.GameOptimizer.Recommend(Game, Hw, Sc, 60);
+        Assert.Equal(144, auto.TargetFps);
+        Assert.Equal(60, manual.TargetFps);
+    }
+
+    [Fact]
+    public void ListValuesAreSortedAndStartWithAuto()
+    {
+        var v = WinOptimizer.ViewModels.GamesViewModel.TargetFpsValues;
+        Assert.Equal(0, v[0]);
+        Assert.Equal(v.Skip(1).OrderBy(x => x), v.Skip(1));
+    }
+}

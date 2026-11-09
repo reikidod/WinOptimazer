@@ -51,6 +51,9 @@ public sealed class GameItemViewModel : ObservableObject
 
     private OptimizationResult? _result;
 
+    /// <summary>Что известно об игре; нужно, чтобы пересчитать настройки при смене целевого FPS.</summary>
+    public GameTraits? Traits { get; set; }
+
     /// <summary>Рекомендованные настройки (null — ещё не подбирали или скрыты).</summary>
     public OptimizationResult? Result
     {
@@ -119,6 +122,34 @@ public sealed class GamesViewModel : ObservableObject
             : Games.Where(g => g.Name.Contains(Filter, StringComparison.CurrentCultureIgnoreCase)
                                || g.Platform.Contains(Filter, StringComparison.CurrentCultureIgnoreCase));
 
+    /// <summary>Варианты целевого FPS: 0 — подобрать по частоте монитора.</summary>
+    public static readonly int[] TargetFpsValues = { 0, 30, 60, 90, 120, 144, 240 };
+
+    public IReadOnlyList<string> TargetFpsLabels { get; } =
+        TargetFpsValues.Select(v => v == 0 ? "Авто (по монитору)" : v + " FPS").ToArray();
+
+    private int _targetFpsIndex;
+
+    public int TargetFpsIndex
+    {
+        get => _targetFpsIndex;
+        set
+        {
+            if (value < 0 || value >= TargetFpsValues.Length) return;
+            if (SetField(ref _targetFpsIndex, value)) RecalculateAll();
+        }
+    }
+
+    public int TargetFps => TargetFpsValues[_targetFpsIndex];
+
+    /// <summary>Пересчитывает уже показанные рекомендации под новый целевой FPS без повторной загрузки тестов.</summary>
+    private void RecalculateAll()
+    {
+        if (_profile is null || _scores is null) return;
+        foreach (var g in Games.Where(g => g.HasResult && g.Traits is not null))
+            g.Result = GameOptimizer.Recommend(g.Traits!, _profile, _scores, TargetFps);
+    }
+
     public ICommand ScanCommand { get; }
     public ICommand InstallOptiCommand { get; }
     public ICommand RemoveOptiCommand { get; }
@@ -167,7 +198,8 @@ public sealed class GamesViewModel : ObservableObject
         {
             await EnsureHardwareAsync();
             var traits = await Task.Run(() => GameKnowledge.Analyze(item.Name, item.Folder));
-            item.Result = GameOptimizer.Recommend(traits, _profile!, _scores!);
+            item.Traits = traits;
+            item.Result = GameOptimizer.Recommend(traits, _profile!, _scores!, TargetFps);
             Status = $"Настройки для «{item.Name}» подобраны.";
         }
         finally
