@@ -1,0 +1,365 @@
+<Window x:Class="WinOptimizer.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WinOptimizer.Views"
+        Title="WinOptimizer"
+        Width="1180" Height="800" MinWidth="980" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Assets/app.ico"
+        Background="{DynamicResource BgWindowBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontSize="14"
+        UseLayoutRounding="True">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <local:CardWidthConverter x:Key="CardWidth" />
+
+        <Style x:Key="BorderCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Заголовок страницы и подзаголовок -->
+        <Style x:Key="PageTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="SecondaryText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!-- Небольшой «бейдж» с текстом -->
+        <Style x:Key="Badge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Background" Value="#33FFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="RootGrid" ClipToBounds="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Пользовательский фон: картинка с размытием и затемняющий слой цвета темы (под всеми страницами) -->
+        <!-- Клип, чтобы blur не «зумил» картинку: изображение чуть увеличено под радиус, края обрезаны -->
+        <Grid Grid.ColumnSpan="2" ClipToBounds="True" IsHitTestVisible="False">
+            <Image x:Name="BackgroundImage" Stretch="UniformToFill" Visibility="Collapsed"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   RenderTransformOrigin="0.5,0.5">
+                <Image.RenderTransform>
+                    <ScaleTransform x:Name="BackgroundScale" ScaleX="1" ScaleY="1" />
+                </Image.RenderTransform>
+                <Image.Effect>
+                    <BlurEffect x:Name="BackgroundBlur" Radius="0" KernelType="Gaussian" RenderingBias="Performance" />
+                </Image.Effect>
+                <Image.CacheMode>
+                    <BitmapCache EnableClearType="False" RenderAtScale="1" />
+                </Image.CacheMode>
+            </Image>
+            <Rectangle x:Name="BackgroundDim" Fill="{DynamicResource BgWindowBrush}"
+                       Opacity="0" Visibility="Collapsed" />
+        </Grid>
+
+        <!-- ============ Боковая панель ============ -->
+        <Border Background="{DynamicResource BgSidebarBrush}" Panel.ZIndex="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="18" ShadowDepth="4" Direction="0" Opacity="0.5" Color="Black" />
+            </Border.Effect>
+            <Grid Margin="16,24,16,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Margin="6,0,0,28">
+                    <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" />
+                    <TextBlock Text="Оптимизация Windows 10/11" Style="{StaticResource SecondaryText}" FontSize="12" Margin="0,2,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1">
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsTweaksPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowTweaksTab, Converter={StaticResource BoolToVis}}"
+                                 AutomationProperties.Name="Страница «Твики»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Оптимизация системы" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsDebloatPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowDebloatTab, Converter={StaticResource BoolToVis}}"
+                                 AutomationProperties.Name="Страница «Лишние приложения»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Удаление программ" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsAppsPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowAppsTab, Converter={StaticResource BoolToVis}}"
+                                 AutomationProperties.Name="Страница «Приложения»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Установка программ" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsStorePage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
+                                 AutomationProperties.Name="Страница «MS Store»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Microsoft Store" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsGamesPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowGamesTab, Converter={StaticResource BoolToVis}}"
+                                 AutomationProperties.Name="Страница «Игры»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Игры" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsSystemPage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowSystemTab, Converter={StaticResource BoolToVis}}"
+                                 AutomationProperties.Name="Страница «Характеристики ПК»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Мой ПК" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsMaintenancePage, Mode=TwoWay}"
+                                 Visibility="{Binding Settings.ShowMaintenanceTab, Converter={StaticResource BoolToVis}}"
+                                 AutomationProperties.Name="Страница «Обслуживание»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M15.55 13c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2h7.45zM6.16 6h12.15l-2.76 5H8.53L6.16 6zM7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Очистка и автозагрузка" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsSettingsPage, Mode=TwoWay}"
+                                 AutomationProperties.Name="Страница «Настройки»">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Настройки" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Margin="0,16,0,0">
+                    <Button Style="{StaticResource NavButton}" HorizontalAlignment="Stretch"
+                            Command="{Binding OpenLinkCommand}" CommandParameter="https://t.me/iseedeadp3pole"
+                            ToolTip="Telegram · @iseedeadp3pole">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          Data="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Telegram" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavButton}" HorizontalAlignment="Stretch" Margin="0,4,0,0"
+                            Command="{Binding OpenLinkCommand}" CommandParameter="https://github.com/reikidod/WinOptimazer"
+                            ToolTip="GitHub · reikidod/WinOptimazer">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          Data="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.09.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="GitHub" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============ Контент ============ -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Страницы -->
+            <Grid>
+                <!-- ТВИКИ -->
+                <Grid Visibility="{Binding IsTweaksPage, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Margin="32,28,32,12">
+                        <TextBlock Text="Оптимизация системы" Style="{StaticResource PageTitle}" />
+                        <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,0"
+                                   Text="Твики реестра и системных параметров. Наведите на «?», чтобы увидеть описание." />
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button Content="Применить выбранные" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
+                                    Command="{Binding ApplyTweaksCommand}" />
+                            <Button Content="Сбросить выбранные" Margin="0,0,8,0"
+                                    Command="{Binding ResetTweaksCommand}" />
+                            <Button Content="Точка восстановления" Margin="0,0,8,0"
+                                    Command="{Binding CreateRestorePointCommand}"
+                                    ToolTip="Создать точку восстановления Windows прямо сейчас" />
+                        </WrapPanel>
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True"
+                                  VerticalScrollBarVisibility="Auto" Margin="0,0,0,0">
+                        <ItemsControl ItemsSource="{Binding VisibleTweaks}" Margin="32,0,32,24">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource BorderCard}" Margin="0,0,0,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Стрелка группы -->
+                                            <Button Grid.Column="0" Content="{Binding GroupArrow}"
+                                                    Visibility="{Binding IsGroupHeader, Converter={StaticResource BoolToVis}}"
+                                                    Margin="0,0,8,0" Padding="6,2" MinWidth="28"
+                                                    VerticalAlignment="Top" Cursor="Hand"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Foreground="{DynamicResource AccentBrush}"
+                                                    FontSize="12"
+                                                    Command="{Binding DataContext.ToggleGroupCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Показать / скрыть отдельные профили" />
+
+                                            <StackPanel Grid.Column="1">
+                                                <WrapPanel>
+                                                    <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold"
+                                                               Margin="0,0,8,4" VerticalAlignment="Center" />
+                                                    <!-- Простой ToolTip=string: так работает общий Style ToolTip из DarkTheme -->
+                                                    <TextBlock Text="?" FontSize="13" FontWeight="Bold" Width="22" Height="22"
+                                                               Margin="0,0,10,4" VerticalAlignment="Center" Cursor="Help"
+                                                               TextAlignment="Center" Padding="0,2,0,0"
+                                                               Foreground="{DynamicResource AccentBrush}"
+                                                               Background="Transparent"
+                                                               ToolTip="{Binding HelpTip}"
+                                                               ToolTipService.Placement="Mouse"
+                                                               ToolTipService.InitialShowDelay="200"
+                                                               ToolTipService.ShowDuration="60000"
+                                                               ToolTipService.BetweenShowDelay="100" />
+                                                    <Border Style="{StaticResource Badge}" Margin="0,0,8,4">
+                                                        <TextBlock Text="{Binding EvidenceLabel}" FontSize="12">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource NeutralBrush}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Evidence}" Value="Measured">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Evidence}" Value="Reasoned">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Border>
+                                                    <Border Style="{StaticResource Badge}" Margin="0,0,8,4"
+                                                            Visibility="{Binding RequiresRestorePoint, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="предложит точку восстановления" FontSize="12"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                    </Border>
+                                                    <Border Style="{StaticResource Badge}" Margin="0,0,8,4"
+                                                            Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="нужна перезагрузка" FontSize="12"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                    </Border>
+                                                    <Border Style="{StaticResource Badge}" Margin="0,0,8,4"
+                                                            Visibility="{Binding IsChanged, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="изменено" FontSize="12" Foreground="{DynamicResource AccentBrush}" />
+                                                    </Border>
+                                                </WrapPanel>
+
+                                                <!-- Описание, evidence и предупреждения — только в подсказке «?» (HelpTip) -->
+                                                <TextBlock Text="{Binding Warning}" TextWrapping="Wrap" FontSize="12.5" LineHeight="18"
+                                                           Margin="0,4,0,0" Foreground="{DynamicResource WarnBrush}"
+                                                           Visibility="{Binding HasWarning, Converter={StaticResource BoolToVis}}" />
+                                                <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" FontSize="12.5" LineHeight="18"
+                                                           Margin="0,4,0,0" Foreground="{DynamicResource DangerBrush}"
+                                                           Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
+                                            </StackPanel>
+
+                                            <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitch}"
+                                                      VerticalAlignment="Center" Margin="24,0,0,0"
+                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                      IsEnabled="{Binding IsAvailable}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- PLACEHOLDER_PART0_END -->
