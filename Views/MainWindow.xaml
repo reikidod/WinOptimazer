@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WinOptimizer.Views"
         Title="WinOptimizer"
-        Width="1180" Height="800" MinWidth="980" MinHeight="640"
+        Width="1240" Height="820" MinWidth="960" MinHeight="640"
         WindowStartupLocation="CenterScreen"
         Icon="pack://application:,,,/Assets/app.ico"
         Background="{DynamicResource BgWindowBrush}"
@@ -20,7 +20,7 @@
 
     <Grid x:Name="RootGrid" ClipToBounds="True">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="252" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -43,16 +43,16 @@
         <!-- ============ Боковая панель ============ -->
         <Border Background="{DynamicResource BgSidebarBrush}" Panel.ZIndex="1">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="18" ShadowDepth="4" Direction="0" Opacity="0.5" Color="Black" />
+                <DropShadowEffect BlurRadius="14" ShadowDepth="2" Direction="0" Opacity="0.28" Color="Black" />
             </Border.Effect>
-            <Grid Margin="16,24,16,16">
+            <Grid Margin="14,20,14,14">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <StackPanel Margin="6,0,0,28">
+                <StackPanel Margin="6,0,0,22">
                     <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" />
                     <TextBlock Text="Оптимизация Windows 10/11" Style="{StaticResource SecondaryText}" FontSize="12" Margin="0,2,0,0" />
                 </StackPanel>
@@ -250,7 +250,7 @@
             </Grid.RowDefinitions>
 
             <!-- Страница «Твики» -->
-            <Grid Visibility="{Binding IsTweaksPage, Converter={StaticResource BoolToVis}}" local:Motion.PageTransition="True" Margin="32,28,16,12">
+            <Grid Visibility="{Binding IsTweaksPage, Converter={StaticResource BoolToVis}}" local:Motion.PageTransition="True" Margin="28,24,16,12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
