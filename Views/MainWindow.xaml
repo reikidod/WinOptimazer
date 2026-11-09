@@ -416,15 +416,19 @@
                         <TextBlock Text="Твики" Style="{StaticResource PageTitle}" />
                         <TextBlock Text="{Binding PendingText}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="Сбросить выбор" Margin="0,0,8,0"
+                    <WrapPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Content="Импорт профиля" Margin="0,0,6,6"
+                                Command="{Binding LoadProfileCommand}" />
+                        <Button Content="Экспорт профиля" Margin="0,0,6,6"
+                                Command="{Binding SaveProfileCommand}" />
+                        <Button Content="Сбросить выбор" Margin="0,0,6,6"
                                 Command="{Binding ResetSelectionCommand}" />
-                        <Button Content="Снимок системы" Margin="0,0,8,0"
+                        <Button Content="Снимок системы" Margin="0,0,6,6"
                                 Command="{Binding CreateRestorePointCommand}"
                                 ToolTip="Создать точку восстановления Windows прямо сейчас" />
-                        <Button Content="Применить" Style="{StaticResource AccentButton}"
+                        <Button Content="Применить" Style="{StaticResource AccentButton}" Margin="0,0,0,6"
                                 Command="{Binding ApplyCommand}" />
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
 
                 <ItemsControl Grid.Row="1" ItemsSource="{Binding TweakCategories}" Margin="0,0,16,10">
