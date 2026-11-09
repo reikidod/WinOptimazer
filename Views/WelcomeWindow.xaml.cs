@@ -27,6 +27,22 @@ public partial class WelcomeWindow : Window
     private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(350);
     private static readonly TimeSpan FadeOutDuration = TimeSpan.FromMilliseconds(480);
 
+    private static void AnimateDot(TranslateTransform shift, UIElement dot, int delayMs)
+    {
+        var ease = new SineEase { EasingMode = EasingMode.EaseInOut };
+        var timing = new Func<DoubleAnimation, DoubleAnimation>(a =>
+        {
+            a.BeginTime = TimeSpan.FromMilliseconds(900 + delayMs);
+            a.AutoReverse = true;
+            a.RepeatBehavior = RepeatBehavior.Forever;
+            a.EasingFunction = ease;
+            return a;
+        });
+        // Подъём вверх и лёгкое затухание/возврат; пауза между циклами получается из AutoReverse на разных фазах.
+        shift.BeginAnimation(TranslateTransform.YProperty, timing(new DoubleAnimation(0, -4, TimeSpan.FromMilliseconds(380))));
+        dot.BeginAnimation(OpacityProperty, timing(new DoubleAnimation(0.35, 1, TimeSpan.FromMilliseconds(380))));
+    }
+
     public WelcomeWindow()
     {
         InitializeComponent();
@@ -60,6 +76,11 @@ public partial class WelcomeWindow : Window
             GreetingText.BeginAnimation(OpacityProperty, Anim(0, 1, 800, 380, outCubic));
             GreetingShift.BeginAnimation(TranslateTransform.YProperty, Anim(22, 0, 1100, 380, outSoft));
             StatusPanel.BeginAnimation(OpacityProperty, Anim(0, 1, 700, 900, outCubic));
+
+            // Точки статуса подпрыгивают по очереди, цикл 1.2 с.
+            AnimateDot(Dot1Shift, Dot1, 0);
+            AnimateDot(Dot2Shift, Dot2, 160);
+            AnimateDot(Dot3Shift, Dot3, 320);
 
             // Свечение дуги «дышит», пока окно на экране.
             var breathe = new DoubleAnimation(0.35, 0.85, TimeSpan.FromMilliseconds(1800))
