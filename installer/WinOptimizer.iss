@@ -33,6 +33,8 @@ OutputDir=..\dist
 ; Имя без версии: встроенное обновление ищет в релизе файл с «Setup» в названии
 OutputBaseFilename=WinOptimizer-Setup
 SetupIconFile=..\Assets\app.ico
+; Просит Проводник обновить кэш значков, чтобы у ярлыков и exe сразу появилась новая иконка
+ChangesAssociations=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
 SolidCompression=yes

@@ -28,6 +28,7 @@ public sealed partial class SystemInfoService : ISystemInfoService
     private static IReadOnlyList<InfoSection> Collect() =>
     [
         Section("Система", CollectOs),
+        Section("Температуры", TemperatureReader.Collect),
         Section("Процессор", CollectCpu),
         Section("Оперативная память", CollectMemory),
         Section("Видеокарта", CollectGpu),
@@ -259,7 +260,7 @@ public sealed partial class SystemInfoService : ISystemInfoService
     }
 
     /// <summary>Выполняет WMI-запрос и сразу materialize-ит результат, чтобы освободить объекты.</summary>
-    private static List<ManagementBaseObject> Query(string scope, string query)
+    internal static List<ManagementBaseObject> Query(string scope, string query)
     {
         using var searcher = new ManagementObjectSearcher(scope, query);
         using var collection = searcher.Get();

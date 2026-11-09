@@ -729,3 +729,40 @@ public class NewsInterestsTweakTests : IDisposable
         Assert.Contains("news-interests-off", ids);
     }
 }
+
+public class TemperatureReaderTests
+{
+    [Theory]
+    [InlineData(3231, 49.95)]    // 323.1 K
+    [InlineData(3000, 26.85)]
+    public void FromDeciKelvin_ConvertsToCelsius(int tenths, double expected) =>
+        Assert.Equal(expected, TemperatureReader.FromDeciKelvin(tenths)!.Value, 2);
+
+    [Theory]
+    [InlineData(0)]            // 0 К — датчика нет
+    [InlineData(99999)]        // мусор
+    public void FromDeciKelvin_RejectsImplausible(int tenths) =>
+        Assert.Null(TemperatureReader.FromDeciKelvin(tenths));
+
+    [Fact]
+    public void FromKelvin_ConvertsAndHandlesNull()
+    {
+        Assert.Equal(26.85, TemperatureReader.FromKelvin(300u)!.Value, 2);
+        Assert.Null(TemperatureReader.FromKelvin(null));
+    }
+
+    [Fact]
+    public void ParseNvidiaSmi_ReadsRowsAndSkipsGarbage()
+    {
+        var rows = TemperatureReader.ParseNvidiaSmi("NVIDIA GeForce RTX 4060, 55\r\nbroken line\r\nTesla T4, [N/A]\r\nRTX A2000, 41\r\n");
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(("NVIDIA GeForce RTX 4060", 55d), rows[0]);
+        Assert.Equal(41d, rows[1].Celsius);
+    }
+
+    [Theory]
+    [InlineData(@"\_TZ.TZ00", "TZ00")]
+    [InlineData("THRM", "THRM")]
+    public void ZoneName_IsShortened(string raw, string expected) =>
+        Assert.Equal(expected, TemperatureReader.ZoneName(raw));
+}

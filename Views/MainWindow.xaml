@@ -410,7 +410,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Характеристики ПК" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Система, процессор, видеокарта, память, накопители" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                        <TextBlock Text="Система, температуры, процессор, видеокарта, память, накопители" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="Сохранить в файл" Margin="0,0,8,0" Click="OnSaveReport"
@@ -430,23 +430,29 @@
                         <TextBlock Text="Не удалось получить сведения. Нажмите «Обновить»." Style="{StaticResource SecondaryText}"
                                    Visibility="{Binding HasNoInfo, Converter={StaticResource BoolToVis}}" />
 
-                        <ItemsControl ItemsSource="{Binding InfoSections}">
+                        <!-- Компактная сетка: карточки в 2+ колонки по ширине окна, строки плотнее -->
+                        <ItemsControl ItemsSource="{Binding InfoSections}" Margin="0,0,-12,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel ItemWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}, Converter={StaticResource CardWidth}}" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <ContentControl Style="{StaticResource HoverCard}">
+                                    <ContentControl Style="{StaticResource HoverCard}" Margin="0,0,12,12" VerticalAlignment="Top">
                                         <StackPanel>
-                                            <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10" />
-                                            <ItemsControl ItemsSource="{Binding Lines}">
+                                            <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,6" />
+                                            <ItemsControl ItemsSource="{Binding Lines}" FontSize="12.5">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Grid Margin="0,3">
+                                                        <Grid Margin="0,1.5">
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="190" />
+                                                                <ColumnDefinition Width="112" />
                                                                 <ColumnDefinition Width="*" />
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                       TextWrapping="Wrap" Margin="0,0,12,0" />
+                                                                       TextWrapping="Wrap" Margin="0,0,8,0" />
                                                             <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
                                                         </Grid>
                                                     </DataTemplate>
