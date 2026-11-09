@@ -7,9 +7,9 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="Padding" Value="16,14" />
-        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="Margin" Value="0,0,0,10" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
@@ -20,7 +20,7 @@
 
     <!-- Заголовок страницы и подзаголовок -->
     <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontSize" Value="26" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style x:Key="SecondaryText" TargetType="TextBlock">
@@ -30,7 +30,7 @@
 
     <!-- Небольшой «бейдж» с текстом -->
     <Style x:Key="Badge" TargetType="Border">
-        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Padding" Value="8,2" />
         <Setter Property="Margin" Value="0,0,8,0" />
         <Setter Property="Background" Value="#33FFFFFF" />

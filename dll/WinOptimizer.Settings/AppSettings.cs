@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Reflection;
 
 namespace WinOptimizer.Infrastructure;
 
@@ -47,8 +48,17 @@ public sealed class AppSettings
     public const string StableChannel = "stable";
     public const string BetaChannel = "beta";
 
-    /// <summary>Канал обновлений: «stable» (ветка main) или «beta» (ветка beta с новыми функциями).</summary>
-    public string UpdateChannel { get; set; } = StableChannel;
+    /// <summary>Канал обновлений: beta-сборка по умолчанию следит за beta; стабильная и dev-сборки — за stable.</summary>
+    public string UpdateChannel { get; set; } = GetDefaultUpdateChannel();
+
+    private static string GetDefaultUpdateChannel()
+    {
+        var label = Assembly.GetEntryAssembly()
+            ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? string.Empty;
+        var metadata = label.IndexOf('+');
+        if (metadata >= 0) label = label[..metadata];
+        return label.EndsWith("-beta", StringComparison.OrdinalIgnoreCase) ? BetaChannel : StableChannel;
+    }
 
     /// <summary>Показывать приветственное окно при запуске.</summary>
     public bool ShowWelcome { get; set; } = true;
@@ -159,7 +169,7 @@ public sealed class AppSettings
         CardOpacityPercent = Math.Clamp(CardOpacityPercent, 50, 100);
         // Файл фона могли удалить вручную: тогда просто работаем без фона.
         if (!string.IsNullOrEmpty(BackgroundImage) && !File.Exists(BackgroundImage)) BackgroundImage = "";
-        if (UpdateChannel != StableChannel && UpdateChannel != BetaChannel) UpdateChannel = StableChannel;
+        if (UpdateChannel != StableChannel && UpdateChannel != BetaChannel) UpdateChannel = GetDefaultUpdateChannel();
     }
 
     internal void ResetToDefaults()
@@ -169,7 +179,7 @@ public sealed class AppSettings
         CheckUpdatesOnStartup = true;
         Animations = true;
         UiScalePercent = 100;
-        UpdateChannel = StableChannel;
+        UpdateChannel = GetDefaultUpdateChannel();
         HiddenTabs.Clear();
         GamesTargetFps = 0;
         ThemeId = ThemeManager.DefaultTheme;

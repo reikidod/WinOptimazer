@@ -17,7 +17,13 @@ public sealed class MainViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly IUpdateService _updates;
 
-    private AppPage _page = AppPage.Tweaks;
+    private AppPage _page = AppPage.Dashboard;
+    private readonly DiagnosticsService _diagnostics = new();
+    private readonly OperationHistoryService _history = new();
+    private readonly HashSet<AppPage> _initializedPages = new();
+    private SystemSnapshot? _dashboardSnapshot;
+    private IReadOnlyList<DiagnosticFinding> _diagnosticFindings = Array.Empty<DiagnosticFinding>();
+    private string _dashboardStatus = "Загружаю состояние компьютера…";
 
     public SettingsViewModel Settings { get; } = new();
 
@@ -68,10 +74,44 @@ public sealed class MainViewModel : ObservableObject
         Settings.PropertyChanged += (_, _) => EnsurePageVisible();
         EnsurePageVisible();
         ApplyUpdateCommand = new AsyncRelayCommand(ApplyUpdateAsync, () => !IsBusy && _pendingDownloadUrl is not null, ReportUnexpected);
+        RefreshDashboardCommand = new AsyncRelayCommand(RefreshDashboardAsync, () => !IsBusy, ReportUnexpected);
+        RunDiagnosticsCommand = new AsyncRelayCommand(RunDiagnosticsAsync, () => !IsBusy, ReportUnexpected);
+        NavigateCommand = new RelayCommand<string>(Navigate);
+        RefreshHistoryCommand = new RelayCommand(RefreshRecentOperations);
+        RefreshRecentOperations();
+        SaveProfileCommand = new RelayCommand(SaveProfile);
+        LoadProfileCommand = new RelayCommand(LoadProfile);
 
     }
 
     public ObservableCollection<TweakViewModel> Tweaks { get; }
+
+    public ObservableCollection<OperationHistoryEntry> RecentOperations { get; } = new();
+
+    public SystemSnapshot? DashboardSnapshot
+    {
+        get => _dashboardSnapshot;
+        private set => SetField(ref _dashboardSnapshot, value);
+    }
+
+    public IReadOnlyList<DiagnosticFinding> DiagnosticFindings
+    {
+        get => _diagnosticFindings;
+        private set => SetField(ref _diagnosticFindings, value);
+    }
+
+    public string DashboardStatus
+    {
+        get => _dashboardStatus;
+        private set => SetField(ref _dashboardStatus, value);
+    }
+
+    public ICommand RefreshDashboardCommand { get; }
+    public ICommand RunDiagnosticsCommand { get; }
+    public ICommand NavigateCommand { get; }
+    public ICommand RefreshHistoryCommand { get; }
+    public ICommand SaveProfileCommand { get; }
+    public ICommand LoadProfileCommand { get; }
 
     public IEnumerable<TweakViewModel> FilteredTweaks
     {
@@ -165,6 +205,12 @@ public sealed class MainViewModel : ObservableObject
 
     // Три взаимоисключающих флага для переключателей навигации. Снятие флага ничего не делает:
     // RadioButton сообщает «false» старой странице, когда пользователь выбирает другую.
+    public bool IsDashboardPage
+    {
+        get => _page == AppPage.Dashboard;
+        set => SelectPage(AppPage.Dashboard, value);
+    }
+
     public bool IsTweaksPage
     {
         get => _page == AppPage.Tweaks;
@@ -187,6 +233,15 @@ public sealed class MainViewModel : ObservableObject
     {
         get => _page == AppPage.Debloat;
         set => SelectPage(AppPage.Debloat, value);
+    }
+
+    public bool IsApplicationsGroupPage
+    {
+        get => _page is AppPage.Apps or AppPage.Debloat or AppPage.Store;
+        set
+        {
+            if (value) Navigate(nameof(AppPage.Apps));
+        }
     }
 
     public bool IsAppsPage
@@ -256,21 +311,172 @@ public sealed class MainViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
-        StatusText = "Проверяю текущее состояние…";
+        // Стартуем с лёгкой панели. Тяжёлые разделы загружаются только при первом открытии.
+        await RefreshDashboardAsync();
+        StatusText = "Готово";
+    }
 
-        // Независимые проверки идут параллельно: стартовый экран готов быстрее, чем при последовательной загрузке.
-        var info = RefreshInfoAsync();
-        var maintenance = Maintenance.InitializeAsync();
-        var debloat = Debloat.InitializeAsync();
+    private async Task RefreshDashboardAsync()
+    {
         try
         {
-            await RefreshTweakStatesAsync();
-            StatusText = "Готово";
+            DashboardStatus = "Обновляю системные показатели…";
+            DashboardSnapshot = await Task.Run(SystemMonitorService.Collect);
+            RefreshRecentOperations();
+            DashboardStatus = $"Обновлено: {DateTime.Now:HH:mm:ss}";
         }
-        finally
+        catch (Exception ex)
         {
-            // Дожидаемся остальных даже при ошибке, чтобы их исключения не остались неучтёнными.
-            await Task.WhenAll(info, maintenance, debloat);
+            Logger.Error("Не удалось обновить панель состояния", ex);
+            DashboardStatus = "Не удалось получить часть показателей: " + ex.Message;
+        }
+    }
+
+    private async Task RunDiagnosticsAsync()
+    {
+        var snapshot = DashboardSnapshot;
+        if (snapshot is null)
+        {
+            await RefreshDashboardAsync();
+            snapshot = DashboardSnapshot;
+        }
+        if (snapshot is null)
+        {
+            DashboardStatus = "Диагностика недоступна: не удалось получить системные показатели.";
+            return;
+        }
+
+        DashboardStatus = "Проверяю состояние Windows…";
+        DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
+        RecordOperation("Диагностика", "Проверка состояния Windows", "Завершено");
+        DashboardStatus = $"Диагностика завершена: найдено замечаний — {DiagnosticFindings.Count(x => x.Level != DiagnosticLevel.Info)}.";
+    }
+
+    private void RefreshRecentOperations()
+    {
+        RecentOperations.Clear();
+        foreach (var entry in _history.GetRecent(8)) RecentOperations.Add(entry);
+    }
+
+    private void RecordOperation(string category, string operation, string result)
+    {
+        try
+        {
+            var entry = _history.Record(category, operation, result);
+            RecentOperations.Insert(0, entry);
+            while (RecentOperations.Count > 8) RecentOperations.RemoveAt(RecentOperations.Count - 1);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось сохранить историю операций", ex);
+        }
+    }
+
+    private void SaveProfile()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Сохранить профиль оптимизации",
+            Filter = "Профиль WinOptimizer (*.json)|*.json",
+            FileName = "WinOptimizer-profile.json",
+            DefaultExt = ".json",
+            AddExtension = true,
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var profile = OptimizationProfileService.Create(
+                Path.GetFileNameWithoutExtension(dialog.FileName),
+                Tweaks.Where(t => t.IsSelected).Select(t => t.Tweak.Info.Id));
+            OptimizationProfileService.Save(dialog.FileName, profile);
+            StatusText = $"Профиль сохранён: {profile.Name}.";
+            _dialogs.Info("Профиль сохранён",
+                $"Сохранено выбранных твиков: {profile.SelectedTweakIds.Count}. Профиль не применяет изменения автоматически.",
+                DialogKind.Success);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            Logger.Error("Не удалось сохранить профиль оптимизации", ex);
+            _dialogs.Info("Ошибка профиля", ex.Message, DialogKind.Warning);
+        }
+    }
+
+    private void LoadProfile()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Загрузить профиль оптимизации",
+            Filter = "Профиль WinOptimizer (*.json)|*.json",
+            DefaultExt = ".json",
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var profile = OptimizationProfileService.Load(dialog.FileName);
+            var selected = new HashSet<string>(profile.SelectedTweakIds, StringComparer.OrdinalIgnoreCase);
+            foreach (var tweak in Tweaks)
+                tweak.IsSelected = selected.Contains(tweak.Tweak.Info.Id);
+
+            var known = Tweaks.Select(t => t.Tweak.Info.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var unknown = selected.Count(id => !known.Contains(id));
+            StatusText = $"Профиль «{profile.Name}» загружен. Изменений к применению: {PendingCount}.";
+            _dialogs.Info("Профиль загружен",
+                $"Выбрано твиков: {selected.Count - unknown}. Неизвестных идентификаторов: {unknown}. Изменения ещё не применены — проверьте список и нажмите «Применить».",
+                DialogKind.Success);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
+        {
+            Logger.Error("Не удалось загрузить профиль оптимизации", ex);
+            _dialogs.Info("Ошибка профиля", ex.Message, DialogKind.Warning);
+        }
+    }
+
+    private void Navigate(string? pageName)
+    {
+        if (!Enum.TryParse<AppPage>(pageName, ignoreCase: true, out var page))
+            return;
+
+        // Если пользователь скрыл установку, но оставил удаление или Store,
+        // кнопка группы открывает первый доступный подраздел.
+        if (page == AppPage.Apps && !AppSettings.Current.IsTabVisible("Apps"))
+        {
+            page = AppSettings.Current.IsTabVisible("Debloat")
+                ? AppPage.Debloat
+                : AppSettings.Current.IsTabVisible("Store") ? AppPage.Store : AppPage.Settings;
+        }
+
+        SelectPage(page, true);
+    }
+
+    private async Task InitializePageAsync(AppPage page)
+    {
+        if (!_initializedPages.Add(page)) return;
+        try
+        {
+            switch (page)
+            {
+                case AppPage.Tweaks:
+                    await RefreshTweakStatesAsync();
+                    break;
+                case AppPage.System:
+                    await RefreshInfoAsync();
+                    break;
+                case AppPage.Maintenance:
+                    await Maintenance.InitializeAsync();
+                    break;
+                case AppPage.Debloat:
+                    await Debloat.InitializeAsync();
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            _initializedPages.Remove(page);
+            Logger.Error($"Не удалось загрузить раздел {page}", ex);
+            StatusText = $"Не удалось загрузить раздел: {page}";
         }
     }
 
@@ -327,14 +533,17 @@ public sealed class MainViewModel : ObservableObject
         }
 
         _page = page;
+        OnPropertyChanged(nameof(IsDashboardPage));
         OnPropertyChanged(nameof(IsTweaksPage));
         OnPropertyChanged(nameof(IsSystemPage));
         OnPropertyChanged(nameof(IsMaintenancePage));
         OnPropertyChanged(nameof(IsDebloatPage));
         OnPropertyChanged(nameof(IsAppsPage));
+        OnPropertyChanged(nameof(IsApplicationsGroupPage));
         OnPropertyChanged(nameof(IsStorePage));
         OnPropertyChanged(nameof(IsGamesPage));
         OnPropertyChanged(nameof(IsSettingsPage));
+        _ = InitializePageAsync(page);
     }
 
     private void OnTweakPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -390,11 +599,13 @@ public sealed class MainViewModel : ObservableObject
                 {
                     RebootRequired |= vm.RequiresReboot;
                     Logger.Info($"{(apply ? "Применён" : "Откатан")}: {vm.Title}");
+                    RecordOperation("Оптимизация", (apply ? "Применён твик: " : "Откатан твик: ") + vm.Title, "Успешно");
                 }
                 else
                 {
                     failed++;
                     vm.ErrorText = $"Не удалось {(apply ? "применить" : "откатить")}: {outcome.Error}";
+                    RecordOperation("Оптимизация", (apply ? "Применение: " : "Откат: ") + vm.Title, "Ошибка. Подробности записаны в журнал.");
                 }
             }
 
@@ -647,6 +858,7 @@ public sealed class MainViewModel : ObservableObject
 
 public enum AppPage
 {
+    Dashboard,
     Tweaks,
     System,
     Maintenance,

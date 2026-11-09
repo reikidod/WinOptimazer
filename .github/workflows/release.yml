@@ -39,10 +39,22 @@ jobs:
           "CHANNEL=$channel" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Версия релиза: $v, канал: $channel"
 
+      - name: Restore
+        shell: pwsh
+        run: |
+          dotnet restore tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj
+          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить NuGet-зависимости' }
+
+      - name: Build application
+        shell: pwsh
+        run: |
+          dotnet build WinOptimizer.csproj -c Release --no-restore -p:Version=$env:VERSION -p:ReleaseChannel=$env:CHANNEL
+          if ($LASTEXITCODE -ne 0) { throw 'Сборка приложения не прошла' }
+
       - name: Test
         shell: pwsh
         run: |
-          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release --nologo
+          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release --no-restore --nologo
           if ($LASTEXITCODE -ne 0) { throw 'Тесты не прошли, релиз не публикуется' }
 
       - name: Publish
