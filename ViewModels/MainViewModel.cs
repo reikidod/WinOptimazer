@@ -235,6 +235,12 @@ public sealed class MainViewModel : ObservableObject
         set => SelectPage(AppPage.Debloat, value);
     }
 
+    public bool IsApplicationsGroupPage
+    {
+        get => _page is AppPage.Apps or AppPage.Debloat or AppPage.Store;
+        set => SelectPage(AppPage.Apps, value);
+    }
+
     public bool IsAppsPage
     {
         get => _page == AppPage.Apps;
@@ -529,6 +535,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsMaintenancePage));
         OnPropertyChanged(nameof(IsDebloatPage));
         OnPropertyChanged(nameof(IsAppsPage));
+        OnPropertyChanged(nameof(IsApplicationsGroupPage));
         OnPropertyChanged(nameof(IsStorePage));
         OnPropertyChanged(nameof(IsGamesPage));
         OnPropertyChanged(nameof(IsSettingsPage));
