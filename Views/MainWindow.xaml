@@ -1345,6 +1345,21 @@
                                           IsChecked="{Binding Settings.CheckUpdatesOnStartup, Mode=TwoWay}" AutomationProperties.Name="Проверять обновления при запуске" />
                             </Grid>
                         </Border>
+                        <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Text="Бета-версии" FontSize="14.5" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="0,3,0,0"
+                                               Text="Получать обновления из ветки beta: там новые функции раньше, но возможны ошибки. Выключите, чтобы вернуться на стабильную версию." />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                          IsChecked="{Binding Settings.UseBetaChannel, Mode=TwoWay}" AutomationProperties.Name="Бета-версии" />
+                            </Grid>
+                        </Border>
 
                         <TextBlock Text="Безопасность" FontSize="16" FontWeight="SemiBold" Margin="2,14,0,8" />
                         <Border Style="{StaticResource BorderCard}" Margin="0,0,16,10">

@@ -7,6 +7,12 @@ public sealed class AppSettings
 {
     public static readonly int[] ScaleOptions = { 90, 100, 110, 125 };
 
+    public const string StableChannel = "stable";
+    public const string BetaChannel = "beta";
+
+    /// <summary>Канал обновлений: «stable» (ветка main) или «beta» (ветка beta с новыми функциями).</summary>
+    public string UpdateChannel { get; set; } = StableChannel;
+
     /// <summary>Показывать приветственное окно при запуске.</summary>
     public bool ShowWelcome { get; set; } = true;
 
@@ -76,6 +82,7 @@ public sealed class AppSettings
     internal void Normalize()
     {
         if (!ScaleOptions.Contains(UiScalePercent)) UiScalePercent = 100;
+        if (UpdateChannel != StableChannel && UpdateChannel != BetaChannel) UpdateChannel = StableChannel;
     }
 
     internal void ResetToDefaults()
@@ -85,5 +92,6 @@ public sealed class AppSettings
         CheckUpdatesOnStartup = true;
         Animations = true;
         UiScalePercent = 100;
+        UpdateChannel = StableChannel;
     }
 }

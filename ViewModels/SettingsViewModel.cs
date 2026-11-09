@@ -43,6 +43,20 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public bool UseBetaChannel
+    {
+        get => _settings.UpdateChannel == AppSettings.BetaChannel;
+        set
+        {
+            if (UseBetaChannel == value) return;
+            _settings.UpdateChannel = value ? AppSettings.BetaChannel : AppSettings.StableChannel;
+            Commit(nameof(UseBetaChannel));
+            Status = value
+                ? "Канал: бета. Нажмите «Проверить обновления», чтобы получить свежую бету."
+                : "Канал: стабильный. Если установлена бета, она предложит вернуться на стабильную версию.";
+        }
+    }
+
     public bool AskRestorePoint
     {
         get => _settings.AskRestorePoint;
@@ -132,7 +146,7 @@ public sealed class SettingsViewModel : ObservableObject
     {
         _settings.ResetToDefaults();
         _settings.Save();
-        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText) })
+        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText) })
             OnPropertyChanged(p);
         Status = "Настройки сброшены к значениям по умолчанию.";
     }

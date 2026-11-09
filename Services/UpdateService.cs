@@ -64,12 +64,46 @@ public sealed class UpdateService : IUpdateService
         }
     }
 
+    /// <summary>Канал, из которого собрана запущенная версия: «beta» по метке в версии, иначе «stable».</summary>
+    internal string InstalledChannel => ChannelOfLabel(DisplayVersion);
+
+    internal static string ChannelOfLabel(string label) =>
+        label.EndsWith("-beta", StringComparison.OrdinalIgnoreCase) ? AppSettings.BetaChannel : AppSettings.StableChannel;
+
+    /// <summary>Первый (самый свежий) опубликованный релиз нужного канала: стабильный канал пропускает бета-релизы.</summary>
+    internal static JsonElement? PickRelease(JsonElement releases, bool beta)
+    {
+        if (releases.ValueKind != JsonValueKind.Array) return null;
+        foreach (var r in releases.EnumerateArray())
+        {
+            if (r.TryGetProperty("draft", out var d) && d.ValueKind == JsonValueKind.True) continue;
+            var pre = r.TryGetProperty("prerelease", out var p) && p.ValueKind == JsonValueKind.True;
+            if (pre && !beta) continue;
+            return r;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Предлагать ли обновление. Номера сборок общие для обоих каналов и только растут, поэтому достаточно сравнить версии.
+    /// Исключение — возврат с беты на стабильный канал: стабильная версия может быть старше установленной беты.
+    /// </summary>
+    internal static bool IsUpdate(string current, string installedChannel, string latest, string latestChannel, bool betaSelected)
+    {
+        var cmp = CompareVersions(current, latest);
+        if (cmp < 0) return true;
+        return cmp != 0 && !betaSelected
+               && installedChannel == AppSettings.BetaChannel && latestChannel == AppSettings.StableChannel;
+    }
+
     public async Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default)
     {
         var current = CurrentVersion;
         try
         {
-            var url = $"https://api.github.com/repos/{DefaultOwner}/{DefaultRepo}/releases/latest";
+            var beta = AppSettings.Current.UpdateChannel == AppSettings.BetaChannel;
+            // Список, а не /releases/latest: latest не отдаёт бета-релизы (они помечены prerelease).
+            var url = $"https://api.github.com/repos/{DefaultOwner}/{DefaultRepo}/releases?per_page=20";
             using var resp = await Http.GetAsync(url, ct).ConfigureAwait(false);
             if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -79,7 +113,11 @@ public sealed class UpdateService : IUpdateService
             resp.EnsureSuccessStatusCode();
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
-            var root = doc.RootElement;
+            if (PickRelease(doc.RootElement, beta) is not { } root)
+            {
+                return new UpdateCheckResult(false, current, null, null, null,
+                    beta ? "Релизы на GitHub пока не опубликованы." : "Стабильных релизов пока нет.");
+            }
             var tag = root.GetProperty("tag_name").GetString() ?? "";
             var latest = NormalizeVersion(tag);
             var notes = root.TryGetProperty("body", out var body) ? body.GetString() : null;
@@ -112,13 +150,20 @@ public sealed class UpdateService : IUpdateService
                     "Не удалось разобрать номер версии релиза.");
             }
 
-            var cmp = CompareVersions(current, latest);
-            if (cmp < 0 && download is not null)
+            var isPre = root.TryGetProperty("prerelease", out var pre) && pre.ValueKind == JsonValueKind.True;
+            var latestChannel = isPre || tag.EndsWith("-beta", StringComparison.OrdinalIgnoreCase)
+                ? AppSettings.BetaChannel : AppSettings.StableChannel;
+            var update = IsUpdate(current, InstalledChannel, latest, latestChannel, beta);
+            var label = latestChannel == AppSettings.BetaChannel ? latest + " (бета)" : latest;
+            if (update && download is not null)
             {
+                var switching = CompareVersions(current, latest) >= 0;
                 return new UpdateCheckResult(true, current, latest, notes, download,
-                    $"Доступна версия {latest} (сейчас {current}).");
+                    switching
+                        ? $"Переход на стабильную версию {label} (сейчас {DisplayVersion})."
+                        : $"Доступна версия {label} (сейчас {DisplayVersion}).");
             }
-            if (cmp < 0)
+            if (update)
             {
                 return new UpdateCheckResult(true, current, latest, notes, null,
                     $"Доступна версия {latest}, но файл установщика в релизе не найден.");

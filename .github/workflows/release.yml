@@ -6,7 +6,7 @@ name: Release
 # Номер версии: major.minor из <Version> в WinOptimizer.csproj + номер запуска сборки.
 on:
   push:
-    branches: [main]
+    branches: [main, beta]
   workflow_dispatch:
 
 permissions:
@@ -33,8 +33,11 @@ jobs:
           $base = $proj.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ } | Select-Object -First 1
           $p = $base.Split('.')
           $v = "$($p[0]).$($p[1]).${{ github.run_number }}"
+          # main — стабильный канал, beta — бета-канал (релиз помечается prerelease и тегом -beta)
+          $channel = if ($env:GITHUB_REF_NAME -eq 'beta') { 'beta' } else { 'stable' }
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "Версия релиза: $v"
+          "CHANNEL=$channel" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Версия релиза: $v, канал: $channel"
 
       - name: Test
         shell: pwsh
@@ -47,7 +50,7 @@ jobs:
         run: |
           dotnet publish WinOptimizer.csproj -c Release -r win-x64 --self-contained false -o publish `
             -p:Version=$env:VERSION -p:AssemblyVersion="$env:VERSION.0" -p:FileVersion="$env:VERSION.0" `
-            -p:PublishReadyToRun=true
+            -p:PublishReadyToRun=true -p:ReleaseChannel=$env:CHANNEL
           if ($LASTEXITCODE -ne 0) { throw 'dotnet publish завершился с ошибкой' }
           if (-not (Test-Path publish\WinOptimizer.exe)) { throw 'publish\WinOptimizer.exe не найден' }
           Compress-Archive -Path publish\* -DestinationPath WinOptimizer-win-x64.zip
@@ -76,5 +79,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
-          gh release create "v$env:VERSION" WinOptimizer-win-x64.zip `
-            --target ${{ github.sha }} --title "v$env:VERSION" --notes-file notes.md
+          if ($env:CHANNEL -eq 'beta') {
+            $tag = "v$env:VERSION-beta"
+            gh release create $tag WinOptimizer-win-x64.zip --target ${{ github.sha }} --title "$tag (бета)" --notes-file notes.md --prerelease
+          } else {
+            $tag = "v$env:VERSION"
+            gh release create $tag WinOptimizer-win-x64.zip --target ${{ github.sha }} --title $tag --notes-file notes.md --latest
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Не удалось создать релиз' }

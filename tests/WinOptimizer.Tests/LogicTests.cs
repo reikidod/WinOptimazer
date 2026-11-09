@@ -468,3 +468,53 @@ public class TargetFpsTests
         Assert.Equal(v.Skip(1).OrderBy(x => x), v.Skip(1));
     }
 }
+
+public class UpdateChannelTests
+{
+    private const string Json = """
+        [{"tag_name":"v0.4.60-beta","prerelease":true,"draft":false},
+         {"tag_name":"v0.4.59","prerelease":false,"draft":true},
+         {"tag_name":"v0.4.58","prerelease":false,"draft":false}]
+        """;
+
+    private static string? Tag(bool beta)
+    {
+        using var doc = System.Text.Json.JsonDocument.Parse(Json);
+        return UpdateService.PickRelease(doc.RootElement, beta)?.GetProperty("tag_name").GetString();
+    }
+
+    [Fact] public void Stable_SkipsBetaAndDrafts() => Assert.Equal("v0.4.58", Tag(false));
+    [Fact] public void Beta_TakesNewestPublished() => Assert.Equal("v0.4.60-beta", Tag(true));
+
+    [Fact]
+    public void PickRelease_EmptyOrNotArray_ReturnsNull()
+    {
+        using var empty = System.Text.Json.JsonDocument.Parse("[]");
+        using var obj = System.Text.Json.JsonDocument.Parse("{}");
+        Assert.Null(UpdateService.PickRelease(empty.RootElement, true));
+        Assert.Null(UpdateService.PickRelease(obj.RootElement, true));
+    }
+
+    [Theory]
+    [InlineData("0.4.50", "stable", "0.4.60", "beta", true, true)]
+    [InlineData("0.4.50", "stable", "0.4.50", "stable", false, false)]
+    [InlineData("0.4.60", "beta", "0.4.58", "stable", false, true)]   // возврат с беты на стабильную
+    [InlineData("0.4.60", "beta", "0.4.58", "stable", true, false)]   // остаёмся на бете
+    [InlineData("0.4.60", "beta", "0.4.60", "stable", false, false)]
+    public void IsUpdate_Rules(string cur, string curCh, string latest, string latestCh, bool beta, bool expected) =>
+        Assert.Equal(expected, UpdateService.IsUpdate(cur, curCh, latest, latestCh, beta));
+
+    [Theory]
+    [InlineData("0.4.60-beta", "beta")]
+    [InlineData("0.4.60-stable", "stable")]
+    [InlineData("0.4.60-dev", "stable")]
+    public void ChannelOfLabel(string label, string expected) => Assert.Equal(expected, UpdateService.ChannelOfLabel(label));
+
+    [Fact]
+    public void UnknownChannel_IsNormalizedToStable()
+    {
+        var s = new WinOptimizer.Infrastructure.AppSettings { UpdateChannel = "nightly" };
+        s.Normalize();
+        Assert.Equal("stable", s.UpdateChannel);
+    }
+}
