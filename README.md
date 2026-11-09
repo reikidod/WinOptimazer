@@ -1,153 +1,132 @@
-# WinOptimizer
+<p align="center">
+  <img src="Assets/app.ico" width="72" height="72" alt="WinOptimizer">
+</p>
 
-**WinOptimizer** — бесплатный оптимизатор Windows 10/11 с тёмным интерфейсом: безопасные твики с откатом, удаление лишних программ «под ноль», установка нужных приложений и подготовка ПК к играм. Всё в одном окне, без установки десятка утилит.
+<h1 align="center">WinOptimizer</h1>
 
-[![Лицензия: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <strong>Бесплатный оптимизатор Windows 10/11</strong><br>
+  Твики с откатом · debloat · программы · игры · очистка — в одном тёмном окне
+</p>
+
+<p align="center">
+  <a href="https://github.com/reikidod/WinOptimazer/releases/latest"><img src="https://img.shields.io/github/v/release/reikidod/WinOptimazer?style=for-the-badge&label=stable&color=4B6CA3" alt="Stable release"></a>
+  <a href="https://github.com/reikidod/WinOptimazer/releases"><img src="https://img.shields.io/github/v/release/reikidod/WinOptimazer?include_prereleases&style=for-the-badge&label=beta&color=6B5B95" alt="Beta release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT"></a>
+  <a href="https://dotnet.microsoft.com/download/dotnet/8.0"><img src="https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
+</p>
+
+<p align="center">
+  <a href="https://github.com/reikidod/WinOptimazer/releases/latest"><strong>⬇ Скачать последнюю версию</strong></a>
+  ·
+  <a href="https://github.com/reikidod/WinOptimazer/releases">Все релизы</a>
+  ·
+  <a href="#что-умеет">Возможности</a>
+  ·
+  <a href="#безопасность">Безопасность</a>
+</p>
+
+---
+
+## Зачем это нужно
+
+Один инструмент вместо набора разрозненных утилит: ускорить систему, убрать лишнее, поставить нужное и подготовить ПК к играм — с понятными описаниями и возможностью откатить изменения.
+
+| | |
+|:---:|:---|
+| ⚡ | **Оптимизация** — твики реестра и служб с оценкой пользы и предупреждениями |
+| 🎮 | **Игры** — Steam / Epic / GOG / Xbox, OptiScaler, режим высокой производительности GPU |
+| 📦 | **Программы** — установка популярного софта, Zapret, TG WS Proxy, VC++ / DirectX |
+| 🛒 | **Microsoft Store** — каталог с иконками через winget |
+| 🗑️ | **Удаление** — программы и UWP с поиском, фильтрами и зачисткой остатков |
+| 🧹 | **Очистка** — временные файлы, кэши, автозагрузка |
+| 💻 | **Мой ПК** — процессор, видеокарта, память, диски |
+| 🎨 | **Темы** — несколько тёмных оформлений, акценты, свой фон |
+
+Обновления ставятся из приложения: **«Проверить обновления»** (каналы stable / beta в настройках).
+
+---
+
+## Быстрый старт
+
+1. Скачайте **`WinOptimizer-Setup.exe`** или **`WinOptimizer-win-x64.zip`** из [последнего релиза](https://github.com/reikidod/WinOptimazer/releases/latest).
+2. Установите или распакуйте (лучше не оставлять в «Загрузках»).
+3. Запустите `WinOptimizer.exe`. SmartScreen может предупредить о неизвестном издателе — исходники открыты, сборка с GitHub Actions.
+4. В разделе **Оптимизация** отметьте твики и примените. Согласитесь на **точку восстановления**, если предложит.
+5. Не понравилось — отмените твик: прежние значения сохранены.
+
+> Совет: твики с предупреждением (защита, обновления Windows) включайте только осознанно.
+
+### Требования
+
+- Windows 10 или 11, **64-bit**
+- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (установщик может поставить сам)
+- Права администратора (нужны для HKLM и служб)
+
+---
 
 ## Что умеет
 
-| Раздел | Что делает |
-|--------|------------|
-| **Оптимизация системы** | Каталог твиков реестра и служб с описанием, оценкой пользы и предупреждениями. Каждый твик можно отменить. Перед изменениями предлагается точка восстановления. |
-| **Игры** | Находит игры Steam, Epic, GOG и Xbox, ставит OptiScaler, включает режим высокой производительности GPU. |
-| **Установка программ** | Популярные программы одной кнопкой, найденные Zapret и TG WS Proxy подхватываются автоматически. Рекомендуемые файлы (VC++ Runtimes, DirectX) и полезные утилиты проверяются по контрольной сумме. |
-| **Microsoft Store** | Каталог приложений Store с иконками, установка через winget (с проверкой и починкой winget). |
-| **Удаление программ** | Список всех программ и приложений Windows с поиском и фильтрами (игры, программы, системные), удаление с зачисткой остатков. Игры из лаунчеров удаляются только через лаунчер. |
-| **Очистка и автозагрузка** | Временные файлы, кэши, управление автозагрузкой. |
-| **Мой ПК** | Характеристики процессора, видеокарты, памяти, накопителей и системы. |
+| Раздел | Описание |
+|--------|----------|
+| **Оптимизация системы** | Каталог твиков с описанием, оценкой пользы и откатом. Перед изменениями — точка восстановления. |
+| **Игры** | Обнаружение игр, OptiScaler, режим производительности GPU, подсказки по настройкам. |
+| **Установка программ** | Популярные программы, Zapret / TG WS Proxy, рекомендуемые runtime’ы с проверкой SHA-256. |
+| **Microsoft Store** | Каталог с иконками, установка через winget (с проверкой и починкой). |
+| **Удаление программ** | Поиск и фильтры; игры лаунчеров удаляются только через лаунчер. |
+| **Очистка и автозагрузка** | Temp, кэши, автозапуск. |
+| **Мой ПК** | Сводка по железу и системе. |
+| **Настройки** | Приветствие, автозапуск, масштаб UI, анимации, канал обновлений, вкладки. |
 
-Обновления приложение скачивает само из GitHub Releases: кнопка **«Проверить обновления»** в левом нижнем углу.
-
-## Требования
-
-- Windows 10 или 11, 64-бит
-- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (если не установлен, Windows предложит его скачать)
-- Права администратора (приложение запросит их при запуске: они нужны для твиков HKLM и служб)
-
-## Как пользоваться
-
-1. Скачайте `WinOptimizer-win-x64.zip` из [последнего релиза](../../releases/latest) и распакуйте в любую папку (не в «Загрузки», если хотите оставить приложение насовсем).
-2. Запустите `WinOptimizer.exe`. SmartScreen может предупредить о неизвестном издателе: сборка не подписана платным сертификатом, исходники открыты.
-3. Откройте **Оптимизация системы**, отметьте нужные твики и нажмите применить. Приложение предложит создать точку восстановления: согласитесь.
-4. Если что-то не понравилось, вернитесь в раздел и отмените твик: исходные значения сохранены.
-5. Остальные разделы работают так же: выберите, нажмите кнопку, дождитесь сообщения.
-
-> Совет: твики с пометкой о предупреждении (отключение защиты, служб обновления) включайте осознанно и читайте описание.
+---
 
 ## Безопасность
 
-- Все изменения реестра запоминают прежние значения и отменяются кнопкой.
-- Скачиваемые файлы (рекомендуемые утилиты и библиотеки) сверяются по SHA-256.
-- Игры из Steam/Epic и других лаунчеров не удаляются напрямую, чтобы не снести лаунчер.
-- Приложение не отправляет данные о вашем ПК. Логи лежат в `%ProgramData%\WinOptimizer\log.txt`.
+- Изменения реестра **запоминаются** и откатываются кнопкой.
+- Скачиваемые файлы сверяются по **SHA-256**.
+- Игры Steam / Epic и др. **не удаляются напрямую**.
+- **Нет телеметрии**: данные о ПК никуда не отправляются. Логи: `%ProgramData%\WinOptimizer\log.txt`.
+- Код открыт, релизы собирает **GitHub Actions**.
+
+---
+
+## Каналы обновлений
+
+| Канал | Ветка | Что получает |
+|--------|-------|----------------|
+| **Stable** | `main` | Проверенные релизы |
+| **Beta** | `beta` | Новые функции раньше, возможны шероховатости |
+
+Переключение — в **Настройках** приложения.
+
+---
 
 ## Известные ограничения
 
-- Работает только на Windows, на Linux и macOS не запустится.
-- OptiScaler нельзя использовать в онлайн-играх с античитом (VAC, EAC, BattlEye): возможен бан.
-- Подбор настроек игр по железу пока в разработке.
+- Только Windows (не Linux / macOS).
+- OptiScaler **нельзя** в онлайн-играх с античитом (VAC, EAC, BattlEye) — риск бана.
+- Подбор игровых настроек по железу ещё развивается.
 
-**Лицензия:** [MIT](LICENSE)
+---
+
+## Лицензия
+
+[MIT](LICENSE) — можно использовать, менять и распространять со ссылкой на лицензию.
+
+---
 
 <details>
-<summary><b>Сборка проекта, тесты, подпись и установщик</b> (для разработчиков)</summary>
+<summary><b>🛠 Сборка, тесты, подпись и установщик</b> (для разработчиков)</summary>
 
-## Сборка
+### Сборка
 
 ```powershell
 dotnet build -c Release
 dotnet run
 ```
 
-Иконка: `Assets/app.ico`  
-Лицензия копируется в выходную папку вместе с `LICENSE`.
-
-## Windows Defender
-
-Лицензия MIT **не отключает** SmartScreen и Defender. Они смотрят на:
-
-1. **Цифровую подпись** (Authenticode) — самый сильный сигнал  
-2. Репутацию файла (сколько людей запуска и без жалоб)  
-3. Поведение (запись в реестр, службы, админ-права)
-
-Что можно сделать:
-
-- Собирать **Release** и не путать с вредоносными именами  
-- Опубликовать исходники на GitHub (прозрачность)  
-- При ложном срабатывании: [Microsoft Security Intelligence](https://www.microsoft.com/en-us/wdsi/filesubmission) → Submit a file  
-- Для распространения — подписать exe сертификатом (например, через `signtool` и купленный/облачный код-signing сертификат)
-
-`requireAdministrator` в манифесте нужен для твиков HKLM и служб; из‑за этого SmartScreen строже к «неизвестным» сборкам — это нормально для утилит такого типа.
-
-## Подпись Authenticode
-
-### Важно
-
-| Тип | SmartScreen | Кому подходит |
-|-----|-------------|----------------|
-| Самоподпись (в комплекте) | Всё равно предупреждает, пока не доверите сертификат вручную | Своя машина / тесты |
-| OV/EV Code Signing от CA | Репутация накапливается, предупреждений меньше | Раздача другим людям |
-
-**Бесплатно «как у Microsoft Store» сделать нельзя** — нужен платный code signing сертификат.
-
-### Локальная подпись (самоподпись)
-
-На **Windows** (нужны PowerShell от пользователя и Windows SDK / Visual Studio):
-
-```powershell
-# 1. Сертификат + доверие для текущего пользователя
-.\scripts\New-CodeSigningCert.ps1
-
-# 2. Сборка + подпись
-.\scripts\Sign-Release.ps1
-```
-
-Готовый exe: `publish\WinOptimizer.exe`
-
-Пароль PFX по умолчанию: `WinOptimizerLocal`  
-Файл: `certs\WinOptimizer-Codesign.pfx`
-
-### Коммерческий сертификат
-
-```powershell
-dotnet publish -c Release -r win-x64 -o publish
-.\scripts\Sign-WithCommercialCert.ps1 -PfxPath "C:\path\to\real.pfx" -Password "secret"
-```
-
-Покупают, например, у SSL.com / Sectigo / DigiCert (Code Signing или EV Code Signing).
-
-### Проверка
-
-```powershell
-signtool verify /pa /v publish\WinOptimizer.exe
-# или
-Get-AuthenticodeSignature publish\WinOptimizer.exe
-```
-
-
-## Установщик (Inno Setup)
-
-Нужны [.NET 8 SDK](https://dotnet.microsoft.com/download) и [Inno Setup 6](https://jrsoftware.org/isdl.php).
-
-```powershell
-# одной командой: publish + ISCC
-powershell -ExecutionPolicy Bypass -File .\scripts\Build-Installer.ps1
-```
-
-Или вручную:
-
-```powershell
-dotnet publish -c Release -r win-x64 --self-contained false -o publish
-& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" .\installer\WinOptimizer.iss
-```
-
-Результат: `dist\WinOptimizer-Setup-0.2.0.exe`
-
-Скрипт: `installer\WinOptimizer.iss`  
-- x64, права администратора  
-- русский / english  
-- лицензия MIT  
-- ярлык в меню Пуск, опционально на рабочий стол
+Иконка: `Assets/app.ico` · лицензия копируется в выходную папку.
 
 ### Тесты
 
@@ -155,8 +134,49 @@ dotnet publish -c Release -r win-x64 --self-contained false -o publish
 dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release
 ```
 
-### Автоматические релизы
+### Установщик (Inno Setup)
 
-Каждый push в `main` запускает GitHub Actions: тесты → публикация → пробный запуск собранного приложения → релиз `v<major.minor>.<номер сборки>` с архивом `WinOptimizer-win-x64.zip`. Версия и буквенная метка (`beta`) задаются в `WinOptimizer.csproj` (`Version`, `ReleaseChannel`).
+Нужны [.NET 8 SDK](https://dotnet.microsoft.com/download) и [Inno Setup 6](https://jrsoftware.org/isdl.php).
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Build-Installer.ps1
+```
+
+Результат: `dist\WinOptimizer-Setup.exe`
+
+### Подпись Authenticode
+
+| Тип | SmartScreen | Кому подходит |
+|-----|-------------|----------------|
+| Самоподпись | Предупреждает, пока не доверите сертификат | Своя машина / тесты |
+| OV/EV Code Signing | Репутация накапливается | Раздача другим |
+
+```powershell
+.\scripts\New-CodeSigningCert.ps1
+.\scripts\Sign-Release.ps1
+```
+
+Коммерческий сертификат:
+
+```powershell
+dotnet publish -c Release -r win-x64 -o publish
+.\scripts\Sign-WithCommercialCert.ps1 -PfxPath "C:\path\to\real.pfx" -Password "secret"
+```
+
+Проверка: `signtool verify /pa /v publish\WinOptimizer.exe`
+
+### Windows Defender / SmartScreen
+
+MIT **не отключает** SmartScreen. Смотрят на подпись, репутацию и поведение. Ложные срабатывания: [Microsoft Security Intelligence](https://www.microsoft.com/en-us/wdsi/filesubmission).
+
+`requireAdministrator` нужен для твиков HKLM и служб — из‑за этого SmartScreen строже к «неизвестным» сборкам.
+
+### CI
+
+Push в `main` или `beta` → GitHub Actions: тесты → publish → smoke-test → GitHub Release (`WinOptimizer-win-x64.zip` + `WinOptimizer-Setup.exe`).
 
 </details>
+
+<p align="center">
+  <sub>Сделано с заботой о производительности Windows · <a href="https://github.com/reikidod/WinOptimazer">reikidod/WinOptimazer</a></sub>
+</p>
