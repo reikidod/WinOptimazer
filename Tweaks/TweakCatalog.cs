@@ -45,8 +45,8 @@ public static class TweakCatalog
         return
         [
             new RegistryTweak(
-                new TweakInfo("browser-updaters-off", "Отключить фоновые службы обновления Edge и Chrome",
-                    "Найденные в системе службы обновления и повышения прав Edge и Chrome переводятся в режим «Отключена».",
+                new TweakInfo("browser-updaters-off", "Отключить фоновое обновление Edge и Chrome",
+                    "Останавливает фоновые службы, которые сами обновляют браузеры. Обновления ставятся при запуске браузера или вручную.",
                     EvidenceLevel.Reasoned, "Убирает фоновые процессы обновления; браузеры обновляются при запуске или вручную.",
                     RequiresReboot: true,
                     Warning: "Браузеры перестанут обновляться в фоне, в том числе патчами безопасности. Обновляйте их вручную.",
@@ -61,8 +61,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "game-dvr-off",
-                "Отключить фоновую запись игр (Xbox Game DVR)",
-                "Выключает фоновый захват видео и клипов Xbox Game Bar.",
+                "Отключить фоновую запись игр",
+                "Xbox Game Bar перестаёт записывать видео и клипы в фоне, освобождая процессор и видеокарту.",
                 EvidenceLevel.Reasoned,
                 "Количественных замеров мало; убирает реальные фоновые задачи захвата.",
                 RequiresReboot: false,
@@ -77,8 +77,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "fso-off",
-                "Отключить Fullscreen Optimizations (глобально)",
-                "GameDVR_FSEBehaviorMode = 2 — попытка отключить FSO для всех игр.",
+                "Отключить оптимизацию полноэкранного режима",
+                "Игры работают в настоящем полноэкранном режиме. Помогает, если есть микрофризы или проблемы с задержкой.",
                 EvidenceLevel.NoData,
                 "Эффект зависит от игры; измеряйте сами.",
                 RequiresReboot: false,
@@ -95,8 +95,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "mouse-accel-off",
-                "Отключить ускорение указателя мыши",
-                "Движение курсора 1:1 без ускорения Windows.",
+                "Мышь без ускорения",
+                "Курсор двигается строго за рукой, без разгона от скорости движения. Точнее целиться в играх.",
                 EvidenceLevel.Reasoned,
                 "Важно для точности; современные игры с Raw Input почти не зависят от этого.",
                 RequiresReboot: false,
@@ -112,8 +112,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "mmcss-games",
-                "MMCSS: приоритет Games",
-                "GPU Priority / Priority / Scheduling Category для задач Games.",
+                "Больше ресурсов для игр",
+                "Windows отдаёт играм повышенный приоритет процессора и видеокарты.",
                 EvidenceLevel.NoData,
                 "Классическая настройка MMCSS; эффект зависит от нагрузки.",
                 RequiresReboot: false,
@@ -128,8 +128,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "transparency-off",
-                "Отключить эффекты прозрачности",
-                "Выключает прозрачность панели задач, «Пуск» и окон.",
+                "Убрать прозрачность окон",
+                "Панель задач, «Пуск» и окна без эффекта стекла. Чуть меньше нагрузка на видеокарту.",
                 EvidenceLevel.Measured,
                 "PC-Tuning: меньше циклов CPU у dwm.exe в единичном замере.",
                 RequiresReboot: false,
@@ -144,8 +144,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "sticky-keys-off",
-                "Отключить окно «Залипание клавиш»",
-                "Убирает запрос при многократном Shift в играх.",
+                "Отключить «Залипание клавиш»",
+                "Окно с вопросом больше не появляется, если несколько раз нажать Shift в игре.",
                 EvidenceLevel.Reasoned,
                 "Устраняет навязчивое окно, а не нагрузку.",
                 RequiresReboot: false,
@@ -156,8 +156,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "animations-off",
-                "Отключить анимации окон",
-                "MinAnimate = 0 — мгновенное свертывание/развертывание.",
+                "Убрать анимацию окон",
+                "Окна сворачиваются и разворачиваются мгновенно.",
                 EvidenceLevel.Reasoned,
                 "Субъективная отзывчивость UI.",
                 RequiresReboot: false,
@@ -168,8 +168,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "widgets-off",
-                "Отключить виджеты / News and Interests",
-                "Убирает кнопку виджетов с панели задач.",
+                "Убрать виджеты и новости",
+                "Кнопка виджетов и новостей пропадает с панели задач.",
                 EvidenceLevel.Reasoned,
                 "Меньше фоновых процессов ленты новостей.",
                 RequiresReboot: false,
@@ -180,8 +180,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "search-highlights-off",
-                "Отключить подсветку поиска / Bing в поиске",
-                "Убирает рекламные блоки и новости из поиска Windows.",
+                "Убрать рекламу и Bing из поиска",
+                "В поиске Windows нет рекламных блоков, новостей и результатов из интернета.",
                 EvidenceLevel.Reasoned,
                 "Меньше сетевой активности поиска.",
                 RequiresReboot: false,
@@ -196,8 +196,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "network-throttling-off",
-                "NetworkThrottlingIndex = off",
-                "Снимает ограничение MMCSS на сетевой трафик (~10 по умолчанию).",
+                "Снять ограничение на сетевой трафик",
+                "Windows не притормаживает сеть, пока играет музыка или видео. Меньше задержки в онлайн-играх.",
                 EvidenceLevel.NoData,
                 "Часто рекомендуют для онлайн-игр; замеры зависят от сети.",
                 RequiresReboot: false,
@@ -208,8 +208,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "system-responsiveness-10",
-                "SystemResponsiveness = 10",
-                "Минимальный резерв CPU для low-priority (MMCSS).",
+                "Меньше резерва процессора для фона",
+                "Фоновым задачам достаётся минимум процессора, игры и программы получают больше.",
                 EvidenceLevel.NoData,
                 "Значения ниже 10 Windows может игнорировать.",
                 RequiresReboot: false,
@@ -220,8 +220,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "tcp-nagle-off",
-                "Отключить Nagle (TcpNoDelay / TcpAckFrequency)",
-                "Может снизить latency в части онлайн-игр.",
+                "Меньше задержки в онлайн-играх",
+                "Отключает склейку мелких сетевых пакетов, из-за которой данные уходят с небольшой паузой.",
                 EvidenceLevel.NoData,
                 "Эффект неоднозначен; на части соединений вреден.",
                 RequiresReboot: false,
@@ -236,8 +236,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "tcp-autotuning-normal",
-                "TCP Autotuning = normal",
-                "Включает нормальную автонастройку окна приёма TCP (лучше на быстрых каналах).",
+                "Оптимальная скорость загрузки",
+                "Включает штатную автоподстройку приёма данных. Лучше работает на быстром интернете.",
                 EvidenceLevel.Reasoned,
                 "Соответствует netsh interface tcp set global autotuninglevel=normal.",
                 RequiresReboot: false,
@@ -248,8 +248,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "tcp-timestamps-off",
-                "Отключить TCP timestamps",
-                "Убирает опцию timestamps; иногда чуть снижает overhead, но ломает PAWS.",
+                "Отключить метки времени в сети",
+                "Чуть меньше служебных данных в каждом пакете. Эффект небольшой.",
                 EvidenceLevel.NoData,
                 "На современных ОС обычно оставляют включённым.",
                 RequiresReboot: true,
@@ -261,8 +261,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "tcp-max-connections",
-                "Увеличить MaxUserPort / TcpTimedWaitDelay",
-                "Больше исходящих портов и быстрее освобождение TIME_WAIT — полезно при множестве коротких соединений.",
+                "Больше одновременных соединений",
+                "Освобождает сетевые порты быстрее и даёт их больше. Помогает торрентам и программам со множеством подключений.",
                 EvidenceLevel.Reasoned,
                 "Часто советуют для P2P и нагруженных клиентов.",
                 RequiresReboot: true,
@@ -276,8 +276,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "dns-cache-positive",
-                "DNS-кэш: дольше хранить успешные ответы",
-                "Увеличивает MaxCacheTtl — меньше повторных запросов к DNS.",
+                "Дольше помнить адреса сайтов",
+                "Windows реже запрашивает у DNS уже известные адреса, сайты открываются чуть быстрее.",
                 EvidenceLevel.NoData,
                 "На часто меняющихся CDN может чуть устаревать ответы.",
                 RequiresReboot: false,
@@ -291,8 +291,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "disable-nln-probing",
-                "Отключить Network Location Awareness probes",
-                "Меньше фоновых HTTP-проверок «есть ли интернет» (NCSI).",
+                "Не проверять наличие интернета",
+                "Windows перестаёт в фоне обращаться к серверам Microsoft, чтобы узнать, есть ли связь.",
                 EvidenceLevel.NoData,
                 "Иногда ломает индикатор «Подключено / Без интернета» в трее.",
                 RequiresReboot: false,
@@ -305,8 +305,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "disable-wifi-sense-hotspot",
-                "Отключить автоматическое подключение к hotspot / Wi‑Fi Sense",
-                "Не подключаться к открытым точкам и не раздавать данные о сетях.",
+                "Не подключаться к открытым Wi‑Fi сам",
+                "Windows не заходит автоматически в открытые точки доступа и не делится данными о сетях.",
                 EvidenceLevel.Reasoned,
                 "Снижает лишний фон и риски на публичных Wi‑Fi.",
                 RequiresReboot: false,
@@ -321,8 +321,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "prefer-ipv4-over-ipv6",
-                "Предпочитать IPv4 перед IPv6",
-                "Меняет приоритет префиксов: меньше задержек там, где IPv6 «ломаный».",
+                "Предпочитать IPv4",
+                "Сначала пробуется старый протокол IPv4. Помогает, если часть сайтов или игр грузится с задержкой.",
                 EvidenceLevel.NoData,
                 "Если IPv6 у провайдера нормальный — твик не нужен.",
                 RequiresReboot: true,
@@ -336,8 +336,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "lanman-throughput",
-                "LanmanWorkstation: крупнее буферы SMB",
-                "Чуть быстрее копирование по локальной сети (SMB).",
+                "Быстрее копировать по локальной сети",
+                "Увеличивает буферы при работе с общими папками и сетевыми дисками.",
                 EvidenceLevel.NoData,
                 "На WAN эффект минимален.",
                 RequiresReboot: true,
@@ -352,8 +352,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "qos-not-reserve-bandwidth",
-                "Не резервировать 20% канала под QoS",
-                "NonBestEffortLimit = 0: приложениям доступна вся полоса (если QoS-политики не заданы иначе).",
+                "Убрать резервирование 20% интернета",
+                "Windows перестаёт держать про запас часть канала. Программам доступна вся скорость.",
                 EvidenceLevel.Reasoned,
                 "Миф «всегда режется 20%» преувеличен, но limit=0 снимает резерв для PSched.",
                 RequiresReboot: false,
@@ -366,8 +366,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "disable-delivery-optimization",
-                "Отключить Delivery Optimization (P2P-обновления)",
-                "Windows не раздаёт и не качает обновления с других ПК в интернете.",
+                "Не раздавать обновления другим ПК",
+                "Windows не качает и не отдаёт части обновлений через интернет с чужих компьютеров. Экономит трафик.",
                 EvidenceLevel.Reasoned,
                 "Экономит фон на слабом канале; обновления только с серверов Microsoft.",
                 RequiresReboot: false,
@@ -381,8 +381,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "disable-wifi-power-saving",
-                "Отключить энергосбережение Wi‑Fi (через политику)",
-                "Снижает обрывы на ноутбуках, когда адаптер «засыпает».",
+                "Не усыплять Wi‑Fi адаптер",
+                "Адаптер не засыпает для экономии энергии. Меньше обрывов связи на ноутбуках.",
                 EvidenceLevel.NoData,
                 "Полностью режим адаптера лучше выставить в диспетчере устройств; здесь — смежные ключи.",
                 RequiresReboot: false,
@@ -397,8 +397,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "vbs-off",
-                "Отключить VBS (изоляция на основе виртуализации)",
-                "Снижает накладные расходы гипервизора в играх.",
+                "Отключить изоляцию Windows на виртуализации",
+                "Выключает защитный слой на основе виртуализации. Игры могут давать больше FPS, но защита слабее.",
                 EvidenceLevel.Measured,
                 "Tom's Hardware и др.: до нескольких процентов в зависимости от игры.",
                 RequiresReboot: true,
@@ -410,8 +410,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "hvci-off",
-                "Отключить целостность памяти (HVCI)",
-                "Выключает Memory Integrity.",
+                "Отключить целостность памяти",
+                "Выключает проверку драйверов в защищённой области. Прирост FPS на части ПК, защита слабее.",
                 EvidenceLevel.Measured,
                 "Связано с VBS; прирост в играх в тех же тестах.",
                 RequiresReboot: true,
@@ -426,8 +426,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "background-apps-off",
-                "Запретить фоновую работу приложений Store",
-                "Политика LetAppsRunInBackground = 2.",
+                "Запретить приложениям Store работать в фоне",
+                "Магазинные приложения не работают в фоне и не расходуют память и трафик.",
                 EvidenceLevel.Reasoned,
                 "Меньше фоновой активности UWP.",
                 RequiresReboot: false,
@@ -441,8 +441,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "fast-startup-off",
-                "Отключить быстрый запуск (Fast Startup)",
-                "Полное выключение вместо гибернации ядра.",
+                "Отключить быстрый запуск",
+                "Выключение полностью завершает работу системы. Меньше странных ошибок после включения.",
                 EvidenceLevel.Reasoned,
                 "Стабильность драйверов между сеансами.",
                 RequiresReboot: false,
@@ -456,8 +456,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "prefetch-off",
-                "Отключить Prefetch (для SSD)",
-                "EnablePrefetcher = 0.",
+                "Отключить предзагрузку программ",
+                "Windows не заранее подгружает данные программ. Имеет смысл на SSD.",
                 EvidenceLevel.NoData,
                 "На SSD выгода Prefetch минимальна.",
                 RequiresReboot: false,
@@ -471,8 +471,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "hags-on",
-                "Hardware-accelerated GPU Scheduling",
-                "HwSchMode = 2. Требует перезагрузки.",
+                "Ускорить планирование задач видеокарты",
+                "Видеокарта сама управляет своей очередью задач. Может добавить FPS. Нужна перезагрузка.",
                 EvidenceLevel.NoData,
                 "На части NVIDIA/AMD может снизить latency.",
                 RequiresReboot: true,
@@ -486,8 +486,8 @@ public static class TweakCatalog
         new PowerPlanTweak(
             new TweakInfo(
                 "power-high-performance",
-                "Схема питания «Высокая производительность»",
-                "Меньше парковки ядер, ниже latency отклика CPU.",
+                "Режим питания «Высокая производительность»",
+                "Процессор не снижает частоту и не отключает ядра. Быстрее отклик, но больше нагрев и расход батареи.",
                 EvidenceLevel.NoData,
                 "Зависит от платформы; на ноутбуке сильнее греет и разряжает батарею.",
                 RequiresReboot: false,
@@ -501,7 +501,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "windows-update-disable",
                 "Отключить автоматические обновления Windows",
-                "Политика NoAutoUpdate: Центр обновления не ставит патчи сам.",
+                "Центр обновления сам ничего не скачивает и не ставит.",
                 EvidenceLevel.Reasoned,
                 "Меньше фоновой нагрузки и внезапных перезагрузок. Обновления безопасности придётся ставить вручную.",
                 RequiresReboot: false,
@@ -516,8 +516,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "windows-update-notify-only",
-                "Только уведомлять об обновлениях (не ставить)",
-                "AUOptions = 2: скачивание/установка только с разрешения пользователя.",
+                "Обновления Windows только с разрешения",
+                "Windows сообщает о новых обновлениях, а скачивает и ставит их только по вашему согласию.",
                 EvidenceLevel.Reasoned,
                 "Компромисс: не отключает обновления полностью, но убирает тихую установку.",
                 RequiresReboot: false,
@@ -531,8 +531,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "driver-update-disable",
-                "Не обновлять драйверы через Windows Update",
-                "ExcludeWUDriversInQualityUpdate — драйверы не подтягиваются вместе с качеством.",
+                "Не ставить драйверы через Центр обновления",
+                "Windows не подменяет установленные вами драйверы своими версиями.",
                 EvidenceLevel.Reasoned,
                 "Полезно, если стабильные драйверы GPU/чипа уже стоят с сайта вендора.",
                 RequiresReboot: false,
@@ -547,7 +547,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "firewall-disable-all-profiles",
                 "Отключить брандмауэр Windows",
-                "Выключает Defender Firewall на всех профилях (Domain, Private, Public).",
+                "Полностью выключает встроенный брандмауэр во всех сетях.",
                 EvidenceLevel.Reasoned,
                 "Раскройте стрелкой, чтобы отключить только отдельные профили.",
                 RequiresReboot: false,
@@ -565,8 +565,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "firewall-disable-domain",
-                "Только профиль Domain",
-                "EnableFirewall = 0 для доменного профиля.",
+                "Брандмауэр: сеть организации",
+                "Выключает брандмауэр только в корпоративной (доменной) сети.",
                 EvidenceLevel.Reasoned,
                 "На домашнем ПК почти не используется.",
                 RequiresReboot: false,
@@ -581,8 +581,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "firewall-disable-private",
-                "Только профиль Private (дом / офис)",
-                "EnableFirewall = 0 для частной сети.",
+                "Брандмауэр: домашняя сеть",
+                "Выключает брандмауэр только в домашней и офисной сети.",
                 EvidenceLevel.Reasoned,
                 "Иногда нужно для локальных игр и серверов.",
                 RequiresReboot: false,
@@ -597,8 +597,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "firewall-disable-public",
-                "Только профиль Public (кафе, хотспот)",
-                "EnableFirewall = 0 для общедоступных сетей.",
+                "Брандмауэр: общественные сети",
+                "Выключает брандмауэр только в кафе, отелях и на точках доступа.",
                 EvidenceLevel.Reasoned,
                 "Самый рискованный профиль.",
                 RequiresReboot: false,
@@ -614,8 +614,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "theme-dark-apps",
-                "Тёмная тема приложений Windows",
-                "AppsUseLightTheme = 0 — тёмный режим для UWP/Настроек.",
+                "Тёмная тема для приложений",
+                "Настройки и приложения Windows переключаются на тёмное оформление.",
                 EvidenceLevel.Reasoned,
                 "Действует сразу для многих приложений; проводник может потребовать перезапуск.",
                 RequiresReboot: false,
@@ -628,8 +628,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "theme-dark-system",
-                "Тёмная тема панели задач и системы",
-                "SystemUsesLightTheme = 0 — тёмный Taskbar/Start.",
+                "Тёмная тема для панели задач",
+                "Панель задач и меню «Пуск» становятся тёмными.",
                 EvidenceLevel.Reasoned,
                 "Меняет оформление оболочки Windows.",
                 RequiresReboot: false,
@@ -642,8 +642,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "theme-light-apps",
-                "Светлая тема приложений Windows",
-                "AppsUseLightTheme = 1.",
+                "Светлая тема для приложений",
+                "Возвращает светлое оформление настроек и приложений.",
                 EvidenceLevel.Reasoned,
                 "Возврат светлого оформления приложений.",
                 RequiresReboot: false,
@@ -656,8 +656,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "show-file-extensions",
-                "Показывать расширения файлов (.exe, .dll…)",
-                "HideFileExt = 0 в параметрах проводника.",
+                "Показывать расширения файлов",
+                "В именах видно .exe, .txt, .jpg и т. д. Проще заметить подозрительный файл.",
                 EvidenceLevel.Reasoned,
                 "Проще отличать опасные файлы вроде document.pdf.exe.",
                 RequiresReboot: false,
@@ -671,7 +671,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "show-hidden-files",
                 "Показывать скрытые файлы и папки",
-                "Hidden = 1 в параметрах проводника.",
+                "Проводник показывает файлы и папки, скрытые от глаз.",
                 EvidenceLevel.Reasoned,
                 "Видны файлы со атрибутом Hidden.",
                 RequiresReboot: false,
@@ -685,7 +685,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "show-superhidden",
                 "Показывать защищённые системные файлы",
-                "ShowSuperHidden = 1 — видны файлы ОС (осторожно).",
+                "Видны служебные файлы Windows. Осторожно: их нельзя удалять.",
                 EvidenceLevel.Reasoned,
                 "Нужно редко; случайное удаление системных файлов опасно.",
                 RequiresReboot: false,
@@ -700,7 +700,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "desktop-icon-this-pc",
                 "Значок «Этот компьютер» на рабочем столе",
-                "Показывает This PC на desktop.",
+                "Добавляет значок для быстрого доступа к дискам.",
                 EvidenceLevel.Reasoned,
                 "Удобный ярлык к дискам без открытия проводника.",
                 RequiresReboot: false,
@@ -714,7 +714,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "desktop-icon-recycle",
                 "Значок «Корзина» на рабочем столе",
-                "Показывает Recycle Bin (0 = показать).",
+                "Показывает корзину на рабочем столе.",
                 EvidenceLevel.Reasoned,
                 "Стандартный значок корзины.",
                 RequiresReboot: false,
@@ -728,7 +728,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "desktop-icon-network",
                 "Значок «Сеть» на рабочем столе",
-                "Показывает Network на desktop.",
+                "Добавляет значок для доступа к сетевым устройствам.",
                 EvidenceLevel.Reasoned,
                 "Быстрый доступ к сетевому окружению.",
                 RequiresReboot: false,
@@ -742,7 +742,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "desktop-icon-control-panel",
                 "Значок «Панель управления» на рабочем столе",
-                "Показывает Control Panel на desktop.",
+                "Добавляет значок классической панели управления.",
                 EvidenceLevel.Reasoned,
                 "Классическая панель рядом с «Параметрами».",
                 RequiresReboot: false,
@@ -755,8 +755,8 @@ public static class TweakCatalog
         new RegistryTweak(
             new TweakInfo(
                 "explorer-nav-all-folders",
-                "В панели навигации показывать все папки",
-                "NavPaneShowAllFolders = 1 — дерево проводника как «все папки».",
+                "Все папки в панели проводника",
+                "Слева в проводнике показывается полное дерево папок.",
                 EvidenceLevel.NoData,
                 "Удобнее переходить по дереву дисков и библиотек.",
                 RequiresReboot: false,
@@ -770,7 +770,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "explorer-show-full-path",
                 "Полный путь в заголовке проводника",
-                "Показывать полный путь вместо имени папки.",
+                "В заголовке окна видно, где именно вы находитесь, а не только имя папки.",
                 EvidenceLevel.Reasoned,
                 "Удобнее ориентироваться в глубоких каталогах.",
                 RequiresReboot: false,
@@ -784,7 +784,7 @@ public static class TweakCatalog
             new TweakInfo(
                 "taskbar-endtask",
                 "«Завершить задачу» в меню панели задач",
-                "Включает End Task по ПКМ на приложении в taskbar (Win 11).",
+                "Зависшее приложение можно закрыть правым щелчком по значку на панели (Windows 11).",
                 EvidenceLevel.Reasoned,
                 "Быстрое закрытие зависших окон без диспетчера задач.",
                 RequiresReboot: false,
@@ -795,115 +795,115 @@ public static class TweakCatalog
             backup),
 
         // ─── Набор «Registry Tweak» (отобранное из пользовательских .reg/.bat) ───
-        Reg("cpu-priority-separation", "Приоритет фоновых задач: Win32PrioritySeparation = 0x26",
-            "Короткие фиксированные кванты и приоритет активного окна — типичная настройка для игр.",
+        Reg("cpu-priority-separation", "Приоритет активного окна",
+            "Игра или программа, с которой вы работаете, получает больше процессорного времени, чем фоновые.",
             EvidenceLevel.NoData, "Количественных замеров нет; на современных CPU разница обычно в пределах погрешности.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", RegistryValueKind.DWord, 0x26, 2)),
 
-        Reg("csrss-priority", "Повысить приоритет csrss.exe (CPU и ввод-вывод)",
-            "Ставит csrss.exe (обработка ввода и окон) в высокий приоритет через PerfOptions.",
+        Reg("csrss-priority", "Быстрее реакция на ввод",
+            "Системный процесс, который обрабатывает мышь, клавиатуру и окна, получает повышенный приоритет.",
             EvidenceLevel.NoData, "Распространённая настройка из гайдов; независимых замеров не найдено.",
             true, "Игры", backup, "Неверные значения PerfOptions могут ухудшить отзывчивость системы. Откат возвращает исходное состояние.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions", "CpuPriorityClass", RegistryValueKind.DWord, 3),
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions", "IoPriority", RegistryValueKind.DWord, 3)),
 
-        Reg("svchost-split-off", "Объединить службы в меньшее число svchost.exe",
-            "SvcHostSplitThresholdInKB больше объёма ОЗУ: службы не разносятся по отдельным процессам.",
+        Reg("svchost-split-off", "Меньше процессов служб в диспетчере",
+            "Служебные процессы Windows объединяются. Немного экономит память.",
             EvidenceLevel.Reasoned, "Меньше процессов svchost и немного меньше памяти; отдельные сбои службы могут затронуть соседние.",
             true, "Система", backup, "Одна упавшая служба может потянуть за собой остальные в том же svchost.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control", "SvcHostSplitThresholdInKB", RegistryValueKind.DWord, SvcHostThresholdKb(), 3670016)),
 
-        Reg("spectre-meltdown-off", "Отключить защиту от Spectre/Meltdown",
-            "FeatureSettingsOverride/Mask = 3: выключает программные митигации уязвимостей процессора.",
+        Reg("spectre-meltdown-off", "Отключить защиту от уязвимостей процессора",
+            "Выключает программные заплатки Spectre и Meltdown. Может дать прирост на старых процессорах.",
             EvidenceLevel.Measured, "Прирост заметен в основном на старых процессорах без аппаратных исправлений; на новых — почти нулевой.",
             true, "Система", backup, "Снижает защиту от атак на процессор (чтение чужой памяти). Не включайте на ПК, где открываете недоверенные программы и сайты.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "FeatureSettings", RegistryValueKind.DWord, 1),
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "FeatureSettingsOverride", RegistryValueKind.DWord, 3),
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "FeatureSettingsOverrideMask", RegistryValueKind.DWord, 3)),
 
-        Reg("maintenance-off", "Отключить автоматическое обслуживание Windows",
-            "MaintenanceDisabled = 1: не запускаются фоновые задачи обслуживания в простое.",
+        Reg("maintenance-off", "Отключить автообслуживание Windows",
+            "Windows не запускает фоновые задачи обслуживания, когда вы не за компьютером.",
             EvidenceLevel.Reasoned, "Убирает неожиданную фоновую нагрузку; обслуживание придётся запускать вручную.",
             false, "Система", backup, "Дефрагментация/TRIM по расписанию и диагностика перестанут запускаться сами.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\Maintenance", "MaintenanceDisabled", RegistryValueKind.DWord, 1)),
 
-        Reg("telemetry-off", "Минимальная телеметрия (AllowTelemetry = 0)",
-            "Сообщает Windows, что диагностические данные отправлять не нужно.",
+        Reg("telemetry-off", "Минимум отправки данных в Microsoft",
+            "Windows получает указание не отправлять диагностические данные.",
             EvidenceLevel.Reasoned, "Полностью работает только в редакциях Pro/Enterprise/Education; в Home действует как «обязательные данные».",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection", "AllowTelemetry", RegistryValueKind.DWord, 0)),
 
-        Reg("gamedvr-policy-off", "Запретить Game DVR политикой",
-            "AllowGameDVR = 0 в политиках: запись игр отключена для всех пользователей.",
+        Reg("gamedvr-policy-off", "Запретить запись игр для всех пользователей",
+            "Запись игр отключена на уровне системы, её нельзя включить обратно из настроек.",
             EvidenceLevel.Reasoned, "Дополняет отключение Game DVR на уровне пользователя.",
             false, "Игры", backup, "Запись через Game Bar перестанет работать.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR", RegistryValueKind.DWord, 0)),
 
-        Reg("gamebar-nexus-off", "Отключить кнопку Game Bar на геймпаде",
-            "UseNexusForGameBarEnabled = 0: кнопка Xbox на контроллере не открывает Game Bar.",
+        Reg("gamebar-nexus-off", "Кнопка Xbox на геймпаде не открывает Game Bar",
+            "Нажатие кнопки Xbox на контроллере больше не вызывает панель Game Bar.",
             EvidenceLevel.NoData, "Убирает случайные вызовы оверлея во время игры.",
             false, "Игры", backup, null,
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "UseNexusForGameBarEnabled", RegistryValueKind.DWord, 0, 1)),
 
         Reg("hibernate-off", "Отключить гибернацию",
-            "HibernateEnabled = 0: освобождает место (hiberfil.sys ≈ 40% ОЗУ на диске).",
+            "Освобождает на диске место, равное примерно 40% оперативной памяти. Спящий режим продолжит работать.",
             EvidenceLevel.Reasoned, "Освобождает несколько ГБ на системном диске.",
             true, "Система", backup, "Режим гибернации станет недоступен. Быстрый запуск тоже работает через hiberfil.sys.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Power", "HibernateEnabled", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("menu-delay-0", "Меню без задержки (MenuShowDelay = 0)",
-            "Подменю открываются сразу, без паузы 400 мс.",
+        Reg("menu-delay-0", "Меню открываются мгновенно",
+            "Подменю появляются сразу, без паузы около 0,4 секунды.",
             EvidenceLevel.Reasoned, "Ощущение быстрого интерфейса, на производительность не влияет.",
             false, "Визуал", backup, null,
             new RegistryEntry(RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", RegistryValueKind.String, "0", "400")),
 
-        Reg("autoplay-off", "Отключить автозапуск носителей",
-            "DisableAutoplay = 1: диски и флешки не запускаются автоматически.",
+        Reg("autoplay-off", "Отключить автозапуск флешек и дисков",
+            "Подключённые носители не запускают программы сами. Это безопаснее.",
             EvidenceLevel.Reasoned, "Закрывает типичный путь заражения со сменных носителей.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers", "DisableAutoplay", RegistryValueKind.DWord, 1, 0)),
 
-        Reg("track-progs-off", "Не отслеживать запуски программ для меню «Пуск»",
-            "Start_TrackProgs = 0: Windows не запоминает часто запускаемые программы.",
+        Reg("track-progs-off", "Не запоминать часто запускаемые программы",
+            "Меню «Пуск» перестаёт собирать список ваших самых используемых программ.",
             EvidenceLevel.Reasoned, "Приватность; на скорость почти не влияет.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Start_TrackProgs", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("input-personalization-off", "Не собирать данные рукописного и текстового ввода",
-            "Отключает сбор контактов и персонализацию ввода.",
+        Reg("input-personalization-off", "Не собирать данные о вашем наборе текста",
+            "Windows не запоминает почерк, контакты и привычки набора для персонализации.",
             EvidenceLevel.Reasoned, "Приватность; на скорость не влияет.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\InputPersonalization", "RestrictImplicitInkCollection", RegistryValueKind.DWord, 1, 0),
             new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\InputPersonalization", "RestrictImplicitTextCollection", RegistryValueKind.DWord, 1, 0),
             new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\InputPersonalization\TrainedDataStore", "HarvestContacts", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("llmnr-off", "Отключить LLMNR (многоадресный DNS)",
-            "EnableMulticast = 0: Windows не рассылает LLMNR-запросы по локальной сети.",
+        Reg("llmnr-off", "Отключить лишние запросы по локальной сети",
+            "Windows не рассылает по сети запросы имён компьютеров. Снижает риск атак в общей сети.",
             EvidenceLevel.Reasoned, "Снижает риск перехвата имён в сети; в домашней сети обычно ничего не ломает.",
             false, "Сеть", backup, "Имена соседних устройств без DNS могут перестать находиться.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows NT\DNSClient", "EnableMulticast", RegistryValueKind.DWord, 0)),
 
         Reg("remote-assistance-off", "Отключить удалённого помощника",
-            "fAllowToGetHelp = 0: запрещает приглашения Remote Assistance.",
+            "Никто не сможет отправить приглашение для удалённого управления вашим ПК.",
             EvidenceLevel.Reasoned, "Уменьшает поверхность атаки; нужен только если вам помогают удалённо.",
             false, "Сеть", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Remote Assistance", "fAllowToGetHelp", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("maps-autoupdate-off", "Не обновлять офлайн-карты автоматически",
-            "AutoUpdateEnabled = 0 для офлайн-карт Windows.",
+        Reg("maps-autoupdate-off", "Не обновлять офлайн-карты",
+            "Скачанные карты Windows остаются как есть и не качают обновления.",
             EvidenceLevel.Reasoned, "Убирает фоновые загрузки; важно только если карты скачаны.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\Maps", "AutoUpdateEnabled", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("store-autodownload-off", "Не обновлять приложения Microsoft Store автоматически",
-            "Политика AutoDownload = 2.",
+        Reg("store-autodownload-off", "Не обновлять приложения Store сами",
+            "Магазин не скачивает обновления приложений без вашей команды.",
             EvidenceLevel.Reasoned, "Меньше фоновых загрузок; приложения Store придётся обновлять вручную.",
             false, "Система", backup, "Обновления безопасности приложений Store не будут приходить сами.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\WindowsStore", "AutoDownload", RegistryValueKind.DWord, 2)),
 
-        Reg("feedback-prompts-off", "Не показывать запросы обратной связи",
-            "NumberOfSIUFInPeriod = 0: Windows не просит оценить систему.",
+        Reg("feedback-prompts-off", "Не просить оценить Windows",
+            "Окна с просьбой оставить отзыв больше не появляются.",
             EvidenceLevel.Reasoned, "Убирает всплывающие опросы.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Siuf\Rules", "NumberOfSIUFInPeriod", RegistryValueKind.DWord, 0)),
@@ -911,8 +911,8 @@ public static class TweakCatalog
         // ─── Из набора пользователя: службы обновления браузеров, ввод, уведомления, приватность ───
         .. BrowserUpdaterTweak(backup),
 
-        Reg("chrome-edge-background-off", "Chrome и Edge: без ускоренного запуска и фоновой работы",
-            "Политики StartupBoostEnabled = 0 и BackgroundModeEnabled = 0 для Chrome и Edge: браузер не висит в памяти после закрытия.",
+        Reg("chrome-edge-background-off", "Chrome и Edge не висят в фоне",
+            "Браузеры не запускаются заранее и не работают после закрытия. Освобождает оперативную память.",
             EvidenceLevel.Reasoned, "Освобождает память и убирает фоновые процессы; первый запуск браузера станет чуть медленнее.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Google\Chrome", "StartupBoostEnabled", RegistryValueKind.DWord, 0),
@@ -920,57 +920,57 @@ public static class TweakCatalog
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "StartupBoostEnabled", RegistryValueKind.DWord, 0),
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Edge", "BackgroundModeEnabled", RegistryValueKind.DWord, 0)),
 
-        Reg("game-mode-auto-off", "Отключить автоматический игровой режим Windows",
-            "AllowAutoGameMode и AutoGameModeEnabled = 0, подсказки Game Bar не показываются.",
+        Reg("game-mode-auto-off", "Отключить автоматический игровой режим",
+            "Windows сама не включает игровой режим и не показывает подсказки Game Bar.",
             EvidenceLevel.NoData, "Игровой режим Windows спорен: на части систем даёт микрофризы. Проверьте на своих играх.",
             false, "Игры", backup, "Игровой режим перестанет включаться сам.",
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "AllowAutoGameMode", RegistryValueKind.DWord, 0, 1),
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "AutoGameModeEnabled", RegistryValueKind.DWord, 0, 1),
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\GameBar", "ShowStartupPanel", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("multimedia-nolazymode", "MMCSS: NoLazyMode = 1",
-            "Планировщик мультимедиа не уходит в «ленивый» режим, пока идёт игра или аудио.",
+        Reg("multimedia-nolazymode", "Мультимедиа без пауз в играх",
+            "Система не снижает активность обработки звука и видео, пока идёт игра.",
             EvidenceLevel.NoData, "Из распространённых гайдов; независимых замеров не найдено.",
             false, "Игры", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, MultimediaProfile, "NoLazyMode", RegistryValueKind.DWord, 1)),
 
-        Reg("input-queue-size", "Очередь ввода клавиатуры и мыши: 50 событий (0x32)",
-            "KeyboardDataQueueSize и MouseDataQueueSize = 50 вместо 100 по умолчанию.",
+        Reg("input-queue-size", "Быстрее обрабатывать мышь и клавиатуру",
+            "Уменьшает очередь событий ввода. Отклик может стать чуть быстрее.",
             EvidenceLevel.NoData, "Измеримого выигрыша в независимых тестах не найдено; при перегрузке системы события могут теряться раньше.",
             true, "Игры", backup, "В исходном .reg у MouseDataQueueSize стоял лишний пробел в имени — здесь он исправлен, иначе значение Windows игнорирует.",
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", RegistryValueKind.DWord, 0x32, 0x64),
             new RegistryEntry(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", RegistryValueKind.DWord, 0x32, 0x64)),
 
-        Reg("toast-notifications-off", "Отключить всплывающие уведомления Windows",
-            "ToastEnabled = 0 и запрет уведомлений на экране блокировки.",
+        Reg("toast-notifications-off", "Отключить всплывающие уведомления",
+            "Окошки в углу экрана и на экране блокировки больше не появляются.",
             EvidenceLevel.Reasoned, "Меньше отвлекающих окон во время игры.",
             false, "Система", backup, "Уведомления приложений и системы показываться не будут.",
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\PushNotifications", "ToastEnabled", RegistryValueKind.DWord, 0, 1),
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\PushNotifications", "LockScreenToastEnabled", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("search-cortana-off", "Отключить Cortana и историю поиска на устройстве",
-            "CortanaEnabled, CortanaConsent и IsDeviceSearchHistoryEnabled = 0.",
+        Reg("search-cortana-off", "Отключить Cortana и историю поиска",
+            "Голосовой помощник выключен, поиск не хранит историю на устройстве.",
             EvidenceLevel.Reasoned, "Приватность; на скорость почти не влияет.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "CortanaEnabled", RegistryValueKind.DWord, 0, 1),
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Search", "CortanaConsent", RegistryValueKind.DWord, 0, 1),
             new RegistryEntry(RegistryHive.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\SearchSettings", "IsDeviceSearchHistoryEnabled", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("privacy-language-speech-off", "Не передавать список языков сайтам и отключить онлайн-распознавание речи",
-            "HttpAcceptLanguageOptOut = 1 и OnlineSpeechPrivacy HasAccepted = 0.",
+        Reg("privacy-language-speech-off", "Меньше личных данных для сайтов и речи",
+            "Сайты не узнают список ваших языков, а онлайн-распознавание речи отключено.",
             EvidenceLevel.Reasoned, "Приватность; на скорость не влияет.",
             false, "Система", backup, "Голосовой ввод через облако Windows перестанет работать.",
             new RegistryEntry(RegistryHive.CurrentUser, @"Control Panel\International\User Profile", "HttpAcceptLanguageOptOut", RegistryValueKind.DWord, 1, 0),
             new RegistryEntry(RegistryHive.CurrentUser, @"Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy", "HasAccepted", RegistryValueKind.DWord, 0, 1)),
 
-        Reg("news-interests-off", "Отключить «Новости и интересы» политикой",
-            "AllowNewsAndInterests = 0.",
+        Reg("news-interests-off", "Убрать «Новости и интересы»",
+            "Лента новостей и погоды на панели задач отключена на уровне системы.",
             EvidenceLevel.Reasoned, "Убирает фоновую загрузку ленты на панели задач.",
             false, "Визуал", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", RegistryValueKind.DWord, 0)),
 
-        Reg("device-metadata-offline", "Не загружать метаданные устройств из интернета",
-            "PreventDeviceMetadataFromNetwork = 1: Windows не скачивает значки и описания устройств.",
+        Reg("device-metadata-offline", "Не качать описания устройств из интернета",
+            "Windows не загружает значки и названия подключённых устройств.",
             EvidenceLevel.Reasoned, "Убирает сетевые запросы при подключении устройств.",
             false, "Система", backup, null,
             new RegistryEntry(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Device Metadata", "PreventDeviceMetadataFromNetwork", RegistryValueKind.DWord, 1, 0)),
