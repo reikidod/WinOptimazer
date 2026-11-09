@@ -21,12 +21,19 @@ public sealed record AccentInfo(string Id, string Name, string Accent, string Ac
 /// </summary>
 public static class ThemeManager
 {
-    public const string DefaultTheme = "dark";
+    /// <summary>Fluent — новый стиль 0.6; dark — прежняя классическая палитра (сохранена).</summary>
+    public const string DefaultTheme = "fluent";
     public const string ThemeAccent = "theme";
 
     public static readonly IReadOnlyList<ThemeInfo> Themes =
     [
-        new("dark", "Тёмная", new("#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
+        // Новый Fluent Design (0.6): layered slate + restrained blue.
+        new("fluent", "Fluent (Windows 11)", new(
+            "#171B24", "#1D2430", "#242C39", "#2C3747", "#354153", "#61799B", "#9BBEFF", "#426BA8", "#3A3D44",
+            "#F2F3F5", "#C2CCDA", "#AAB6C8", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
+        // Классическая тёмная палитра до 0.6 — доступна в настройках.
+        new("dark", "Классическая тёмная", new(
+            "#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
             "#F2F3F5", "#C2C6CE", "#A9AEB9", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
         new("light", "Светлая", new("#F3F4F7", "#FFFFFF", "#FFFFFF", "#EEF1F7", "#D8DCE5", "#8A94A8", "#2F6FDB", "#2F6FDB", "#C9CEDA",
             "#1B1E24", "#4A5160", "#666D7E", "#2E7D50", "#9A6412", "#C23B3B", "#6B7280", IsLight: true)),
@@ -78,7 +85,6 @@ public static class ThemeManager
         if (app is null) return;
         try
         {
-            // Размытие/затемнение фона не меняют кисти — не пересоздаём их на каждый тик ползунка.
             var hasBackground = !string.IsNullOrEmpty(s.BackgroundImage);
             var cardAlpha = hasBackground && s.TransparencyEffectsEnabled
                 ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0)
@@ -88,7 +94,6 @@ public static class ThemeManager
             if (key == _appliedKey) return;
 
             var p = Find(s.ThemeId).Palette;
-            // Быстрый путь: двигается только «Плотность карточек» — обновляем alpha у 3 кистей, без полного пересоздания палитры.
             if (_appliedKey is not null && _appliedKey.StartsWith(themeKey + "|", StringComparison.Ordinal))
             {
                 Set(app, "BgSidebarBrush", p.BgSidebar, cardAlpha);
@@ -104,7 +109,6 @@ public static class ThemeManager
             var accentStrong = p.AccentStrong;
             if (accent is { Id: not ThemeAccent } && accent.Accent.Length > 0)
             {
-                // На светлой теме пастельный акцент плохо читается на белом: берём насыщенный вариант и для текста.
                 accentHex = p.IsLight ? accent.AccentStrong : accent.Accent;
                 accentStrong = accent.AccentStrong;
             }
@@ -143,7 +147,6 @@ public static class ThemeManager
 
     internal static Color ParseColor(string hex) => (Color)ColorConverter.ConvertFromString(hex);
 
-    /// <summary>Контраст двух цветов по WCAG (1…21). Нужен для проверки читаемости палитр в тестах.</summary>
     internal static double Contrast(string hexA, string hexB)
     {
         static double Lin(byte v)

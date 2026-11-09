@@ -13,6 +13,14 @@ public enum EvidenceLevel
     NoData,
 }
 
+/// <summary>Уровень риска изменения для UI (0.6). Не заменяет EvidenceLevel.</summary>
+public enum RiskLevel
+{
+    Low,
+    Medium,
+    High,
+}
+
 /// <summary>Описание твика для интерфейса.</summary>
 public sealed record TweakInfo(
     string Id,
@@ -26,7 +34,14 @@ public sealed record TweakInfo(
     /// <summary>Общий ключ группы (например firewall). Дочерние скрыты, пока группа свёрнута.</summary>
     string? GroupKey = null,
     /// <summary>True — заголовок группы со стрелкой; False при GroupKey — дочерний пункт.</summary>
-    bool IsGroupHeader = false);
+    bool IsGroupHeader = false)
+{
+    /// <summary>Риск выводится из Warning + reboot, без правок всего каталога.</summary>
+    public RiskLevel Risk =>
+        !string.IsNullOrWhiteSpace(Warning) && RequiresReboot ? RiskLevel.High
+        : !string.IsNullOrWhiteSpace(Warning) || RequiresReboot ? RiskLevel.Medium
+        : RiskLevel.Low;
+}
 
 public interface ITweak
 {
