@@ -15,7 +15,14 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <local:CardWidthConverter x:Key="CardWidth" />
-
+        <Style x:Key="DashboardCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,12,10" />
+        </Style>
     </Window.Resources>
 
     <Grid x:Name="RootGrid" ClipToBounds="True">
@@ -287,7 +294,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsCard}" Margin="0,0,8,0">
+                            <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0">
                                 <StackPanel>
                                     <TextBlock Text="Процессор" Style="{StaticResource SecondaryText}"/>
                                     <TextBlock Text="{Binding DashboardSnapshot.CpuSummary, TargetNullValue='Загрузка…'}"
@@ -295,7 +302,7 @@
                                     <TextBlock Text="Логические процессоры" Style="{StaticResource SecondaryText}" FontSize="11"/>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="1" Style="{StaticResource SettingsCard}" Margin="4,0">
+                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="4,0">
                                 <StackPanel>
                                     <TextBlock Text="Оперативная память" Style="{StaticResource SecondaryText}"/>
                                     <TextBlock Text="{Binding DashboardSnapshot.MemorySummary, TargetNullValue='Загрузка…'}"
@@ -303,7 +310,7 @@
                                     <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}" Style="{StaticResource SecondaryText}" FontSize="11"/>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="2" Style="{StaticResource SettingsCard}" Margin="8,0,0,0">
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="8,0,0,0">
                                 <StackPanel>
                                     <TextBlock Text="Системный диск" Style="{StaticResource SecondaryText}"/>
                                     <TextBlock Text="{Binding DashboardSnapshot.DiskSummary, TargetNullValue='Загрузка…'}"
@@ -313,7 +320,7 @@
                             </Border>
                         </Grid>
 
-                        <Border Style="{StaticResource SettingsCard}">
+                        <Border Style="{StaticResource DashboardCard}">
                             <StackPanel>
                                 <TextBlock Text="Система" FontSize="16" FontWeight="SemiBold"/>
                                 <TextBlock Text="{Binding DashboardSnapshot.OsDescription}" Style="{StaticResource SecondaryText}" Margin="0,5,0,0" TextWrapping="Wrap"/>
@@ -327,7 +334,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource SettingsCard}" Margin="0,0,8,0">
+                            <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -351,7 +358,7 @@
                                     </ItemsControl>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="1" Style="{StaticResource SettingsCard}" Margin="8,0,0,0">
+                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="8,0,0,0">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -376,7 +383,7 @@
                             </Border>
                         </Grid>
 
-                        <Border Style="{StaticResource SettingsCard}" Margin="0,0,0,8">
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8">
                             <StackPanel>
                                 <TextBlock Text="Быстрые действия" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
                                 <WrapPanel>
