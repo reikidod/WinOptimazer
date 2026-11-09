@@ -57,7 +57,7 @@ public sealed partial class PowerPlanTweak : ITweak
 
     private static string GetActiveSchemeGuid()
     {
-        var result = ProcessRunner.Run(PowerCfg, "/getactivescheme");
+        var result = ProcessRunner.Run(PowerCfg, "/getactivescheme", outputEncoding: ProcessRunner.OemEncoding);
         if (result.ExitCode != 0)
         {
             throw new InvalidOperationException($"powercfg /getactivescheme завершился с кодом {result.ExitCode}: {result.StandardError.Trim()}");
@@ -76,7 +76,7 @@ public sealed partial class PowerPlanTweak : ITweak
             throw new ArgumentException("Некорректный идентификатор схемы питания.", nameof(guid));
         }
 
-        var result = ProcessRunner.Run(PowerCfg, $"/setactive {guid}");
+        var result = ProcessRunner.Run(PowerCfg, $"/setactive {guid}", outputEncoding: ProcessRunner.OemEncoding);
         if (result.ExitCode != 0)
         {
             var details = string.IsNullOrWhiteSpace(result.StandardError) ? result.StandardOutput : result.StandardError;

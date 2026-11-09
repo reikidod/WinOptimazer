@@ -817,5 +817,17 @@ public class PowerPlanNamesTests
         Assert.Equal("11111111-2222-3333-4444-555555555555", PowerPlanNames.Describe("GUID: 11111111-2222-3333-4444-555555555555"));
 
     [Fact]
+    public void ReadActive_NeverThrows_AndIsReadable()
+    {
+        var name = PowerPlanNames.ReadActive();
+        // На Windows имя есть и не содержит символа замены «�» (признак битой кодировки); на других ОС — null.
+        if (name is not null)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(name));
+            Assert.DoesNotContain('\uFFFD', name);
+        }
+    }
+
+    [Fact]
     public void OemEncoding_IsAvailable() => Assert.NotNull(WinOptimizer.Services.ProcessRunner.OemEncoding);
 }

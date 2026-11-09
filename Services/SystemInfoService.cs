@@ -201,11 +201,18 @@ public sealed partial class SystemInfoService : ISystemInfoService
 
         lines.Add(new InfoLine("Secure Boot", ReadSecureBoot()));
 
-        var scheme = ProcessRunner.Run(System.IO.Path.Combine(Environment.SystemDirectory, "powercfg.exe"), "/getactivescheme",
-            outputEncoding: ProcessRunner.OemEncoding);
-        if (scheme.ExitCode == 0)
+        var plan = PowerPlanNames.ReadActive();
+        if (plan is null)
         {
-            lines.Add(new InfoLine("Схема питания", PowerPlanNames.Describe(scheme.StandardOutput)));
+            // Запасной путь: разбор вывода powercfg в OEM-кодировке консоли.
+            var scheme = ProcessRunner.Run(System.IO.Path.Combine(Environment.SystemDirectory, "powercfg.exe"), "/getactivescheme",
+                outputEncoding: ProcessRunner.OemEncoding);
+            if (scheme.ExitCode == 0) plan = PowerPlanNames.Describe(scheme.StandardOutput);
+        }
+
+        if (plan is not null)
+        {
+            lines.Add(new InfoLine("Схема питания", plan));
         }
 
         return lines;

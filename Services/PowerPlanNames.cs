@@ -1,8 +1,9 @@
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace WinOptimizer.Services;
 
-/// <summary>Читаемое название схемы питания из вывода «powercfg /getactivescheme».</summary>
+/// <summary>Читаемое название схемы питания: напрямую из Windows (Юникод) либо из вывода «powercfg /getactivescheme».</summary>
 internal static partial class PowerPlanNames
 {
     // Стандартные схемы Windows: названия не зависят от языка системы и кодировки консоли.
@@ -13,6 +14,64 @@ internal static partial class PowerPlanNames
         ["a1841308-3541-4fab-bc81-f71556f20b4a"] = "Экономия энергии",
         ["e9a42b02-d5df-448d-aa00-03f14749eb61"] = "Максимальная производительность",
     };
+
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerGetActiveScheme(IntPtr userRootPowerKey, out IntPtr activePolicyGuid);
+
+    [DllImport("powrprof.dll")]
+    private static extern uint PowerReadFriendlyName(IntPtr rootPowerKey, ref Guid schemeGuid, IntPtr subGroupGuid,
+        IntPtr powerSettingGuid, IntPtr buffer, ref uint bufferSize);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr LocalFree(IntPtr hMem);
+
+    /// <summary>
+    /// Название активной схемы без консоли и кодовых страниц: GUID и имя читаются через powrprof.dll в Юникоде,
+    /// поэтому русские названия не превращаются в «кракозябры». null — если системный вызов недоступен.
+    /// </summary>
+    public static string? ReadActive()
+    {
+        try
+        {
+            if (PowerGetActiveScheme(IntPtr.Zero, out var ptr) != 0 || ptr == IntPtr.Zero) return null;
+            try
+            {
+                var guid = Marshal.PtrToStructure<Guid>(ptr);
+                var id = guid.ToString();
+                if (Known.TryGetValue(id, out var known)) return known;
+                return ReadFriendlyName(guid) ?? id;
+            }
+            finally
+            {
+                LocalFree(ptr);
+            }
+        }
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or ArgumentException
+                                       or MarshalDirectiveException or AccessViolationException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ReadFriendlyName(Guid guid)
+    {
+        uint size = 0;
+        PowerReadFriendlyName(IntPtr.Zero, ref guid, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, ref size);
+        if (size < 2 || size > 4096) return null;
+
+        var buffer = Marshal.AllocHGlobal((int)size);
+        try
+        {
+            if (PowerReadFriendlyName(IntPtr.Zero, ref guid, IntPtr.Zero, IntPtr.Zero, buffer, ref size) != 0) return null;
+            var name = Marshal.PtrToStringUni(buffer)?.Trim();
+            // «@%SystemRoot%\system32\powrprof.dll,-N» — нераскрытая ссылка на ресурс: такое имя читать нельзя.
+            return string.IsNullOrWhiteSpace(name) || name.StartsWith('@') ? null : name;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
 
     public static string Describe(string powercfgOutput)
     {
