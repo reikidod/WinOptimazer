@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [beta]
+  push:
+    branches:
+      - "feature/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore tests and application
+        run: dotnet restore tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj
+
+      - name: Build application
+        run: dotnet build WinOptimizer.csproj --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --no-restore --logger "console;verbosity=normal"
