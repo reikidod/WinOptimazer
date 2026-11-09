@@ -105,6 +105,171 @@ public static class Motion
         });
     }
 
+    // ---------- Карточка твика: выезд слева направо, затем появляется тумблер ----------
+
+    private const double CardSlideOffset = 56;
+    private const int CardCascadeStepMs = 45;
+    private const int CardCascadeMaxIndex = 12;
+
+    /// <summary>Задержка начала анимации карточки: соседи выезжают каскадом, но не дольше ~0,5 с.</summary>
+    internal static int CascadeDelayMs(int index) => Math.Clamp(index, 0, CardCascadeMaxIndex) * CardCascadeStepMs;
+
+    public static readonly DependencyProperty CardEntranceProperty = DependencyProperty.RegisterAttached(
+        "CardEntrance", typeof(bool), typeof(Motion), new PropertyMetadata(false, OnCardEntranceChanged));
+
+    public static bool GetCardEntrance(DependencyObject d) => (bool)d.GetValue(CardEntranceProperty);
+    public static void SetCardEntrance(DependencyObject d, bool value) => d.SetValue(CardEntranceProperty, value);
+
+    /// <summary>Метка на тумблере внутри карточки: он скрыт и неактивен, пока карточка не выехала.</summary>
+    public static readonly DependencyProperty RevealWithCardProperty = DependencyProperty.RegisterAttached(
+        "RevealWithCard", typeof(bool), typeof(Motion), new PropertyMetadata(false));
+
+    public static bool GetRevealWithCard(DependencyObject d) => (bool)d.GetValue(RevealWithCardProperty);
+    public static void SetRevealWithCard(DependencyObject d, bool value) => d.SetValue(RevealWithCardProperty, value);
+
+    /// <summary>False, пока тумблер ещё появляется (по нему стиль делает тумблер неактивным). Без анимации всегда True.</summary>
+    public static readonly DependencyProperty EntranceDoneProperty = DependencyProperty.RegisterAttached(
+        "EntranceDone", typeof(bool), typeof(Motion), new PropertyMetadata(true));
+
+    public static bool GetEntranceDone(DependencyObject d) => (bool)d.GetValue(EntranceDoneProperty);
+    public static void SetEntranceDone(DependencyObject d, bool value) => d.SetValue(EntranceDoneProperty, value);
+
+    private static readonly DependencyProperty EntrancePlayedProperty = DependencyProperty.RegisterAttached(
+        "EntrancePlayed", typeof(bool), typeof(Motion), new PropertyMetadata(false));
+
+    private static void OnCardEntranceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not FrameworkElement el) return;
+        el.Loaded -= OnCardLoaded;
+        el.IsVisibleChanged -= OnCardVisibleChanged;
+        if (e.NewValue is not true) return;
+
+        // Прячем сразу при создании, чтобы карточка не мелькнула до начала анимации
+        if (Enabled) el.Opacity = 0;
+        el.Loaded += OnCardLoaded;
+    }
+
+    private static void OnCardLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement el) TryPlayCard(el);
+    }
+
+    private static void OnCardVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is true && sender is FrameworkElement el) TryPlayCard(el);
+    }
+
+    private static void TryPlayCard(FrameworkElement el)
+    {
+        if ((bool)el.GetValue(EntrancePlayedProperty)) return;
+
+        if (!Enabled)
+        {
+            el.SetValue(EntrancePlayedProperty, true);
+            el.ClearValue(UIElement.OpacityProperty);
+            return;
+        }
+
+        // Страница с твиками может быть скрыта: ждём, пока её откроют, чтобы анимация не прошла «за кадром»
+        if (!el.IsVisible)
+        {
+            el.IsVisibleChanged -= OnCardVisibleChanged;
+            el.IsVisibleChanged += OnCardVisibleChanged;
+            return;
+        }
+
+        el.IsVisibleChanged -= OnCardVisibleChanged;
+        el.SetValue(EntrancePlayedProperty, true);
+        PlayCardEntrance(el);
+    }
+
+    private static void PlayCardEntrance(FrameworkElement el)
+    {
+        var delay = TimeSpan.FromMilliseconds(CascadeDelayMs(SiblingIndex(el)));
+
+        // Тумблер: неактивен и невидим, пока карточка едет
+        var toggle = FindRevealToggle(el);
+        if (toggle is not null)
+        {
+            SetEntranceDone(toggle, false);
+            toggle.Opacity = 0;
+        }
+
+        if (el.RenderTransform is not TranslateTransform tt || tt.IsFrozen)
+        {
+            tt = new TranslateTransform();
+            el.RenderTransform = tt;
+        }
+
+        tt.X = -CardSlideOffset;
+
+        // HoldEnd: до BeginTime и после анимации карточка не «мигает» — значения снимаем вручную в Completed
+        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300))
+        {
+            BeginTime = delay,
+            EasingFunction = EaseOut,
+            FillBehavior = FillBehavior.HoldEnd,
+        };
+        var move = new DoubleAnimation(-CardSlideOffset, 0, TimeSpan.FromMilliseconds(420))
+        {
+            BeginTime = delay,
+            EasingFunction = EaseOutSoft,
+            FillBehavior = FillBehavior.HoldEnd,
+        };
+        move.Completed += (_, _) =>
+        {
+            tt.BeginAnimation(TranslateTransform.XProperty, null);
+            tt.X = 0;
+            el.BeginAnimation(UIElement.OpacityProperty, null);
+            el.ClearValue(UIElement.OpacityProperty);
+            if (toggle is not null) RevealToggle(toggle);
+        };
+
+        el.BeginAnimation(UIElement.OpacityProperty, fade);
+        tt.BeginAnimation(TranslateTransform.XProperty, move);
+    }
+
+    /// <summary>Тумблер проявляется «выключенным» (затемнён), потом становится активным.</summary>
+    private static void RevealToggle(UIElement toggle)
+    {
+        const double disabledOpacity = 0.45;
+
+        var appear = new DoubleAnimation(0, disabledOpacity, TimeSpan.FromMilliseconds(180))
+        {
+            EasingFunction = EaseOut,
+            FillBehavior = FillBehavior.HoldEnd,
+        };
+        appear.Completed += (_, _) =>
+        {
+            toggle.BeginAnimation(UIElement.OpacityProperty, null);
+            toggle.ClearValue(UIElement.OpacityProperty);
+            SetEntranceDone(toggle, true); // дальше IsEnabled снова решает IsAvailable твика
+
+            if (toggle is UIElement { IsEnabled: true })
+            {
+                toggle.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(disabledOpacity, 1, TimeSpan.FromMilliseconds(160))
+                {
+                    EasingFunction = EaseOut,
+                    FillBehavior = FillBehavior.Stop,
+                });
+            }
+        };
+        toggle.BeginAnimation(UIElement.OpacityProperty, appear);
+    }
+
+    private static UIElement? FindRevealToggle(DependencyObject root)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is CheckBox box && GetRevealWithCard(box)) return box;
+            if (FindRevealToggle(child) is { } found) return found;
+        }
+
+        return null;
+    }
+
     // ---------- Плавная прокрутка колесом ----------
 
     public static readonly DependencyProperty SmoothScrollProperty = DependencyProperty.RegisterAttached(

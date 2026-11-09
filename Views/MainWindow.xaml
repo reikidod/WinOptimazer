@@ -296,7 +296,7 @@
                     <ItemsControl ItemsSource="{Binding FilteredTweaks}" Margin="0,0,16,8">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <ContentControl>
+                                <ContentControl local:Motion.CardEntrance="True">
                                     <ContentControl.Style>
                                         <Style TargetType="ContentControl" BasedOn="{StaticResource HoverCard}">
                                             <Style.Triggers>
@@ -382,11 +382,23 @@
                                                        Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
                                         </StackPanel>
 
-                                        <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitch}"
+                                        <!-- Тумблер: пока карточка выезжает и он проявляется — неактивен (EntranceDone=False) -->
+                                        <CheckBox Grid.Column="2"
                                                   VerticalAlignment="Center" Margin="24,0,0,0"
+                                                  local:Motion.RevealWithCard="True"
                                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                  IsEnabled="{Binding IsAvailable}"
-                                                  AutomationProperties.Name="{Binding Title}" />
+                                                  AutomationProperties.Name="{Binding Title}">
+                                            <CheckBox.Style>
+                                                <Style TargetType="CheckBox" BasedOn="{StaticResource ToggleSwitch}">
+                                                    <Setter Property="IsEnabled" Value="{Binding IsAvailable}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Path=(local:Motion.EntranceDone), RelativeSource={RelativeSource Self}}" Value="False">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </CheckBox.Style>
+                                        </CheckBox>
                                     </Grid>
                                 </ContentControl>
                             </DataTemplate>

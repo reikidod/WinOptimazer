@@ -785,3 +785,15 @@ public class MasonryLayoutTests
         Assert.Equal(0, WinOptimizer.Views.MasonryPanel.ShortestColumn([0, 0]));
     }
 }
+
+public class CardEntranceTests
+{
+    [Theory]
+    [InlineData(-3, 0)]
+    [InlineData(0, 0)]
+    [InlineData(1, 45)]
+    [InlineData(12, 540)]
+    [InlineData(500, 540)]   // каскад ограничен: длинный список не «доезжает» секундами
+    public void CascadeDelay_IsClamped(int index, int expectedMs) =>
+        Assert.Equal(expectedMs, WinOptimizer.Views.Motion.CascadeDelayMs(index));
+}
