@@ -125,6 +125,8 @@ public sealed class MaintenanceViewModel : ObservableObject
             CleanupSummary = "Очищаю…";
             var result = await Task.Run(_cleanup.Clean);
             Logger.Info($"Очистка temp: удалено {result.Files}, освобождено {result.Bytes} байт, пропущено {result.Skipped}");
+            new OperationHistoryService().Record("Обслуживание", "Очистка временных файлов",
+                $"Удалено: {result.Files}; освобождено: {ByteSize.Format(result.Bytes)}; пропущено: {result.Skipped}");
             CleanupSummary = string.Create(
                 CultureInfo.CurrentCulture,
                 $"Освобождено {ByteSize.Format(result.Bytes)} (удалено файлов: {result.Files}, пропущено: {result.Skipped})");
