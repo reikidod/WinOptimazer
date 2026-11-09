@@ -1,0 +1,32 @@
+name: Restore MainWindow
+on:
+  push:
+    paths:
+      - 'tools/mainwindow-parts/**'
+    branches: [beta]
+  workflow_dispatch:
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: beta
+      - name: Assemble MainWindow.xaml
+        run: |
+          cat tools/mainwindow-parts/part*.txt > Views/MainWindow.xaml
+          EXPECTED=$(cat tools/mainwindow-parts/hash.txt | tr -d '\n\r ')
+          ACTUAL=$(sha256sum Views/MainWindow.xaml | awk '{print $1}')
+          echo "expected $EXPECTED"
+          echo "actual   $ACTUAL"
+          test "$EXPECTED" = "$ACTUAL"
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Views/MainWindow.xaml
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "ui(beta): restore MainWindow.xaml (tweaks tip-only, blur no-zoom)"
+          git push
