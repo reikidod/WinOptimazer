@@ -125,8 +125,15 @@ public sealed class MaintenanceViewModel : ObservableObject
             CleanupSummary = "Очищаю…";
             var result = await Task.Run(_cleanup.Clean);
             Logger.Info($"Очистка temp: удалено {result.Files}, освобождено {result.Bytes} байт, пропущено {result.Skipped}");
-            new OperationHistoryService().Record("Обслуживание", "Очистка временных файлов",
-                $"Удалено: {result.Files}; освобождено: {ByteSize.Format(result.Bytes)}; пропущено: {result.Skipped}");
+            try
+            {
+                new OperationHistoryService().Record("Обслуживание", "Очистка временных файлов",
+                    $"Удалено: {result.Files}; освобождено: {ByteSize.Format(result.Bytes)}; пропущено: {result.Skipped}");
+            }
+            catch (Exception historyError) when (historyError is IOException or UnauthorizedAccessException)
+            {
+                Logger.Error("Не удалось записать историю очистки", historyError);
+            }
             CleanupSummary = string.Create(
                 CultureInfo.CurrentCulture,
                 $"Освобождено {ByteSize.Format(result.Bytes)} (удалено файлов: {result.Files}, пропущено: {result.Skipped})");
