@@ -4,6 +4,8 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
+using System.Windows.Media.Imaging;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.ViewModels;
 
@@ -37,26 +39,39 @@ public partial class MainWindow : Window
         MinHeight = Math.Min(MinHeight, Height);
     }
 
+    private double _lastScale = double.NaN;
+
     private void OnSettingsChanged()
     {
         ApplyScale();
         ApplyBackground();
-        NativeMethods.UseDarkTitleBar(this);
+        // UseDarkTitleBar только при создании окна — на каждый тик ползунка фона не нужен.
     }
 
     private string? _loadedBackground;
+    private int _lastBlurPct = -1;
+    private int _lastDimPct = -1;
 
-    /// <summary>Фон-картинка с размытием и затемнением. Картинка декодируется в разумном разрешении и кэшируется как битмап.</summary>
+    /// <summary>
+    /// Фон-картинка с размытием и затемнением.
+    /// Картинка декодируется один раз (адаптивное разрешение), blur/dim обновляются точечно без лишних layout-проходов.
+    /// </summary>
     private void ApplyBackground()
     {
         var s = AppSettings.Current;
         var path = s.BackgroundImage;
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
-            BackgroundImage.Source = null;
-            BackgroundImage.Visibility = Visibility.Collapsed;
-            BackgroundDim.Visibility = Visibility.Collapsed;
-            _loadedBackground = null;
+            if (_loadedBackground is not null || BackgroundImage.Source is not null)
+            {
+                BackgroundImage.Source = null;
+                BackgroundImage.Effect = null;
+                BackgroundImage.Visibility = Visibility.Collapsed;
+                BackgroundDim.Visibility = Visibility.Collapsed;
+                _loadedBackground = null;
+                _lastBlurPct = -1;
+                _lastDimPct = -1;
+            }
             return;
         }
 
@@ -64,20 +79,30 @@ public partial class MainWindow : Window
         {
             try
             {
-                var bmp = new System.Windows.Media.Imaging.BitmapImage();
+                // Под размер экрана: не больше 1600 px по ширине — blurEffect заметно легче на меньших битмапах.
+                var decodeW = (int)Math.Clamp(SystemParameters.PrimaryScreenWidth, 1280, 1600);
+
+                var bmp = new BitmapImage();
                 bmp.BeginInit();
-                bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                bmp.DecodePixelWidth = 1920;
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
+                bmp.DecodePixelWidth = decodeW;
                 bmp.UriSource = new Uri(path, UriKind.Absolute);
                 bmp.EndInit();
                 bmp.Freeze();
+
                 BackgroundImage.Source = bmp;
+                // Фиксированный вылет за края: max blur ≈ 50 px, без пересчёта Margin на каждый тик.
+                BackgroundImage.Margin = new Thickness(-48);
+                BackgroundImage.CacheMode = new BitmapCache { EnableClearType = false, RenderAtScale = 1 };
                 _loadedBackground = path;
+                _lastBlurPct = -1; // force blur reapply for new image
             }
             catch (Exception ex) when (ex is IOException or NotSupportedException or InvalidOperationException)
             {
                 Logger.Error("Не удалось загрузить фон", ex);
                 BackgroundImage.Source = null;
+                BackgroundImage.Effect = null;
                 BackgroundImage.Visibility = Visibility.Collapsed;
                 BackgroundDim.Visibility = Visibility.Collapsed;
                 _loadedBackground = null;
@@ -85,18 +110,40 @@ public partial class MainWindow : Window
             }
         }
 
-        // Радиус до 50 px; картинку выдвигаем за края окна на радиус, чтобы по краям не было прозрачной каймы от размытия.
-        var radius = s.BackgroundBlurPercent * 0.5;
-        BackgroundBlur.Radius = radius;
-        BackgroundImage.Margin = new Thickness(-radius);
-        BackgroundDim.Opacity = s.BackgroundDimPercent / 100.0;
-        BackgroundImage.Visibility = Visibility.Visible;
-        BackgroundDim.Visibility = Visibility.Visible;
+        if (_lastBlurPct != s.BackgroundBlurPercent)
+        {
+            var radius = s.BackgroundBlurPercent * 0.5;
+            if (radius < 0.5)
+            {
+                // Без размытия эффект снимаем — GPU не гоняет gaussian впустую.
+                BackgroundImage.Effect = null;
+            }
+            else
+            {
+                if (BackgroundImage.Effect is not BlurEffect)
+                    BackgroundImage.Effect = BackgroundBlur;
+                BackgroundBlur.Radius = radius;
+            }
+            _lastBlurPct = s.BackgroundBlurPercent;
+        }
+
+        if (_lastDimPct != s.BackgroundDimPercent)
+        {
+            BackgroundDim.Opacity = s.BackgroundDimPercent / 100.0;
+            _lastDimPct = s.BackgroundDimPercent;
+        }
+
+        if (BackgroundImage.Visibility != Visibility.Visible)
+            BackgroundImage.Visibility = Visibility.Visible;
+        if (BackgroundDim.Visibility != Visibility.Visible)
+            BackgroundDim.Visibility = Visibility.Visible;
     }
 
     private void ApplyScale()
     {
         var scale = AppSettings.Current.UiScale;
+        if (Math.Abs(scale - _lastScale) < 0.001) return;
+        _lastScale = scale;
         RootGrid.LayoutTransform = Math.Abs(scale - 1.0) < 0.001 ? Transform.Identity : new ScaleTransform(scale, scale);
     }
 
