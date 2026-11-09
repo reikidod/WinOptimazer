@@ -321,16 +321,20 @@ public sealed class MainViewModel : ObservableObject
 
     private async Task RunDiagnosticsAsync()
     {
-        if (DashboardSnapshot is null)
+        var snapshot = DashboardSnapshot;
+        if (snapshot is null)
+        {
             await RefreshDashboardAsync();
-        if (DashboardSnapshot is null)
+            snapshot = DashboardSnapshot;
+        }
+        if (snapshot is null)
         {
             DashboardStatus = "Диагностика недоступна: не удалось получить системные показатели.";
             return;
         }
 
         DashboardStatus = "Проверяю состояние Windows…";
-        DiagnosticFindings = await Task.Run(() => _diagnostics.Run(DashboardSnapshot));
+        DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
         RecordOperation("Диагностика", "Проверка состояния Windows", "Завершено");
         DashboardStatus = $"Диагностика завершена: найдено замечаний — {DiagnosticFindings.Count(x => x.Level != DiagnosticLevel.Info)}.";
     }
@@ -513,7 +517,7 @@ public sealed class MainViewModel : ObservableObject
                 {
                     failed++;
                     vm.ErrorText = $"Не удалось {(apply ? "применить" : "откатить")}: {outcome.Error}";
-                    RecordOperation("Оптимизация", (apply ? "Применение: " : "Откат: ") + vm.Title, "Ошибка: " + outcome.Error);
+                    RecordOperation("Оптимизация", (apply ? "Применение: " : "Откат: ") + vm.Title, "Ошибка. Подробности записаны в журнал.");
                 }
             }
 
