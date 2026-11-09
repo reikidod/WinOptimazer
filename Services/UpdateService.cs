@@ -84,18 +84,29 @@ public sealed class UpdateService : IUpdateService
     internal static string ChannelOfLabel(string label) =>
         label.EndsWith("-beta", StringComparison.OrdinalIgnoreCase) ? AppSettings.BetaChannel : AppSettings.StableChannel;
 
-    /// <summary>Первый (самый свежий) опубликованный релиз нужного канала: стабильный канал пропускает бета-релизы.</summary>
+    /// <summary>
+    /// Релиз нужного канала: stable пропускает prerelease; beta предпочитает prerelease (тег -beta),
+    /// и только если бет нет — берёт свежий стабильный.
+    /// </summary>
     internal static JsonElement? PickRelease(JsonElement releases, bool beta)
     {
         if (releases.ValueKind != JsonValueKind.Array) return null;
+        JsonElement? stableFallback = null;
         foreach (var r in releases.EnumerateArray())
         {
             if (r.TryGetProperty("draft", out var d) && d.ValueKind == JsonValueKind.True) continue;
             var pre = r.TryGetProperty("prerelease", out var p) && p.ValueKind == JsonValueKind.True;
-            if (pre && !beta) continue;
-            return r;
+            if (beta)
+            {
+                if (pre) return r;
+                stableFallback ??= r;
+            }
+            else if (!pre)
+            {
+                return r;
+            }
         }
-        return null;
+        return beta ? stableFallback : null;
     }
 
     /// <summary>
@@ -204,16 +215,28 @@ public sealed class UpdateService : IUpdateService
             if (path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
                 progress?.Report("Запускаю установщик…");
-                // Тихая установка если Inno Setup
-                Process.Start(new ProcessStartInfo
+                var installDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
+                // Inno Setup: тихая установка в ту же папку. После успеха сам перезапустит приложение
+                // (ShouldRelaunch в WinOptimizer.iss), поэтому NORELAUNCH не передаём.
+                // Нужны права администратора — иначе файлы в Program Files не заменятся.
+                try
                 {
-                    FileName = path,
-                    Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS",
-                    UseShellExecute = true,
-                });
-                // закрыть текущее приложение через небольшой bat
-                ScheduleRestartAndExit(path);
-                return (true, "Установщик обновления запущен. Приложение закроется.");
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = path,
+                        Arguments = $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"{installDir}\"",
+                        UseShellExecute = true,
+                        Verb = "runas",
+                    });
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    return (false, "Обновление отменено: нужны права администратора для установщика.");
+                }
+
+                // Отпускаем мьютекс (AppMutex в iss) и выходим — установщик дождётся и поставит файлы.
+                ShutdownApp();
+                return (true, "Установщик обновления запущен. Приложение закроется и откроется снова.");
             }
 
             if (path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
@@ -241,26 +264,35 @@ public sealed class UpdateService : IUpdateService
                         goto wait
                     )
                     xcopy /y /e /i /q "{extract}\*" "{targetDir}\"
+                    if errorlevel 1 (
+                        echo xcopy failed
+                        exit /b 1
+                    )
                     start "" "{Path.Combine(targetDir, Path.GetFileName(exe))}"
                     del "%~f0"
                     """;
                 await File.WriteAllTextAsync(bat, content, ct).ConfigureAwait(false);
+
+                // В Program Files нужны права администратора; в пользовательской папке — обычно нет.
+                var needAdmin = InstalledByInstaller || targetDir.Contains("Program Files", StringComparison.OrdinalIgnoreCase);
                 try
                 {
-                    // Программа обычно стоит в Program Files — для замены файлов нужны права администратора.
-                    Process.Start(new ProcessStartInfo
+                    var psi = new ProcessStartInfo
                     {
                         FileName = bat,
                         UseShellExecute = true,
-                        Verb = "runas",
                         WindowStyle = ProcessWindowStyle.Hidden,
-                    });
+                    };
+                    if (needAdmin)
+                        psi.Verb = "runas";
+                    Process.Start(psi);
                 }
                 catch (System.ComponentModel.Win32Exception)
                 {
                     return (false, "Обновление отменено: для замены файлов нужны права администратора.");
                 }
 
+                ShutdownApp();
                 return (true, "Обновление будет применено после закрытия. Перезапуск…");
             }
 
@@ -273,26 +305,8 @@ public sealed class UpdateService : IUpdateService
         }
     }
 
-    private static void ScheduleRestartAndExit(string setupPath)
+    private static void ShutdownApp()
     {
-        try
-        {
-            var bat = Path.Combine(AppPaths.DownloadsDirectory, "close-and-update.bat");
-            File.WriteAllText(bat, $"""
-                @echo off
-                timeout /t 1 /nobreak >nul
-                """);
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = bat,
-                UseShellExecute = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-            });
-        }
-        catch { /* ignore */ }
-
-        // выходим из UI-потока
         System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
         {
             System.Windows.Application.Current.Shutdown();
