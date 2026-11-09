@@ -7,9 +7,9 @@
             <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="16" />
-            <Setter Property="Padding" Value="20,18" />
-            <Setter Property="Margin" Value="0,0,16,12" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Margin" Value="0,0,12,10" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
@@ -18,25 +18,25 @@
             </Style.Triggers>
         </Style>
         <Style x:Key="SettingsSectionTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontSize" Value="15.5" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="Margin" Value="2,20,0,10" />
+            <Setter Property="Margin" Value="2,16,0,8" />
         </Style>
     </UserControl.Resources>
-            <Grid Margin="28,24,12,12">
+            <Grid Margin="24,20,12,12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <StackPanel Margin="0,0,16,20">
+                <StackPanel Margin="0,0,12,16">
                     <Border Background="{DynamicResource AccentBrush}" CornerRadius="6" Padding="9,4"
                             HorizontalAlignment="Left" Margin="0,0,0,10">
                         <TextBlock Text="ПЕРСОНАЛИЗАЦИЯ" FontSize="10.5" FontWeight="Bold"
                                    Foreground="White" />
                     </Border>
-                    <TextBlock Text="Настройки" Style="{StaticResource PageTitle}" FontSize="28" />
+                    <TextBlock Text="Настройки" Style="{StaticResource PageTitle}" FontSize="26" />
                     <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,0" FontSize="13"
                                Text="Настройте WinOptimizer под себя — изменения применяются сразу." />
                 </StackPanel>
