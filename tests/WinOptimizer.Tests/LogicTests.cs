@@ -797,3 +797,25 @@ public class CardEntranceTests
     public void CascadeDelay_IsClamped(int index, int expectedMs) =>
         Assert.Equal(expectedMs, WinOptimizer.Views.Motion.CascadeDelayMs(index));
 }
+
+public class PowerPlanNamesTests
+{
+    [Theory]
+    [InlineData("GUID схемы питания: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)", "Сбалансированная")]
+    [InlineData("Power Scheme GUID: 8C5E7FDA-E8BF-4A96-9A85-A6E23A8C635C  (High performance)", "Высокая производительность")]
+    [InlineData("GUID схемы питания: a1841308-3541-4fab-bc81-f71556f20b4a  (Power saver)", "Экономия энергии")]
+    [InlineData("GUID схемы питания: e9a42b02-d5df-448d-aa00-03f14749eb61  (Ultimate Performance)", "Максимальная производительность")]
+    public void StockPlans_GetRussianNames(string output, string expected) =>
+        Assert.Equal(expected, PowerPlanNames.Describe(output));
+
+    [Fact]
+    public void CustomPlan_KeepsSystemName() =>
+        Assert.Equal("SKID AMD", PowerPlanNames.Describe("GUID схемы питания: 11111111-2222-3333-4444-555555555555  (SKID AMD)"));
+
+    [Fact]
+    public void NoName_FallsBackToGuid() =>
+        Assert.Equal("11111111-2222-3333-4444-555555555555", PowerPlanNames.Describe("GUID: 11111111-2222-3333-4444-555555555555"));
+
+    [Fact]
+    public void OemEncoding_IsAvailable() => Assert.NotNull(WinOptimizer.Services.ProcessRunner.OemEncoding);
+}

@@ -201,11 +201,11 @@ public sealed partial class SystemInfoService : ISystemInfoService
 
         lines.Add(new InfoLine("Secure Boot", ReadSecureBoot()));
 
-        var scheme = ProcessRunner.Run(System.IO.Path.Combine(Environment.SystemDirectory, "powercfg.exe"), "/getactivescheme");
+        var scheme = ProcessRunner.Run(System.IO.Path.Combine(Environment.SystemDirectory, "powercfg.exe"), "/getactivescheme",
+            outputEncoding: ProcessRunner.OemEncoding);
         if (scheme.ExitCode == 0)
         {
-            var match = SchemeNamePattern().Match(scheme.StandardOutput);
-            lines.Add(new InfoLine("Схема питания", match.Success ? match.Groups[1].Value : scheme.StandardOutput.Trim()));
+            lines.Add(new InfoLine("Схема питания", PowerPlanNames.Describe(scheme.StandardOutput)));
         }
 
         return lines;
@@ -321,7 +321,4 @@ public sealed partial class SystemInfoService : ISystemInfoService
 
         return builder.ToString().TrimEnd();
     }
-
-    [GeneratedRegex(@"\(([^)]+)\)")]
-    private static partial Regex SchemeNamePattern();
 }
