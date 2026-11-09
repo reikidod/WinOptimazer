@@ -362,8 +362,9 @@ public sealed class MainViewModel : ObservableObject
     {
         try
         {
-            _history.Record(category, operation, result);
-            RefreshRecentOperations();
+            var entry = _history.Record(category, operation, result);
+            RecentOperations.Insert(0, entry);
+            while (RecentOperations.Count > 8) RecentOperations.RemoveAt(RecentOperations.Count - 1);
         }
         catch (Exception ex)
         {
