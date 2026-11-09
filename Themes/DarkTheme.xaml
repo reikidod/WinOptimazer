@@ -2,15 +2,15 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:WinOptimizer.Views">
 
-    <!-- ===== Палитра: тёмно-серые тона ===== -->
-    <Color x:Key="BgWindowColor">#1B1C1F</Color>
-    <Color x:Key="BgSidebarColor">#202225</Color>
-    <Color x:Key="BgCardColor">#2A2C31</Color>
-    <Color x:Key="BgCardHoverColor">#353840</Color>
-    <Color x:Key="BorderColor">#3A3D44</Color>
-    <Color x:Key="BorderHoverColor">#7F8CA3</Color>
-    <Color x:Key="AccentColor">#8AAAD8</Color>
-    <Color x:Key="AccentStrongColor">#4B6CA3</Color>
+    <!-- Fluent-inspired dark palette: layered slate surfaces and restrained blue accent. -->
+    <Color x:Key="BgWindowColor">#171B24</Color>
+    <Color x:Key="BgSidebarColor">#1D2430</Color>
+    <Color x:Key="BgCardColor">#242C39</Color>
+    <Color x:Key="BgCardHoverColor">#2C3747</Color>
+    <Color x:Key="BorderColor">#354153</Color>
+    <Color x:Key="BorderHoverColor">#61799B</Color>
+    <Color x:Key="AccentColor">#9BBEFF</Color>
+    <Color x:Key="AccentStrongColor">#426BA8</Color>
     <Color x:Key="TrackOffColor">#3A3D44</Color>
 
     <SolidColorBrush x:Key="BgWindowBrush" Color="{StaticResource BgWindowColor}" />
@@ -25,8 +25,8 @@
 
     <!-- Контраст текста на карточках (#2A2C31): основной ≈ 12:1, вторичный ≈ 6:1, приглушённый ≈ 4.7:1 -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F3F5" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#C2C6CE" />
-    <SolidColorBrush x:Key="TextDimBrush" Color="#A9AEB9" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#C2CCDA" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="#AAB6C8" />
 
     <SolidColorBrush x:Key="SuccessBrush" Color="#7FB38F" />
     <SolidColorBrush x:Key="WarnBrush" Color="#D2AE6D" />
@@ -39,7 +39,7 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="16,9" />
+        <Setter Property="Padding" Value="14,8" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
@@ -49,15 +49,12 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8"
+                            CornerRadius="10"
                             RenderTransformOrigin="0.5,0.5"
                             SnapsToDevicePixels="True">
                         <Border.RenderTransform>
                             <ScaleTransform x:Name="PressScale" ScaleX="1" ScaleY="1" />
                         </Border.RenderTransform>
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="8" ShadowDepth="2" Direction="270" Opacity="0.35" Color="Black" />
-                        </Border.Effect>
                         <Grid>
                             <Border x:Name="Highlight" Background="White" Opacity="0" CornerRadius="7" IsHitTestVisible="False" />
                             <ContentPresenter Margin="{TemplateBinding Padding}"
@@ -140,11 +137,11 @@
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Margin" Value="0,0,0,6" />
+        <Setter Property="Margin" Value="0,0,0,4" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Root" CornerRadius="8" Background="Transparent" BorderThickness="1" BorderBrush="Transparent"
+                    <Border x:Name="Root" CornerRadius="10" Background="Transparent" BorderThickness="1" BorderBrush="Transparent"
                             Padding="12,10" SnapsToDevicePixels="True">
                         <Grid>
                             <Border x:Name="HoverFill" Margin="-12,-10" CornerRadius="8" Opacity="0" IsHitTestVisible="False"
