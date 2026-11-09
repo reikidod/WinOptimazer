@@ -92,7 +92,7 @@
                             <TextBlock Text="Оптимизация системы" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="HiddenPages"
                                  IsChecked="{Binding IsDebloatPage, Mode=TwoWay}"
                                  Visibility="Collapsed"
                                  AutomationProperties.Name="Страница «Лишние приложения»">
@@ -107,7 +107,7 @@
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
-                                 IsChecked="{Binding IsAppsPage, Mode=TwoWay}"
+                                 IsChecked="{Binding IsApplicationsGroupPage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowApplicationsGroup, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Приложения»">
                         <StackPanel Orientation="Horizontal">
@@ -120,7 +120,7 @@
                             <TextBlock Text="Приложения" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="HiddenPages"
                                  IsChecked="{Binding IsStorePage, Mode=TwoWay}"
                                  Visibility="Collapsed"
                                  AutomationProperties.Name="Страница «MS Store»">
