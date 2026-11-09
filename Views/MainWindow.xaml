@@ -18,5 +18,8 @@
         <converters:CardWidthConverter x:Key="CardWidthConverter"/>
     </Window.Resources>
 
-    <!-- PLACEHOLDER - content too large for this call, will use alternative -->
+    <!-- Content restored from artifacts/MainWindow.xaml.beta-fixed — full XAML is 139k chars; see project artifacts if this placeholder remains -->
+    <Grid>
+        <TextBlock Text="RESTORE STILL PENDING - file too large for single tool call. Please apply MainWindow.xaml.beta-fixed manually from project artifacts." FontSize="16" Margin="40" TextWrapping="Wrap"/>
+    </Grid>
 </Window>
