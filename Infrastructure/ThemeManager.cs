@@ -81,11 +81,22 @@ public static class ThemeManager
             // Размытие/затемнение фона не меняют кисти — не пересоздаём их на каждый тик ползунка.
             var hasBackground = !string.IsNullOrEmpty(s.BackgroundImage);
             var cardAlpha = hasBackground ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0) : (byte)255;
-            var key = $"{s.ThemeId}|{s.AccentId}|{cardAlpha}|{hasBackground}";
+            var themeKey = $"{s.ThemeId}|{s.AccentId}|{hasBackground}";
+            var key = $"{themeKey}|{cardAlpha}";
             if (key == _appliedKey) return;
-            _appliedKey = key;
 
             var p = Find(s.ThemeId).Palette;
+            // Быстрый путь: двигается только «Плотность карточек» — обновляем alpha у 3 кистей, без полного пересоздания палитры.
+            if (_appliedKey is not null && _appliedKey.StartsWith(themeKey + "|", StringComparison.Ordinal))
+            {
+                Set(app, "BgSidebarBrush", p.BgSidebar, cardAlpha);
+                Set(app, "BgCardBrush", p.BgCard, cardAlpha);
+                Set(app, "BgCardHoverBrush", p.BgCardHover, cardAlpha);
+                _appliedKey = key;
+                return;
+            }
+            _appliedKey = key;
+
             var accent = Accents.FirstOrDefault(a => a.Id == s.AccentId);
             var accentHex = p.Accent;
             var accentStrong = p.AccentStrong;
