@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -246,6 +247,39 @@ public partial class MainWindow : Window
         {
             Logger.Error("Не удалось сохранить отчёт", ex);
             ShowInfo("Не удалось сохранить", ex.Message);
+        }
+    }
+
+    private void OnSaveJsonReport(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel.InfoSections.Count == 0)
+        {
+            ShowInfo("Нет данных", "Сведения о системе ещё не загружены. Нажмите «Обновить» и повторите.");
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Экспортировать характеристики ПК в JSON",
+            Filter = "JSON-файл (*.json)|*.json",
+            FileName = $"pc-info-{DateTime.Now:yyyy-MM-dd}.json",
+            DefaultExt = ".json",
+            AddExtension = true,
+        };
+
+        if (dialog.ShowDialog(this) != true) return;
+
+        try
+        {
+            var json = JsonSerializer.Serialize(_viewModel.InfoSections,
+                new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(dialog.FileName, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            Logger.Info($"Характеристики экспортированы в JSON: {dialog.FileName}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Logger.Error("Не удалось экспортировать характеристики в JSON", ex);
+            ShowInfo("Не удалось сохранить JSON", ex.Message);
         }
     }
 
