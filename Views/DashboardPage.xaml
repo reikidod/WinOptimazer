@@ -1,0 +1,102 @@
+<UserControl x:Class="WinOptimizer.Views.DashboardPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WinOptimizer.Views">
+    <UserControl.Resources>
+        <Style x:Key="MetricCard" TargetType="Border" BasedOn="{StaticResource BorderCard}">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="MinWidth" Value="140" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer Style="{StaticResource OverlayScroll}" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+        <StackPanel Margin="28,24,16,16">
+            <TextBlock Text="Главная" Style="{StaticResource PageTitle}" />
+            <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,18"
+                       Text="Состояние ПК, быстрые действия и последние операции. Мониторинг работает только на этой странице." />
+
+            <TextBlock Text="{Binding Dashboard.StatusSummary}" FontWeight="SemiBold" Margin="0,0,0,14"
+                       Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
+
+            <!-- Метрики -->
+            <UniformGrid Columns="4" Margin="0,0,0,16">
+                <Border Style="{StaticResource MetricCard}" Margin="0,0,10,10">
+                    <StackPanel>
+                        <TextBlock Text="ЦП" Style="{StaticResource SecondaryText}" FontSize="12" />
+                        <TextBlock Text="{Binding Dashboard.CpuText}" FontSize="26" FontWeight="SemiBold" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource MetricCard}" Margin="0,0,10,10">
+                    <StackPanel>
+                        <TextBlock Text="Память" Style="{StaticResource SecondaryText}" FontSize="12" />
+                        <TextBlock Text="{Binding Dashboard.RamText}" FontSize="15" FontWeight="SemiBold" Margin="0,8,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource MetricCard}" Margin="0,0,10,10">
+                    <StackPanel>
+                        <TextBlock Text="Темп. ЦП" Style="{StaticResource SecondaryText}" FontSize="12" />
+                        <TextBlock Text="{Binding Dashboard.CpuTempText}" FontSize="22" FontWeight="SemiBold" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource MetricCard}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Темп. GPU" Style="{StaticResource SecondaryText}" FontSize="12" />
+                        <TextBlock Text="{Binding Dashboard.GpuTempText}" FontSize="22" FontWeight="SemiBold" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Button Content="Обновить показатели" Command="{Binding Dashboard.RefreshCommand}"
+                    HorizontalAlignment="Left" Margin="0,0,0,20" />
+
+            <!-- Быстрые действия -->
+            <TextBlock Text="Быстрые действия" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
+            <WrapPanel Margin="0,0,0,20">
+                <Button Content="Оптимизация" Command="{Binding Dashboard.OpenTweaksCommand}" Margin="0,0,8,8" />
+                <Button Content="Обслуживание" Command="{Binding Dashboard.OpenMaintenanceCommand}" Margin="0,0,8,8" />
+                <Button Content="Игры" Command="{Binding Dashboard.OpenGamesCommand}" Margin="0,0,8,8" />
+                <Button Content="Мой ПК" Command="{Binding Dashboard.OpenSystemCommand}" Margin="0,0,8,8" />
+            </WrapPanel>
+
+            <!-- Профили -->
+            <TextBlock Text="Профили оптимизации" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
+            <TextBlock Style="{StaticResource SecondaryText}" Margin="0,0,0,10" TextWrapping="Wrap"
+                       Text="Встроенные наборы твиков. Применение — через раздел «Оптимизация системы» (выберите твики профиля вручную в 0.6; авто-применение профиля — следующий шаг)." />
+            <ItemsControl ItemsSource="{Binding Dashboard.Profiles}" Margin="0,0,0,20">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource BorderCard}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- История -->
+            <TextBlock Text="Последние операции" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
+            <ItemsControl ItemsSource="{Binding Dashboard.RecentOperations}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource BorderCard}" Padding="12,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Detail}" Style="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding Outcome}" Style="{StaticResource SecondaryText}"
+                                           VerticalAlignment="Center" Margin="12,0,0,0" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
