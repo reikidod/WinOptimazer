@@ -11,6 +11,7 @@ namespace WinOptimizer;
 public partial class App : Application
 {
     private Mutex? _instanceMutex;
+    private SystemMonitorService? _monitor;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -25,7 +26,6 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             Logger.Error("Критическая ошибка", args.ExceptionObject as Exception);
 
-        // Два окна одновременно портят общий файл бэкапа твиков и мешают обновлению.
         _instanceMutex = new Mutex(initiallyOwned: true, @"Global\WinOptimizer.SingleInstance", out var firstInstance);
         if (!firstInstance)
         {
@@ -44,11 +44,8 @@ public partial class App : Application
             return;
         }
 
-        // Тема и акцент применяются до создания окон, чтобы не мигать цветами по умолчанию.
         ThemeManager.Initialize();
 
-        // Первое окно в WPF становится MainWindow. При ShutdownMode=OnMainWindowClose
-        // закрытие приветствия сразу гасило бы всё приложение — временно отключаем.
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         try
@@ -67,6 +64,10 @@ public partial class App : Application
         var dialogs = new DialogService();
         var updates = new UpdateService();
         var backup = new BackupStore(AppPaths.BackupFile);
+        var history = new OperationHistoryService();
+        var profiles = new OptimizationProfileService();
+        _monitor = new SystemMonitorService();
+
         var viewModel = new MainViewModel(
             TweakCatalog.Create(backup),
             new RestorePointService(),
@@ -80,7 +81,10 @@ public partial class App : Application
             new DebloatViewModel(new DebloatService(), dialogs),
             new AppsViewModel(new AppInstallService(), new ZapretService(), new TgWsProxyService(), dialogs),
             new StoreViewModel(new MsStoreService(), dialogs),
-            new GamesViewModel(new GameDiscoveryService(), new OptiScalerService(), dialogs));
+            new GamesViewModel(new GameDiscoveryService(), new OptiScalerService(), dialogs),
+            history,
+            profiles,
+            _monitor);
 
         var window = new MainWindow(viewModel);
         MainWindow = window;
@@ -88,14 +92,14 @@ public partial class App : Application
         window.Show();
         if (AppSettings.Current.CheckUpdatesOnStartup)
             _ = viewModel.CheckForUpdatesOnStartupAsync();
-        Logger.Info("WinOptimizer запущен");
+        Logger.Info("WinOptimizer 0.6 запущен");
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
-        // Ползунки сохраняются с задержкой; при закрытии сразу после изменения записываем значения принудительно.
         try { AppSettings.Current.Save(); } catch (Exception ex) { Logger.Error("Сохранение настроек при выходе", ex); }
-        try { _instanceMutex?.ReleaseMutex(); } catch (ApplicationException) { /* уже освобождён */ }
+        try { _monitor?.Dispose(); } catch { /* ignore */ }
+        try { _instanceMutex?.ReleaseMutex(); } catch (ApplicationException) { }
         _instanceMutex?.Dispose();
         base.OnExit(e);
     }
@@ -107,8 +111,6 @@ public partial class App : Application
         Logger.Error("Необработанное исключение", e.Exception);
         e.Handled = true;
 
-        // Одна ошибка в одном разделе не должна закрывать всё приложение вместе с несохранённым выбором.
-        // Если ошибки идут подряд (больше пяти), состояние уже ненадёжно — закрываемся.
         var fatal = ++_unhandledCount > 5;
         MessageBox.Show(
             $"Произошла непредвиденная ошибка:{Environment.NewLine}{e.Exception.Message}{Environment.NewLine}{Environment.NewLine}" +
