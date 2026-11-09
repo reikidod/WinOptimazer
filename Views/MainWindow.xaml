@@ -59,6 +59,19 @@
 
                 <StackPanel Grid.Row="1">
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                                 IsChecked="{Binding IsDashboardPage, Mode=TwoWay}"
+                                 AutomationProperties.Name="Главная панель">
+                        <StackPanel Orientation="Horizontal">
+                            <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          Data="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z M9 21v-7h6v7" />
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Главная" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsTweaksPage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowTweaksTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Твики»">
@@ -248,6 +261,136 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
+
+            <!-- Главная панель: лёгкий снимок состояния, без постоянного фонового опроса -->
+            <Grid Visibility="{Binding IsDashboardPage, Converter={StaticResource BoolToVis}}"
+                  local:Motion.PageTransition="True" Margin="28,24,16,12">
+                <ScrollViewer Style="{StaticResource OverlayScroll}" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,16,12">
+                        <Grid Margin="0,0,0,18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Главная" Style="{StaticResource PageTitle}"/>
+                                <TextBlock Text="Состояние компьютера и быстрый доступ к инструментам"
+                                           Style="{StaticResource SecondaryText}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Обновить" VerticalAlignment="Center"
+                                    Command="{Binding RefreshDashboardCommand}"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsCard}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Процессор" Style="{StaticResource SecondaryText}"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.CpuSummary, TargetNullValue='Загрузка…'}"
+                                               FontSize="18" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                    <TextBlock Text="Логические процессоры" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource SettingsCard}" Margin="4,0">
+                                <StackPanel>
+                                    <TextBlock Text="Оперативная память" Style="{StaticResource SecondaryText}"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.MemorySummary, TargetNullValue='Загрузка…'}"
+                                               FontSize="18" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource SettingsCard}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Системный диск" Style="{StaticResource SecondaryText}"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.DiskSummary, TargetNullValue='Загрузка…'}"
+                                               FontSize="16" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.SystemDrive}" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="Система" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding DashboardSnapshot.OsDescription}" Style="{StaticResource SecondaryText}" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding DashboardSnapshot.NetworkSummary}" Style="{StaticResource SecondaryText}" Margin="0,5,0,0"/>
+                                <TextBlock Text="{Binding DashboardStatus}" Foreground="{DynamicResource AccentBrush}" Margin="0,8,0,0" FontSize="12"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource SettingsCard}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Диагностика" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" Content="Проверить" Style="{StaticResource AccentButton}"
+                                                Command="{Binding RunDiagnosticsCommand}" Padding="12,6"/>
+                                    </Grid>
+                                    <TextBlock Text="Проверка диска, памяти, сети, прав и ожидающей перезагрузки. Ничего не исправляется автоматически."
+                                               Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,8"/>
+                                    <ItemsControl ItemsSource="{Binding DiagnosticFindings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0,5,0,5">
+                                                    <TextBlock Text="{Binding LevelLabel}" Foreground="{DynamicResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="0,1,0,0"/>
+                                                    <TextBlock Text="{Binding Message}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding Recommendation}" Style="{StaticResource SecondaryText}" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource SettingsCard}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Последние действия" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" Content="Обновить" Command="{Binding RefreshHistoryCommand}" Padding="10,5"/>
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding RecentOperations}" Margin="0,8,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0,4,0,6">
+                                                    <TextBlock Text="{Binding Operation}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding Category}" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                                    <TextBlock Text="{Binding Result}" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                                    <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Style="{StaticResource SecondaryText}" FontSize="10"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="История хранится локально на этом компьютере."
+                                               Style="{StaticResource SecondaryText}" FontSize="10" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Style="{StaticResource SettingsCard}" Margin="0,0,0,8">
+                            <StackPanel>
+                                <TextBlock Text="Быстрые действия" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                <WrapPanel>
+                                    <Button Content="Оптимизация" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Tweaks"/>
+                                    <Button Content="Приложения" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Apps"/>
+                                    <Button Content="Игры" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Games"/>
+                                    <Button Content="Обслуживание" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Maintenance"/>
+                                    <Button Content="Мой ПК" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="System"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
 
             <!-- Страница «Твики» -->
             <Grid Visibility="{Binding IsTweaksPage, Converter={StaticResource BoolToVis}}" local:Motion.PageTransition="True" Margin="28,24,16,12">
