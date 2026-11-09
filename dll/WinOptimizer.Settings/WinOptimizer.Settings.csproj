@@ -6,6 +6,9 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>WinOptimizer</RootNamespace>
     <AssemblyName>WinOptimizer.Settings</AssemblyName>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Using Include="System.IO" />

@@ -6,6 +6,10 @@
     <RootNamespace>WinOptimizer.Infrastructure</RootNamespace>
     <AssemblyName>WinOptimizer.Core</AssemblyName>
     <UseWPF>true</UseWPF>
+    <!-- Готовые DLL складываем в /bin у корня репозитория -->
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Using Include="System.IO" />

@@ -1,0 +1,2 @@
+# Сюда после сборки попадают WinOptimizer.Core.dll и WinOptimizer.Settings.dll
+# Папка в .gitignore (кроме .gitkeep) — бинарники в git не коммитим.

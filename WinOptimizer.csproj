@@ -40,6 +40,11 @@
     <EmbeddedResource Remove="tests\**" />
     <None Remove="tests\**" />
     <Page Remove="tests\**" />
+    <!-- Исходники DLL-проектов собираются отдельно (ProjectReference), иначе будут дубли типов. -->
+    <Compile Remove="dll\**" />
+    <EmbeddedResource Remove="dll\**" />
+    <None Remove="dll\**" />
+    <Page Remove="dll\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,7 +58,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="modules\WinOptimizer.Settings\WinOptimizer.Settings.csproj" />
+    <ProjectReference Include="dll\WinOptimizer.Settings\WinOptimizer.Settings.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,7 @@
-bin/
+bin/*
+!bin/.gitkeep
+dll/**/obj/
+dll/**/bin/
 obj/
 publish/
 certs/*.pfx
