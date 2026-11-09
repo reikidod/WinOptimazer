@@ -1,9 +1,70 @@
 using System.Diagnostics;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.Services;
 
 namespace WinOptimizer.ViewModels;
+
+/// <summary>Плитка выбора темы: образец фона, карточки и акцента.</summary>
+public sealed class ThemeOption : ObservableObject
+{
+    private bool _selected;
+
+    public ThemeOption(ThemeInfo info)
+    {
+        Id = info.Id;
+        Name = info.Name;
+        BgBrush = Make(info.Palette.BgWindow);
+        CardBrush = Make(info.Palette.BgCard);
+        AccentBrush = Make(info.Palette.Accent);
+        TextBrush = Make(info.Palette.TextPrimary);
+    }
+
+    public string Id { get; }
+    public string Name { get; }
+    public Brush BgBrush { get; }
+    public Brush CardBrush { get; }
+    public Brush AccentBrush { get; }
+    public Brush TextBrush { get; }
+
+    public bool IsSelected
+    {
+        get => _selected;
+        set => SetField(ref _selected, value);
+    }
+
+    internal static Brush Make(string hex)
+    {
+        var b = new SolidColorBrush(ThemeManager.ParseColor(hex));
+        b.Freeze();
+        return b;
+    }
+}
+
+/// <summary>Чип выбора акцентного цвета.</summary>
+public sealed class AccentOption : ObservableObject
+{
+    private bool _selected;
+
+    public AccentOption(AccentInfo info)
+    {
+        Id = info.Id;
+        Name = info.Name;
+        Swatch = info.Accent.Length > 0 ? ThemeOption.Make(info.Accent) : ThemeOption.Make("#8C93A3");
+    }
+
+    public string Id { get; }
+    public string Name { get; }
+    public Brush Swatch { get; }
+
+    public bool IsSelected
+    {
+        get => _selected;
+        set => SetField(ref _selected, value);
+    }
+}
 
 /// <summary>Страница «Настройки»: поведение приложения, внешний вид, обслуживание данных.</summary>
 public sealed class SettingsViewModel : ObservableObject
@@ -25,6 +86,7 @@ public sealed class SettingsViewModel : ObservableObject
         ClearCacheCommand = new RelayCommand(ClearCache);
         ResetCommand = new RelayCommand(Reset);
         RefreshCacheSize();
+        InitAppearance();
         _ = LoadAutostartAsync();
     }
 
@@ -179,6 +241,158 @@ public sealed class SettingsViewModel : ObservableObject
         private set => SetField(ref _cacheText, value);
     }
 
+    // ---------- Тема, акцент, фон ----------
+
+    public IReadOnlyList<ThemeOption> ThemeOptions { get; } = ThemeManager.Themes.Select(t => new ThemeOption(t)).ToList();
+    public IReadOnlyList<AccentOption> AccentOptions { get; } = ThemeManager.Accents.Select(a => new AccentOption(a)).ToList();
+
+    public ICommand SetThemeCommand { get; private set; } = null!;
+    public ICommand SetAccentCommand { get; private set; } = null!;
+    public ICommand PickBackgroundCommand { get; private set; } = null!;
+    public ICommand ClearBackgroundCommand { get; private set; } = null!;
+
+    private System.Windows.Threading.DispatcherTimer? _saveTimer;
+
+    private void InitAppearance()
+    {
+        SetThemeCommand = new RelayCommand<string>(id =>
+        {
+            if (id is null || !ThemeManager.IsKnownTheme(id) || _settings.ThemeId == id) return;
+            _settings.ThemeId = id;
+            RefreshSelection();
+            _settings.Save();
+        });
+        SetAccentCommand = new RelayCommand<string>(id =>
+        {
+            if (id is null || !ThemeManager.IsKnownAccent(id) || _settings.AccentId == id) return;
+            _settings.AccentId = id;
+            RefreshSelection();
+            _settings.Save();
+        });
+        PickBackgroundCommand = new RelayCommand(PickBackground);
+        ClearBackgroundCommand = new RelayCommand(ClearBackground, () => HasBackground);
+        RefreshSelection();
+    }
+
+    private void RefreshSelection()
+    {
+        foreach (var t in ThemeOptions) t.IsSelected = t.Id == _settings.ThemeId;
+        foreach (var a in AccentOptions) a.IsSelected = a.Id == _settings.AccentId;
+    }
+
+    public bool HasBackground => !string.IsNullOrEmpty(_settings.BackgroundImage);
+
+    public string BackgroundName => HasBackground ? Path.GetFileName(_settings.BackgroundImage) : "Фон не выбран";
+
+    public int BackgroundBlur
+    {
+        get => _settings.BackgroundBlurPercent;
+        set => SetLive(_settings.BackgroundBlurPercent, Math.Clamp(value, 0, 100), v => _settings.BackgroundBlurPercent = v, nameof(BackgroundBlur));
+    }
+
+    public int BackgroundDim
+    {
+        get => _settings.BackgroundDimPercent;
+        set => SetLive(_settings.BackgroundDimPercent, Math.Clamp(value, 0, 90), v => _settings.BackgroundDimPercent = v, nameof(BackgroundDim));
+    }
+
+    public int CardOpacity
+    {
+        get => _settings.CardOpacityPercent;
+        set => SetLive(_settings.CardOpacityPercent, Math.Clamp(value, 50, 100), v => _settings.CardOpacityPercent = v, nameof(CardOpacity));
+    }
+
+    /// <summary>Ползунок меняет значение десятки раз в секунду: применяем сразу, а на диск пишем один раз после паузы.</summary>
+    private void SetLive(int current, int value, Action<int> assign, string property)
+    {
+        if (current == value) return;
+        assign(value);
+        OnPropertyChanged(property);
+        AppSettings.RaiseChanged();
+        _saveTimer ??= new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _saveTimer.Tick -= OnSaveTimer;
+        _saveTimer.Tick += OnSaveTimer;
+        _saveTimer.Stop();
+        _saveTimer.Start();
+    }
+
+    private void OnSaveTimer(object? sender, EventArgs e)
+    {
+        _saveTimer?.Stop();
+        _settings.Save();
+    }
+
+    private void PickBackground()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Выберите картинку для фона",
+            Filter = "Изображения (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp",
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var info = new FileInfo(dialog.FileName);
+            if (info.Length > 40L * 1024 * 1024)
+            {
+                Status = "Файл слишком большой: выберите картинку до 40 МБ.";
+                return;
+            }
+
+            // Проверяем, что файл действительно читается как изображение, до копирования.
+            var probe = new BitmapImage();
+            probe.BeginInit();
+            probe.CacheOption = BitmapCacheOption.OnLoad;
+            probe.DecodePixelWidth = 64;
+            probe.UriSource = new Uri(dialog.FileName);
+            probe.EndInit();
+
+            // Копия лежит в папке данных: фон не пропадёт, если исходный файл переместят или удалят.
+            Directory.CreateDirectory(AppPaths.DataDirectory);
+            var dest = Path.Combine(AppPaths.DataDirectory, "background-" + DateTime.Now.ToString("yyyyMMddHHmmss") + info.Extension.ToLowerInvariant());
+            File.Copy(dialog.FileName, dest, overwrite: true);
+            DeleteBackgroundFiles(keep: dest);
+
+            _settings.BackgroundImage = dest;
+            _settings.Save();
+            OnPropertyChanged(nameof(HasBackground));
+            OnPropertyChanged(nameof(BackgroundName));
+            CommandManager.InvalidateRequerySuggested();
+            Status = "Фон установлен. Размытие и затемнение настраиваются ползунками.";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException)
+        {
+            Logger.Error("Не удалось установить фон", ex);
+            Status = "Не удалось установить фон: файл не читается как картинка.";
+        }
+    }
+
+    private void ClearBackground()
+    {
+        _settings.BackgroundImage = "";
+        _settings.Save();
+        DeleteBackgroundFiles(keep: null);
+        OnPropertyChanged(nameof(HasBackground));
+        OnPropertyChanged(nameof(BackgroundName));
+        CommandManager.InvalidateRequerySuggested();
+        Status = "Фон убран.";
+    }
+
+    private static void DeleteBackgroundFiles(string? keep)
+    {
+        try
+        {
+            foreach (var f in Directory.EnumerateFiles(AppPaths.DataDirectory, "background-*"))
+                if (!string.Equals(f, keep, StringComparison.OrdinalIgnoreCase))
+                    File.Delete(f);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Logger.Error("Не удалось удалить старый фон", ex);
+        }
+    }
+
     private void Commit(string property)
     {
         OnPropertyChanged(property);
@@ -189,8 +403,10 @@ public sealed class SettingsViewModel : ObservableObject
     {
         _settings.ResetToDefaults();
         _settings.Save();
-        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText) })
+        foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText), nameof(BackgroundBlur), nameof(BackgroundDim), nameof(CardOpacity), nameof(HasBackground), nameof(BackgroundName) })
             OnPropertyChanged(p);
+        DeleteBackgroundFiles(keep: null);
+        RefreshSelection();
         Status = "Настройки сброшены к значениям по умолчанию.";
     }
 

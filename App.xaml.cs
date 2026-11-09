@@ -44,6 +44,9 @@ public partial class App : Application
             return;
         }
 
+        // Тема и акцент применяются до создания окон, чтобы не мигать цветами по умолчанию.
+        ThemeManager.Initialize();
+
         // Первое окно в WPF становится MainWindow. При ShutdownMode=OnMainWindowClose
         // закрытие приветствия сразу гасило бы всё приложение — временно отключаем.
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -90,6 +93,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // Ползунки сохраняются с задержкой; при закрытии сразу после изменения записываем значения принудительно.
+        try { AppSettings.Current.Save(); } catch (Exception ex) { Logger.Error("Сохранение настроек при выходе", ex); }
         try { _instanceMutex?.ReleaseMutex(); } catch (ApplicationException) { /* уже освобождён */ }
         _instanceMutex?.Dispose();
         base.OnExit(e);

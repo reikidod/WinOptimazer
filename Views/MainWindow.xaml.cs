@@ -20,8 +20,9 @@ public partial class MainWindow : Window
         InitializeComponent();
         FitToScreen();
         ApplyScale();
-        AppSettings.Changed += ApplyScale;
-        Closed += (_, _) => AppSettings.Changed -= ApplyScale;
+        ApplyBackground();
+        AppSettings.Changed += OnSettingsChanged;
+        Closed += (_, _) => AppSettings.Changed -= OnSettingsChanged;
         DataContext = viewModel;
         Loaded += OnLoaded;
     }
@@ -34,6 +35,63 @@ public partial class MainWindow : Window
         Height = Math.Min(Height, Math.Floor(area.Height * 0.92));
         MinWidth = Math.Min(MinWidth, Width);
         MinHeight = Math.Min(MinHeight, Height);
+    }
+
+    private void OnSettingsChanged()
+    {
+        ApplyScale();
+        ApplyBackground();
+        NativeMethods.UseDarkTitleBar(this);
+    }
+
+    private string? _loadedBackground;
+
+    /// <summary>Фон-картинка с размытием и затемнением. Картинка декодируется в разумном разрешении и кэшируется как битмап.</summary>
+    private void ApplyBackground()
+    {
+        var s = AppSettings.Current;
+        var path = s.BackgroundImage;
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+        {
+            BackgroundImage.Source = null;
+            BackgroundImage.Visibility = Visibility.Collapsed;
+            BackgroundDim.Visibility = Visibility.Collapsed;
+            _loadedBackground = null;
+            return;
+        }
+
+        if (_loadedBackground != path)
+        {
+            try
+            {
+                var bmp = new System.Windows.Media.Imaging.BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bmp.DecodePixelWidth = 1920;
+                bmp.UriSource = new Uri(path, UriKind.Absolute);
+                bmp.EndInit();
+                bmp.Freeze();
+                BackgroundImage.Source = bmp;
+                _loadedBackground = path;
+            }
+            catch (Exception ex) when (ex is IOException or NotSupportedException or InvalidOperationException)
+            {
+                Logger.Error("Не удалось загрузить фон", ex);
+                BackgroundImage.Source = null;
+                BackgroundImage.Visibility = Visibility.Collapsed;
+                BackgroundDim.Visibility = Visibility.Collapsed;
+                _loadedBackground = null;
+                return;
+            }
+        }
+
+        // Радиус до 50 px; картинку выдвигаем за края окна на радиус, чтобы по краям не было прозрачной каймы от размытия.
+        var radius = s.BackgroundBlurPercent * 0.5;
+        BackgroundBlur.Radius = radius;
+        BackgroundImage.Margin = new Thickness(-radius);
+        BackgroundDim.Opacity = s.BackgroundDimPercent / 100.0;
+        BackgroundImage.Visibility = Visibility.Visible;
+        BackgroundDim.Visibility = Visibility.Visible;
     }
 
     private void ApplyScale()

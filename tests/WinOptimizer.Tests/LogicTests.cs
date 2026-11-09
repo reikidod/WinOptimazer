@@ -624,3 +624,60 @@ public class AssetScoreTests
         Assert.True(DebloatService.AssetScore("Logo.scale-100.png") > DebloatService.AssetScore("Logo.targetsize-16.png"));
     }
 }
+
+public class ThemeTests
+{
+    [Fact]
+    public void Themes_HaveUniqueIds_AndDefaultExists()
+    {
+        var ids = WinOptimizer.Infrastructure.ThemeManager.Themes.Select(t => t.Id).ToList();
+        Assert.Equal(ids.Count, ids.Distinct().Count());
+        Assert.Contains(WinOptimizer.Infrastructure.ThemeManager.DefaultTheme, ids);
+        Assert.True(ids.Count >= 6);
+    }
+
+    [Fact]
+    public void EveryTheme_TextIsReadableOnCards()
+    {
+        foreach (var t in WinOptimizer.Infrastructure.ThemeManager.Themes)
+        {
+            var p = t.Palette;
+            Assert.True(WinOptimizer.Infrastructure.ThemeManager.Contrast(p.TextPrimary, p.BgCard) >= 7, t.Id + " primary");
+            Assert.True(WinOptimizer.Infrastructure.ThemeManager.Contrast(p.TextSecondary, p.BgCard) >= 4.5, t.Id + " secondary");
+            Assert.True(WinOptimizer.Infrastructure.ThemeManager.Contrast(p.TextDim, p.BgCard) >= 4.5, t.Id + " dim");
+            Assert.True(WinOptimizer.Infrastructure.ThemeManager.Contrast(p.TextPrimary, p.BgWindow) >= 7, t.Id + " on window");
+            Assert.True(WinOptimizer.Infrastructure.ThemeManager.Contrast(p.Accent, p.BgCard) >= 3, t.Id + " accent");
+        }
+    }
+
+    [Fact]
+    public void Settings_NormalizeClampsAppearanceValues()
+    {
+        var s = new WinOptimizer.Infrastructure.AppSettings
+        {
+            ThemeId = "nope", AccentId = "nope", BackgroundBlurPercent = 500, BackgroundDimPercent = -5,
+            CardOpacityPercent = 1, BackgroundImage = @"C:\definitely\missing.png",
+        };
+        s.Normalize();
+        Assert.Equal("dark", s.ThemeId);
+        Assert.Equal("theme", s.AccentId);
+        Assert.Equal(100, s.BackgroundBlurPercent);
+        Assert.Equal(0, s.BackgroundDimPercent);
+        Assert.Equal(50, s.CardOpacityPercent);
+        Assert.Equal("", s.BackgroundImage);
+    }
+
+    [Fact]
+    public void Settings_ThemeAndAccentRoundTrip()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "wo-theme-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            new WinOptimizer.Infrastructure.AppSettings { ThemeId = "redblack", AccentId = "green" }.Save(path);
+            var loaded = WinOptimizer.Infrastructure.AppSettings.Load(path);
+            Assert.Equal("redblack", loaded.ThemeId);
+            Assert.Equal("green", loaded.AccentId);
+        }
+        finally { File.Delete(path); }
+    }
+}

@@ -10,11 +10,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
                     <Grid Width="46" Height="26" Background="Transparent" SnapsToDevicePixels="True">
-                        <Border x:Name="Track" CornerRadius="13" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                            <Border.Background>
-                                <SolidColorBrush x:Name="TrackBrush" Color="{StaticResource TrackOffColor}" />
-                            </Border.Background>
-                        </Border>
+                        <Border x:Name="Track" CornerRadius="13" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                                Background="{DynamicResource TrackOffBrush}" />
+                        <!-- Включённое состояние — отдельный слой с плавным появлением: кисти берутся из текущей темы -->
+                        <Border x:Name="OnTrack" CornerRadius="13" Opacity="0" Background="{DynamicResource AccentStrongBrush}" />
                         <Ellipse x:Name="Thumb" Width="18" Height="18" HorizontalAlignment="Left" Margin="4,0,0,0" Fill="#D5D8DE">
                             <Ellipse.Effect>
                                 <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270" Opacity="0.5" Color="Black" />
@@ -28,8 +27,8 @@
                                     <Storyboard>
                                         <ThicknessAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="Margin"
                                                             To="24,0,0,0" Duration="0:0:0.15" />
-                                        <ColorAnimation Storyboard.TargetName="TrackBrush" Storyboard.TargetProperty="Color"
-                                                        To="{StaticResource AccentStrongColor}" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="OnTrack" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.15" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -38,17 +37,17 @@
                                     <Storyboard>
                                         <ThicknessAnimation Storyboard.TargetName="Thumb" Storyboard.TargetProperty="Margin"
                                                             To="4,0,0,0" Duration="0:0:0.15" />
-                                        <ColorAnimation Storyboard.TargetName="TrackBrush" Storyboard.TargetProperty="Color"
-                                                        To="{StaticResource TrackOffColor}" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="OnTrack" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.15" />
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45" />
@@ -65,15 +64,15 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContentControl">
-                    <Border x:Name="Card" Background="{StaticResource BgCardBrush}"
-                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    <Border x:Name="Card" Background="{DynamicResource BgCardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                             CornerRadius="12" Padding="16,14" SnapsToDevicePixels="True">
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Card" Property="Background" Value="{StaticResource BgCardHoverBrush}" />
-                            <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
+                            <Setter TargetName="Card" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                            <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -82,16 +81,16 @@
     </Style>
 
     <Style x:Key="BorderCard" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource BgCardBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Padding" Value="16,14" />
         <Setter Property="Margin" Value="0,0,0,12" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource BgCardHoverBrush}" />
-                <Setter Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
+                <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -137,7 +136,7 @@
                             <Setter TargetName="Pill" Property="Background" Value="#AAC8D0DC" />
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
-                            <Setter TargetName="Pill" Property="Background" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="Pill" Property="Background" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -197,7 +196,7 @@
 
     <!-- Сворачиваемый раздел: заголовок-карточка со стрелкой, содержимое плавно появляется -->
     <Style x:Key="SectionExpander" TargetType="Expander">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Expander">
@@ -214,9 +213,9 @@
                                             </Grid.ColumnDefinitions>
                                             <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}"
                                                               TextElement.FontSize="15" TextElement.FontWeight="SemiBold"
-                                                              TextElement.Foreground="{StaticResource TextPrimaryBrush}"
+                                                              TextElement.Foreground="{DynamicResource TextPrimaryBrush}"
                                                               VerticalAlignment="Center" />
-                                            <Path x:Name="Arrow" Grid.Column="1" Data="M 0,0 L 5,5 L 10,0" Stroke="{StaticResource TextDimBrush}"
+                                            <Path x:Name="Arrow" Grid.Column="1" Data="M 0,0 L 5,5 L 10,0" Stroke="{DynamicResource TextDimBrush}"
                                                   StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                                   VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
                                                 <Path.RenderTransform>
@@ -273,7 +272,7 @@
 
     <!-- ===== Выпадающий список (тёмный) ===== -->
     <Style TargetType="ComboBoxItem">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Padding" Value="10,7" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
@@ -285,10 +284,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource BgCardHoverBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -297,9 +296,9 @@
     </Style>
 
     <Style TargetType="ComboBox">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="Background" Value="{StaticResource BgCardBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="12,0,34,0" />
         <Setter Property="MinHeight" Value="38" />
@@ -317,16 +316,16 @@
                                             Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                                             BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
                                             BorderThickness="1">
-                                        <Path Data="M0,0 L4,4 L8,0" Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.6"
+                                        <Path Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource TextDimBrush}" StrokeThickness="1.6"
                                               StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                               HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,14,0" />
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                                         </Trigger>
                                         <Trigger Property="IsChecked" Value="True">
-                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -341,7 +340,7 @@
                                PopupAnimation="Fade" IsOpen="{TemplateBinding IsDropDownOpen}">
                             <Border MinWidth="{Binding ActualWidth, ElementName=Root}" MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                     Margin="0,4,0,8" Padding="4" CornerRadius="8" SnapsToDevicePixels="True"
-                                    Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                    Background="{DynamicResource BgCardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                 <ScrollViewer>
                                     <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
                                 </ScrollViewer>
@@ -351,6 +350,79 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===== Ползунок значения (тема берётся из текущей палитры) ===== -->
+    <Style x:Key="SliderFillButton" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="Transparent" Height="24">
+                        <Border Height="4" CornerRadius="2" Background="{DynamicResource AccentStrongBrush}" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="SliderEmptyButton" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="Transparent" Height="24" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="SliderKnob" TargetType="Thumb">
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="16" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Ellipse x:Name="Knob" Fill="{DynamicResource AccentBrush}" Stroke="{DynamicResource BgWindowBrush}" StrokeThickness="2" />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource TextPrimaryBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="Slider">
+        <Setter Property="Height" Value="24" />
+        <Setter Property="IsMoveToPointEnabled" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid Height="24" Background="Transparent">
+                        <Border Height="4" CornerRadius="2" Background="{DynamicResource TrackOffBrush}" VerticalAlignment="Center" />
+                        <Track x:Name="PART_Track">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource SliderFillButton}" Command="Slider.DecreaseLarge" />
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource SliderEmptyButton}" Command="Slider.IncreaseLarge" />
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource SliderKnob}" />
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -21,6 +21,7 @@
     <SolidColorBrush x:Key="BorderHoverBrush" Color="{StaticResource BorderHoverColor}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
     <SolidColorBrush x:Key="AccentStrongBrush" Color="{StaticResource AccentStrongColor}" />
+    <SolidColorBrush x:Key="TrackOffBrush" Color="{StaticResource TrackOffColor}" />
 
     <!-- Контраст текста на карточках (#2A2C31): основной ≈ 12:1, вторичный ≈ 6:1, приглушённый ≈ 4.7:1 -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F3F5" />
@@ -34,9 +35,9 @@
 
     <!-- ===== Кнопки ===== -->
     <Style TargetType="Button">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="Background" Value="{StaticResource BgCardBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="16,9" />
         <Setter Property="Cursor" Value="Hand" />
@@ -87,10 +88,10 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Trigger.EnterActions>
@@ -128,15 +129,15 @@
     </Style>
 
     <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Background" Value="{StaticResource AccentStrongBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
     <!-- ===== Пункт навигации в боковой панели ===== -->
     <Style x:Key="NavButton" TargetType="RadioButton">
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Margin" Value="0,0,0,6" />
@@ -147,12 +148,12 @@
                             Padding="12,10" SnapsToDevicePixels="True">
                         <Grid>
                             <Border x:Name="HoverFill" Margin="-12,-10" CornerRadius="8" Opacity="0" IsHitTestVisible="False"
-                                    Background="{StaticResource BgCardHoverBrush}" />
+                                    Background="{DynamicResource BgCardHoverBrush}" />
                             <Border x:Name="CheckedFill" Margin="-12,-10" CornerRadius="8" Opacity="0" IsHitTestVisible="False"
-                                    Background="{StaticResource BgCardBrush}" BorderThickness="1"
-                                    BorderBrush="{StaticResource BorderBrush}" />
+                                    Background="{DynamicResource BgCardBrush}" BorderThickness="1"
+                                    BorderBrush="{DynamicResource BorderBrush}" />
                             <Border x:Name="Bar" Width="3" CornerRadius="2" HorizontalAlignment="Left"
-                                    Margin="-8,0,0,0" Background="{StaticResource AccentBrush}" Opacity="0"
+                                    Margin="-8,0,0,0" Background="{DynamicResource AccentBrush}" Opacity="0"
                                     RenderTransformOrigin="0.5,0.5">
                                 <Border.RenderTransform>
                                     <ScaleTransform x:Name="BarScale" ScaleY="0.3" />
@@ -165,7 +166,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
@@ -184,7 +185,7 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
@@ -213,7 +214,7 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -224,12 +225,12 @@
     <!-- ===== Поле ввода / поиск ===== -->
     <!-- Подсказка (placeholder) задаётся через Tag="Текст подсказки" -->
     <Style TargetType="TextBox">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}" />
-        <Setter Property="SelectionBrush" Value="{StaticResource AccentStrongBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource AccentStrongBrush}" />
         <Setter Property="SelectionTextBrush" Value="White" />
-        <Setter Property="Background" Value="{StaticResource BgCardBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="12,0" />
         <Setter Property="MinHeight" Value="38" />
@@ -251,7 +252,7 @@
                                           VerticalScrollBarVisibility="Hidden" />
                             <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}"
                                        Margin="{TemplateBinding Padding}"
-                                       Foreground="{StaticResource TextDimBrush}"
+                                       Foreground="{DynamicResource TextDimBrush}"
                                        VerticalAlignment="Center" IsHitTestVisible="False"
                                        TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
                         </Grid>
@@ -261,10 +262,10 @@
                             <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource BorderHoverBrush}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5" />

@@ -23,6 +23,24 @@ public sealed class AppSettings
         if (!visible) HiddenTabs.Add(tab);
     }
 
+    /// <summary>Тема оформления (см. ThemeManager.Themes).</summary>
+    public string ThemeId { get; set; } = ThemeManager.DefaultTheme;
+
+    /// <summary>Акцентный цвет: «theme» — из темы, иначе blue/red/green/purple/orange/pink.</summary>
+    public string AccentId { get; set; } = ThemeManager.ThemeAccent;
+
+    /// <summary>Путь к скопированной в папку данных картинке фона; пусто — без фона.</summary>
+    public string BackgroundImage { get; set; } = "";
+
+    /// <summary>Размытие фона, 0–100 %.</summary>
+    public int BackgroundBlurPercent { get; set; } = 40;
+
+    /// <summary>Затемнение фона, 0–90 %: чем больше, тем лучше читается текст.</summary>
+    public int BackgroundDimPercent { get; set; } = 45;
+
+    /// <summary>Непрозрачность карточек поверх фона, 50–100 %.</summary>
+    public int CardOpacityPercent { get; set; } = 88;
+
     public const string StableChannel = "stable";
     public const string BetaChannel = "beta";
 
@@ -57,6 +75,9 @@ public sealed class AppSettings
 
     /// <summary>Вызывается после сохранения: окна применяют масштаб и анимации сразу.</summary>
     public static event Action? Changed;
+
+    /// <summary>Сообщает окнам о новых значениях без записи на диск (для ползунков: запись делается позже одним разом).</summary>
+    public static void RaiseChanged() => Changed?.Invoke();
 
     public void Save()
     {
@@ -103,6 +124,13 @@ public sealed class AppSettings
         if (!ScaleOptions.Contains(UiScalePercent)) UiScalePercent = 100;
         HiddenTabs = (HiddenTabs ?? new()).Where(HideableTabs.Contains).Distinct().ToList();
         if (!TargetFpsOptions.Contains(GamesTargetFps)) GamesTargetFps = 0;
+        if (!ThemeManager.IsKnownTheme(ThemeId)) ThemeId = ThemeManager.DefaultTheme;
+        if (!ThemeManager.IsKnownAccent(AccentId)) AccentId = ThemeManager.ThemeAccent;
+        BackgroundBlurPercent = Math.Clamp(BackgroundBlurPercent, 0, 100);
+        BackgroundDimPercent = Math.Clamp(BackgroundDimPercent, 0, 90);
+        CardOpacityPercent = Math.Clamp(CardOpacityPercent, 50, 100);
+        // Файл фона могли удалить вручную: тогда просто работаем без фона.
+        if (!string.IsNullOrEmpty(BackgroundImage) && !File.Exists(BackgroundImage)) BackgroundImage = "";
         if (UpdateChannel != StableChannel && UpdateChannel != BetaChannel) UpdateChannel = StableChannel;
     }
 
@@ -116,5 +144,11 @@ public sealed class AppSettings
         UpdateChannel = StableChannel;
         HiddenTabs.Clear();
         GamesTargetFps = 0;
+        ThemeId = ThemeManager.DefaultTheme;
+        AccentId = ThemeManager.ThemeAccent;
+        BackgroundImage = "";
+        BackgroundBlurPercent = 40;
+        BackgroundDimPercent = 45;
+        CardOpacityPercent = 88;
     }
 }

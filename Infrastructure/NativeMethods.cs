@@ -19,7 +19,7 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool SystemParametersInfo(uint action, uint param, int[] value, uint winIni);
 
-    /// <summary>Включает тёмную рамку и заголовок окна (Windows 10 1809+ / 11). Ошибки игнорируются.</summary>
+    /// <summary>Включает тёмную (или светлую для светлой темы) рамку и заголовок окна (Windows 10 1809+ / 11). Ошибки игнорируются.</summary>
     internal static void UseDarkTitleBar(Window window)
     {
         var handle = new WindowInteropHelper(window).Handle;
@@ -28,7 +28,8 @@ internal static class NativeMethods
             return;
         }
 
-        var enabled = 1;
+        // Светлая тема — светлая рамка окна, остальные — тёмная.
+        var enabled = ThemeManager.Find(AppSettings.Current.ThemeId).Palette.IsLight ? 0 : 1;
         if (DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref enabled, sizeof(int)) != 0)
         {
             _ = DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref enabled, sizeof(int));
