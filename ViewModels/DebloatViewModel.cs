@@ -119,6 +119,35 @@ public sealed class DebloatItemViewModel : ObservableObject
         set => SetField(ref _status, value);
     }
 
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern uint PrivateExtractIcons(string file, int index, int cx, int cy,
+        IntPtr[] icons, int[] ids, uint count, uint flags);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool DestroyIcon(IntPtr hIcon);
+
+    /// <summary>Иконка нужного размера из exe/dll/ico (стандартный ExtractAssociatedIcon отдаёт только 32 px).</summary>
+    private static ImageSource? ExtractIcon(string path, int size)
+    {
+        var handles = new IntPtr[1];
+        try
+        {
+            if (PrivateExtractIcons(path, 0, size, size, handles, new int[1], 1, 0) == 0 || handles[0] == IntPtr.Zero)
+                return null;
+            var source = Imaging.CreateBitmapSourceFromHIcon(handles[0], Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            source.Freeze();
+            return source;
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            if (handles[0] != IntPtr.Zero) DestroyIcon(handles[0]);
+        }
+    }
+
     private static ImageSource? LoadIcon(string? path)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -138,7 +167,10 @@ public sealed class DebloatItemViewModel : ObservableObject
                 return bmp;
             }
 
-            // Иконка классической программы: из exe/dll/ico
+            // Иконка классической программы: сначала крупная (64 px), иначе стандартные 32 px
+            var large = ExtractIcon(path, 64);
+            if (large is not null) return large;
+
             using var icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
             if (icon is null) return null;
             var source = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());

@@ -605,7 +605,7 @@
                                                     <TextBlock Text="{Binding Initial}" FontSize="20" FontWeight="SemiBold"
                                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                                Foreground="{StaticResource TextSecondaryBrush}" />
-                                                    <Image Source="{Binding Icon}" Stretch="Uniform" Margin="4"
+                                                    <Image Source="{Binding Icon}" Stretch="Uniform" Margin="2"
                                                            RenderOptions.BitmapScalingMode="HighQuality"
                                                            Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}" />
                                                 </Grid>
@@ -1053,7 +1053,7 @@
                                                 <TextBlock Text="▦" FontSize="16" HorizontalAlignment="Center"
                                                            VerticalAlignment="Center" Opacity="0.35"
                                                            Foreground="{StaticResource TextSecondaryBrush}" />
-                                                <Image Source="{Binding Icon}" Stretch="Uniform" Margin="5"
+                                                <Image Source="{Binding Icon}" Stretch="Uniform" Margin="2"
                                                        RenderOptions.BitmapScalingMode="HighQuality"
                                                        Visibility="{Binding HasIcon, Converter={StaticResource BoolToVis}}" />
                                             </Grid>

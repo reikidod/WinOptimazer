@@ -379,9 +379,9 @@ public sealed class DebloatService : IDebloatService
 
             // Типичные имена ассетов
             candidates.AddRange([
-                @"Assets\StoreLogo.png",
                 @"Assets\Square44x44Logo.png",
                 @"Assets\Square150x150Logo.png",
+                @"Assets\StoreLogo.png",
                 @"Assets\AppList.png",
                 @"Assets\Logo.png",
                 @"StoreLogo.png",
@@ -430,13 +430,32 @@ public sealed class DebloatService : IDebloatService
         var ext = Path.GetExtension(relative);
         if (!Directory.Exists(dir)) return null;
 
-        // StoreLogo.scale-200.png, StoreLogo.targetsize-44.png и т.п.
+        // StoreLogo.scale-200.png, StoreLogo.targetsize-256.png и т.п.: берём самый крупный из разумных
         var match = Directory.EnumerateFiles(dir, baseName + "*" + ext)
-            .OrderByDescending(f => f.Contains("scale-200", StringComparison.OrdinalIgnoreCase))
-            .ThenByDescending(f => f.Contains("scale-100", StringComparison.OrdinalIgnoreCase))
-            .ThenByDescending(f => f.Contains("targetsize-44", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(f => AssetScore(Path.GetFileName(f)))
             .FirstOrDefault();
         return match;
+    }
+
+    /// <summary>
+    /// Оценка варианта ассета: чем крупнее картинка (до 256 px), тем выше. Иконки 16–32 px в плитке 44 px выглядят мелкими и мутными.
+    /// Варианты altform (для светлой темы/без плиток) чуть ниже обычных.
+    /// </summary>
+    internal static int AssetScore(string fileName)
+    {
+        var m = Regex.Match(fileName, @"targetsize-(\d+)", RegexOptions.IgnoreCase);
+        var px = 0;
+        if (m.Success) px = int.Parse(m.Groups[1].Value);
+        else
+        {
+            m = Regex.Match(fileName, @"scale-(\d+)", RegexOptions.IgnoreCase);
+            if (m.Success) px = 44 * int.Parse(m.Groups[1].Value) / 100; // базовый размер значка 44 px
+        }
+
+        if (px > 256) px = 256 - (px - 256) / 8; // слишком большие не нужны, но лучше, чем крошечные
+        var score = px * 10;
+        if (fileName.Contains("altform", StringComparison.OrdinalIgnoreCase)) score -= 5;
+        return score;
     }
 
     private static ProcessResult RunPowerShell(string script)

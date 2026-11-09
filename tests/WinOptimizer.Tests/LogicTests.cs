@@ -611,3 +611,16 @@ public class InstallerAndPersistenceTests
         Assert.Equal(0, s.GamesTargetFps);
     }
 }
+
+public class AssetScoreTests
+{
+    [Fact]
+    public void LargerAssetsWin()
+    {
+        var names = new[] { "Logo.targetsize-16.png", "Logo.scale-100.png", "Logo.scale-200.png", "Logo.targetsize-256.png", "Logo.targetsize-256_altform-unplated.png" };
+        var best = names.OrderByDescending(DebloatService.AssetScore).First();
+        Assert.Equal("Logo.targetsize-256.png", best);
+        Assert.True(DebloatService.AssetScore("Logo.scale-200.png") > DebloatService.AssetScore("Logo.scale-100.png"));
+        Assert.True(DebloatService.AssetScore("Logo.scale-100.png") > DebloatService.AssetScore("Logo.targetsize-16.png"));
+    }
+}
