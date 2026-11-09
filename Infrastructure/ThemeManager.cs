@@ -54,6 +54,7 @@ public static class ThemeManager
     ];
 
     private static bool _initialized;
+    private static string? _appliedKey;
 
     public static ThemeInfo Find(string? id) => Themes.FirstOrDefault(t => t.Id == id) ?? Themes[0];
 
@@ -77,6 +78,13 @@ public static class ThemeManager
         if (app is null) return;
         try
         {
+            // Размытие/затемнение фона не меняют кисти — не пересоздаём их на каждый тик ползунка.
+            var hasBackground = !string.IsNullOrEmpty(s.BackgroundImage);
+            var cardAlpha = hasBackground ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0) : (byte)255;
+            var key = $"{s.ThemeId}|{s.AccentId}|{cardAlpha}|{hasBackground}";
+            if (key == _appliedKey) return;
+            _appliedKey = key;
+
             var p = Find(s.ThemeId).Palette;
             var accent = Accents.FirstOrDefault(a => a.Id == s.AccentId);
             var accentHex = p.Accent;
@@ -87,10 +95,6 @@ public static class ThemeManager
                 accentHex = p.IsLight ? accent.AccentStrong : accent.Accent;
                 accentStrong = accent.AccentStrong;
             }
-
-            // Если задан фон-картинка, карточки и панели делаем чуть прозрачными, чтобы картинка просвечивала.
-            var hasBackground = !string.IsNullOrEmpty(s.BackgroundImage);
-            var cardAlpha = hasBackground ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0) : (byte)255;
 
             Set(app, "BgWindowBrush", p.BgWindow);
             Set(app, "BgSidebarBrush", p.BgSidebar, cardAlpha);
