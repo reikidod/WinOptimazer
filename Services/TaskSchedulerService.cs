@@ -100,9 +100,8 @@ public static class ScheduledTaskManagementPolicy
 }
 
 /// <summary>
-/// Read-only доступ к Windows Task Scheduler через штатный COM API.
-/// Сервис только читает определения и состояние задач — он не запускает,
-/// не останавливает, не включает и не отключает задания.
+/// Доступ к Windows Task Scheduler через штатный COM API.
+/// Чтение охватывает все задачи; изменение состояния ограничено пользовательскими задачами.
 /// </summary>
 [SupportedOSPlatform("windows")]
 public sealed class WindowsTaskSchedulerService : ITaskSchedulerService, ITaskSchedulerManagementService
