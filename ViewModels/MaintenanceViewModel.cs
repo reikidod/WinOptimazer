@@ -41,8 +41,6 @@ public sealed class MaintenanceViewModel : ObservableObject
         CleanCommand = new AsyncRelayCommand(CleanAsync, () => !IsBusy, ReportUnexpected);
         RefreshStartupCommand = new AsyncRelayCommand(LoadStartupAsync, () => !IsBusy, ReportUnexpected);
         RefreshScheduledTasksCommand = new AsyncRelayCommand(LoadScheduledTasksAsync, () => !IsBusy, ReportUnexpected);
-        ToggleScheduledTaskCommand = new AsyncRelayCommand<ScheduledTaskEntry>(ToggleScheduledTaskAsync,
-            task => !IsBusy && task?.CanChangeEnabledState == true, ReportUnexpected);
         OpenRestoreCommand = new RelayCommand(OpenSystemRestore);
     }
 
@@ -62,7 +60,6 @@ public sealed class MaintenanceViewModel : ObservableObject
 
     public ICommand RefreshScheduledTasksCommand { get; }
 
-    public ICommand ToggleScheduledTaskCommand { get; }
 
     public ICommand OpenRestoreCommand { get; }
 
@@ -263,74 +260,6 @@ public sealed class MaintenanceViewModel : ObservableObject
         {
             Logger.Error("Не удалось прочитать задачи планировщика Windows", ex);
             TaskSchedulerError = "Не удалось прочитать задачи планировщика: " + ex.Message;
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private async Task ToggleScheduledTaskAsync(ScheduledTaskEntry? task)
-    {
-        if (task is null || !task.CanChangeEnabledState) return;
-
-        if (_taskScheduler is not ITaskSchedulerManagementService management)
-        {
-            _dialogs.Info("Управление недоступно", "Подключённый источник планировщика поддерживает только чтение.");
-            return;
-        }
-
-        var enable = !task.Enabled;
-        var action = enable ? "включить" : "отключить";
-        var actionTitle = enable ? "Включить задачу" : "Отключить задачу";
-        var message = enable
-            ? $"Задача «{task.Name}» снова сможет запускаться по своему расписанию. Изменение можно отменить, отключив задачу обратно.\n\n{task.Path}"
-            : $"Будущие автоматические запуски задачи «{task.Name}» будут отключены. Уже выполняющийся экземпляр не остановится. Изменение можно отменить, включив задачу обратно.\n\n{task.Path}";
-
-        var choice = _dialogs.Ask(actionTitle, message, primary: enable ? "Включить" : "Отключить");
-        if (choice != DialogChoice.Primary) return;
-
-        IsBusy = true;
-        try
-        {
-            await Task.Run(() => management.SetEnabled(task.Path, enable));
-
-            try
-            {
-                new OperationHistoryService().Record(
-                    "Планировщик задач",
-                    $"{(enable ? "Включена" : "Отключена")}: {task.Path}",
-                    enable ? "Включена" : "Отключена");
-            }
-            catch (Exception historyError) when (historyError is IOException or UnauthorizedAccessException)
-            {
-                Logger.Error("Не удалось записать изменение задачи в историю операций", historyError);
-            }
-
-            try
-            {
-                var refreshed = await Task.Run(_taskScheduler.GetTasks);
-                ScheduledTasks.Clear();
-                foreach (var item in refreshed)
-                    ScheduledTasks.Add(item);
-
-                TaskSchedulerError = null;
-                FilteredScheduledTasks.Refresh();
-                OnPropertyChanged(nameof(ScheduledTasksSummary));
-                OnPropertyChanged(nameof(HasNoScheduledTasks));
-            }
-            catch (Exception refreshError) when (IsExpectedFailure(refreshError))
-            {
-                Logger.Error("Состояние задачи изменено, но не удалось обновить список планировщика", refreshError);
-                TaskSchedulerError = $"Состояние задачи изменено, но список не удалось обновить: {refreshError.Message}";
-                _dialogs.Info("Задача изменена", "Состояние задачи изменено. Нажмите «Обновить», чтобы перечитать список.");
-            }
-        }
-        catch (Exception ex) when (IsExpectedFailure(ex))
-        {
-            Logger.Error($"Не удалось {action} задачу планировщика {task.Path}", ex);
-            TaskSchedulerError = $"Не удалось {action} задачу «{task.Name}»: {ex.Message}";
-            _dialogs.Info("Не удалось изменить задачу", ex.Message);
         }
         finally
         {
