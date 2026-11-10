@@ -61,8 +61,21 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
     public int MonitorIntervalSeconds
     {
         get => _monitorIntervalSeconds;
-        private set => SetField(ref _monitorIntervalSeconds, value);
+        private set
+        {
+            if (!SetField(ref _monitorIntervalSeconds, value)) return;
+            OnPropertyChanged(nameof(IsInterval2));
+            OnPropertyChanged(nameof(IsInterval3));
+            OnPropertyChanged(nameof(IsInterval5));
+            OnPropertyChanged(nameof(IsInterval10));
+            OnPropertyChanged(nameof(IntervalHint));
+        }
     }
+
+    public bool IsInterval2 => MonitorIntervalSeconds == 2;
+    public bool IsInterval3 => MonitorIntervalSeconds == 3;
+    public bool IsInterval5 => MonitorIntervalSeconds == 5;
+    public bool IsInterval10 => MonitorIntervalSeconds == 10;
 
     public string IntervalHint => $"Обновление каждые {MonitorIntervalSeconds} с";
 
@@ -73,7 +86,6 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
     public ICommand RefreshCommand { get; }
     public ICommand SetIntervalCommand { get; }
 
-    /// <summary>Включает опрос только пока открыта главная.</summary>
     public void OnActivated()
     {
         if (_active) return;
@@ -96,7 +108,6 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
         var sec = AppSettings.Current.MonitorIntervalSeconds;
         if (sec == MonitorIntervalSeconds) return;
         MonitorIntervalSeconds = sec;
-        OnPropertyChanged(nameof(IntervalHint));
         if (_active) RestartMonitor();
     }
 
@@ -114,7 +125,6 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
         AppSettings.Current.MonitorIntervalSeconds = sec;
         AppSettings.Current.Save();
         MonitorIntervalSeconds = sec;
-        OnPropertyChanged(nameof(IntervalHint));
         if (_active) RestartMonitor();
     }
 
@@ -143,7 +153,6 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
 
     private void ApplySnapshot(SystemSnapshot s)
     {
-        // Загрузка ЦП из PerformanceCounter; подпись — число логических ядер системы.
         CpuText = $"{s.CpuPercent:0}%";
         CpuSubtitle = $"{Environment.ProcessorCount} логических · загрузка";
         RamText = s.RamDetail ?? $"{s.RamUsedPercent:0}% занято";
