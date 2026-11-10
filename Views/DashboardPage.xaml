@@ -46,9 +46,7 @@
             <TextBlock Text="{Binding Dashboard.StatusSummary}" FontWeight="SemiBold" Margin="0,0,0,14"
                        Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
 
-            <!-- Метрики -->
             <UniformGrid Columns="4" Margin="0,0,0,12">
-                <!-- Процессор: загрузка из системы -->
                 <Border Style="{StaticResource MetricCard}" Margin="0,0,10,10">
                     <StackPanel VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
@@ -94,7 +92,6 @@
                 </Border>
             </UniformGrid>
 
-            <!-- Интервал обновления -->
             <Grid Margin="0,0,0,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -103,13 +100,16 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Обновлять" Style="{StaticResource SecondaryText}" VerticalAlignment="Center" Margin="0,0,10,0" />
                     <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="2 с"
-                                 IsChecked="{Binding Dashboard.MonitorIntervalSeconds, Converter={StaticResource BoolToVis}, Mode=OneWay}"
+                                 IsChecked="{Binding Dashboard.IsInterval2, Mode=OneWay}"
                                  Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="2" />
                     <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="3 с"
+                                 IsChecked="{Binding Dashboard.IsInterval3, Mode=OneWay}"
                                  Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="3" />
                     <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="5 с"
+                                 IsChecked="{Binding Dashboard.IsInterval5, Mode=OneWay}"
                                  Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="5" />
                     <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="10 с"
+                                 IsChecked="{Binding Dashboard.IsInterval10, Mode=OneWay}"
                                  Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="10" />
                     <TextBlock Text="{Binding Dashboard.IntervalHint}" Style="{StaticResource SecondaryText}"
                                VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12" />
@@ -117,7 +117,6 @@
                 <Button Grid.Column="1" Content="Обновить сейчас" Command="{Binding Dashboard.RefreshCommand}" />
             </Grid>
 
-            <!-- Быстрые действия -->
             <TextBlock Text="Быстрые действия" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
             <WrapPanel Margin="0,0,0,20">
                 <Button Content="Оптимизация" Command="{Binding Dashboard.OpenTweaksCommand}" Margin="0,0,8,8" />
@@ -126,7 +125,6 @@
                 <Button Content="Мой ПК" Command="{Binding Dashboard.OpenSystemCommand}" Margin="0,0,8,8" />
             </WrapPanel>
 
-            <!-- Профили -->
             <TextBlock Text="Профили оптимизации" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
             <TextBlock Style="{StaticResource SecondaryText}" Margin="0,0,0,10" TextWrapping="Wrap"
                        Text="Встроенные наборы твиков. Применение — через раздел «Оптимизация системы»." />
@@ -143,7 +141,6 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- История -->
             <TextBlock Text="Последние операции" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
             <ItemsControl ItemsSource="{Binding Dashboard.RecentOperations}">
                 <ItemsControl.ItemTemplate>
