@@ -43,7 +43,11 @@
 
                 <ScrollViewer Style="{StaticResource OverlayScroll}" Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,0,8">
-                        <TextBlock Text="Запуск" Style="{StaticResource SettingsSectionTitle}" />
+                        <Expander Header="Запуск" IsExpanded="true" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: Запуск">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -102,7 +106,14 @@
                             </Grid>
                         </Border>
 
-                        <TextBlock Text="Безопасность" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Безопасность" IsExpanded="true" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: Безопасность">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -118,7 +129,14 @@
                             </Grid>
                         </Border>
 
-                        <TextBlock Text="Вкладки" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Вкладки" IsExpanded="false" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: Вкладки">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Какие вкладки показывать" FontSize="14.5" FontWeight="SemiBold" />
@@ -190,7 +208,14 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Тема и цвета" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Тема и цвета" IsExpanded="false" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: Тема и цвета">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Тема приложения" FontSize="14.5" FontWeight="SemiBold" />
@@ -272,7 +297,14 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Фон" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Фон" IsExpanded="false" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: Фон">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Свой фон" FontSize="14.5" FontWeight="SemiBold" />
@@ -355,7 +387,14 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Внешний вид" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Внешний вид" IsExpanded="true" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: Внешний вид">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -386,7 +425,14 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Данные и диагностика" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Данные и диагностика" IsExpanded="false" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: Данные и диагностика">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Журнал и папка данных" FontSize="14.5" FontWeight="SemiBold" />
@@ -407,7 +453,14 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="О программе" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="О программе" IsExpanded="false" Margin="0,4,16,8"
+                                  FontSize="15" FontWeight="SemiBold"
+                                  Foreground="{DynamicResource AccentBrush}"
+                                  AutomationProperties.Name="Раздел настроек: О программе">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="{Binding VersionLabel, StringFormat=WinOptimizer {0}}" FontSize="14.5" FontWeight="SemiBold" />
@@ -427,7 +480,10 @@
                                 <TextBlock Text="{Binding Settings.Status}" Margin="0,6,0,0" Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
-                    </StackPanel>
+                                                </StackPanel>
+                        </Expander>
+
+                        </StackPanel>
                 </ScrollViewer>
             </Grid>
 </UserControl>
