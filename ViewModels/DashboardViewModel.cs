@@ -14,10 +14,12 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
     private readonly Action<AppPage> _navigate;
     private bool _active;
     private string _cpuText = "—";
+    private string _cpuSubtitle = "загрузка";
     private string _ramText = "—";
     private string _cpuTempText = "—";
     private string _gpuTempText = "—";
     private string _statusSummary = "Загрузка…";
+    private int _monitorIntervalSeconds = 3;
 
     public DashboardViewModel(
         ISystemMonitorService monitor,
@@ -35,26 +37,41 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
         OpenGamesCommand = new RelayCommand(() => _navigate(AppPage.Games));
         OpenSystemCommand = new RelayCommand(() => _navigate(AppPage.System));
         RefreshCommand = new AsyncRelayCommand(RefreshAsync);
+        SetIntervalCommand = new RelayCommand(p => SetInterval(p));
 
         Profiles = new ObservableCollection<OptimizationProfile>(_profiles.BuiltIn);
+        MonitorIntervalSeconds = AppSettings.Current.MonitorIntervalSeconds;
         RefreshHistory();
+        AppSettings.Changed += OnSettingsChanged;
     }
 
     public ObservableCollection<OptimizationProfile> Profiles { get; }
 
     public ObservableCollection<OperationRecord> RecentOperations { get; } = new();
 
+    public IReadOnlyList<int> IntervalOptions => AppSettings.MonitorIntervalOptions;
+
     public string CpuText { get => _cpuText; private set => SetField(ref _cpuText, value); }
+    public string CpuSubtitle { get => _cpuSubtitle; private set => SetField(ref _cpuSubtitle, value); }
     public string RamText { get => _ramText; private set => SetField(ref _ramText, value); }
     public string CpuTempText { get => _cpuTempText; private set => SetField(ref _cpuTempText, value); }
     public string GpuTempText { get => _gpuTempText; private set => SetField(ref _gpuTempText, value); }
     public string StatusSummary { get => _statusSummary; private set => SetField(ref _statusSummary, value); }
+
+    public int MonitorIntervalSeconds
+    {
+        get => _monitorIntervalSeconds;
+        private set => SetField(ref _monitorIntervalSeconds, value);
+    }
+
+    public string IntervalHint => $"Обновление каждые {MonitorIntervalSeconds} с";
 
     public ICommand OpenTweaksCommand { get; }
     public ICommand OpenMaintenanceCommand { get; }
     public ICommand OpenGamesCommand { get; }
     public ICommand OpenSystemCommand { get; }
     public ICommand RefreshCommand { get; }
+    public ICommand SetIntervalCommand { get; }
 
     /// <summary>Включает опрос только пока открыта главная.</summary>
     public void OnActivated()
@@ -62,7 +79,7 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
         if (_active) return;
         _active = true;
         _monitor.Updated += OnSnapshot;
-        _monitor.Start(TimeSpan.FromSeconds(3));
+        RestartMonitor();
         _ = RefreshAsync();
     }
 
@@ -72,6 +89,39 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
         _active = false;
         _monitor.Updated -= OnSnapshot;
         _monitor.Stop();
+    }
+
+    private void OnSettingsChanged()
+    {
+        var sec = AppSettings.Current.MonitorIntervalSeconds;
+        if (sec == MonitorIntervalSeconds) return;
+        MonitorIntervalSeconds = sec;
+        OnPropertyChanged(nameof(IntervalHint));
+        if (_active) RestartMonitor();
+    }
+
+    private void SetInterval(object? parameter)
+    {
+        var sec = parameter switch
+        {
+            int i => i,
+            string s when int.TryParse(s, out var v) => v,
+            _ => MonitorIntervalSeconds,
+        };
+        if (!AppSettings.MonitorIntervalOptions.Contains(sec)) return;
+        if (sec == MonitorIntervalSeconds) return;
+
+        AppSettings.Current.MonitorIntervalSeconds = sec;
+        AppSettings.Current.Save();
+        MonitorIntervalSeconds = sec;
+        OnPropertyChanged(nameof(IntervalHint));
+        if (_active) RestartMonitor();
+    }
+
+    private void RestartMonitor()
+    {
+        _monitor.Stop();
+        _monitor.Start(TimeSpan.FromSeconds(Math.Max(2, MonitorIntervalSeconds)));
     }
 
     private void OnSnapshot(SystemSnapshot s) => ApplySnapshot(s);
@@ -93,7 +143,9 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
 
     private void ApplySnapshot(SystemSnapshot s)
     {
+        // Загрузка ЦП из PerformanceCounter; подпись — число логических ядер системы.
         CpuText = $"{s.CpuPercent:0}%";
+        CpuSubtitle = $"{Environment.ProcessorCount} логических · загрузка";
         RamText = s.RamDetail ?? $"{s.RamUsedPercent:0}% занято";
         CpuTempText = string.IsNullOrWhiteSpace(s.CpuTemp) ? "н/д" : s.CpuTemp!;
         GpuTempText = string.IsNullOrWhiteSpace(s.GpuTemp) ? "н/д" : s.GpuTemp!;
@@ -109,5 +161,9 @@ public sealed class DashboardViewModel : ObservableObject, IDisposable
             RecentOperations.Add(op);
     }
 
-    public void Dispose() => OnDeactivated();
+    public void Dispose()
+    {
+        AppSettings.Changed -= OnSettingsChanged;
+        OnDeactivated();
+    }
 }
