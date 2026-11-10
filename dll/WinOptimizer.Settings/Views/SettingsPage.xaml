@@ -81,7 +81,7 @@
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
-                                <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
+                                <ContentPresenter ContentSource="Header"
                                                   ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
                                                   ContentTemplateSelector="{Binding HeaderTemplateSelector, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
                                                   ContentStringFormat="{Binding HeaderStringFormat, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
@@ -90,9 +90,7 @@
                                                   TextBlock.FontWeight="SemiBold" />
                             </ToggleButton>
                             <ContentPresenter x:Name="ExpandSite" Grid.Row="1" Margin="0,8,0,0"
-                                              Content="{TemplateBinding Content}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                                              ContentSource="Content"
                                               Visibility="Collapsed"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
                         </Grid>
@@ -526,8 +524,8 @@
                                                     </StackPanel>
                         </Expander>
 
-                        <Expander Header="О программе" IsExpanded="false" Style="{StaticResource SettingsSectionExpander}"
-                                  AutomationProperties.Name="Раздел настроек: О программе">
+                        <Expander Header="О программе" IsExpanded="False" Style="{StaticResource SectionExpander}"
+                                  Margin="0,0,16,10" AutomationProperties.Name="Раздел настроек: О программе">
                             <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
