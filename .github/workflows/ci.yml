@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - beta
-      - "feature/**"
   workflow_dispatch:
 
 permissions:
@@ -18,6 +17,7 @@ concurrency:
 
 jobs:
   build-and-test:
+    name: "Pair validation — build and tests"
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -34,5 +34,14 @@ jobs:
       - name: Build application
         run: dotnet build WinOptimizer.csproj --configuration Release --no-restore
 
-      - name: Run tests
-        run: dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --no-restore --logger "console;verbosity=normal"
+      - name: Run tests and save detailed report
+        run: dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --no-restore --logger "console;verbosity=normal" --logger "trx;LogFileName=winoptimizer-tests.trx"
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ github.run_number }}
+          path: tests/WinOptimizer.Tests/TestResults/*.trx
+          if-no-files-found: warn
+          retention-days: 14
