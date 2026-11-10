@@ -53,7 +53,7 @@ public sealed class AppSettingsTests : IDisposable
             UpdateChannel = AppSettings.BetaChannel
         };
 
-        settings.Save(path);
+        Assert.True(settings.Save(path));
         var loaded = AppSettings.Load(path);
 
         Assert.False(loaded.TransparencyEffectsEnabled);
@@ -61,6 +61,22 @@ public sealed class AppSettingsTests : IDisposable
         Assert.Equal(22, loaded.BackgroundBlurPercent);
         Assert.Equal(AppSettings.BetaChannel, loaded.UpdateChannel);
         Assert.Equal(new[] { "settings.json" }, Directory.GetFiles(_directory).Select(Path.GetFileName));
+    }
+
+    [Fact]
+    public void Save_FailurePreservesExistingDirectoryAndCleansTemporaryFile()
+    {
+        Directory.CreateDirectory(_directory);
+        var path = Path.Combine(_directory, "settings.json");
+        Directory.CreateDirectory(path);
+        var markerPath = Path.Combine(path, "keep.txt");
+        File.WriteAllText(markerPath, "previous data");
+
+        var saved = new AppSettings { UiScalePercent = 125 }.Save(path);
+
+        Assert.False(saved);
+        Assert.Equal("previous data", File.ReadAllText(markerPath));
+        Assert.Empty(Directory.GetFiles(_directory));
     }
 
     [Fact]

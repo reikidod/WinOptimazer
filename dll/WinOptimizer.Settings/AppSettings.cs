@@ -92,13 +92,16 @@ public sealed class AppSettings
     /// <summary>Сообщает окнам о новых значениях без записи на диск (для ползунков: запись делается позже одним разом).</summary>
     public static void RaiseChanged() => Changed?.Invoke();
 
-    public void Save()
+    public bool Save()
     {
-        Save(FilePath);
+        if (!Save(FilePath))
+            return false;
+
         Changed?.Invoke();
+        return true;
     }
 
-    internal void Save(string path)
+    internal bool Save(string path)
     {
         string? temporaryPath = null;
         try
@@ -119,10 +122,12 @@ public sealed class AppSettings
             // но не частично записанный JSON.
             File.Move(temporaryPath, path, overwrite: true);
             temporaryPath = null;
+            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Logger.Error("Не удалось сохранить настройки", ex);
+            return false;
         }
         finally
         {

@@ -260,16 +260,26 @@ public sealed class SettingsViewModel : ObservableObject
         SetThemeCommand = new RelayCommand<string>(id =>
         {
             if (id is null || !ThemeManager.IsKnownTheme(id) || _settings.ThemeId == id) return;
+            var previousTheme = _settings.ThemeId;
             _settings.ThemeId = id;
             RefreshSelection();
-            _settings.Save();
+            if (!SaveSettings())
+            {
+                _settings.ThemeId = previousTheme;
+                RefreshSelection();
+            }
         });
         SetAccentCommand = new RelayCommand<string>(id =>
         {
             if (id is null || !ThemeManager.IsKnownAccent(id) || _settings.AccentId == id) return;
+            var previousAccent = _settings.AccentId;
             _settings.AccentId = id;
             RefreshSelection();
-            _settings.Save();
+            if (!SaveSettings())
+            {
+                _settings.AccentId = previousAccent;
+                RefreshSelection();
+            }
         });
         PickBackgroundCommand = new RelayCommand(PickBackground);
         ClearBackgroundCommand = new RelayCommand(ClearBackground, () => HasBackground);
@@ -332,7 +342,7 @@ public sealed class SettingsViewModel : ObservableObject
     private void OnSaveTimer(object? sender, EventArgs e)
     {
         _saveTimer?.Stop();
-        _settings.Save();
+        SaveSettings();
     }
 
     private void PickBackground()
@@ -373,8 +383,19 @@ public sealed class SettingsViewModel : ObservableObject
             var dest = Path.Combine(AppPaths.DataDirectory, $"background-{Guid.NewGuid():N}{ext}");
             File.Copy(dialog.FileName, dest, overwrite: false);
 
+            var previousBackground = _settings.BackgroundImage;
             _settings.BackgroundImage = dest;
-            _settings.Save();
+            if (!SaveSettings())
+            {
+                _settings.BackgroundImage = previousBackground;
+                try { File.Delete(dest); }
+                catch (Exception cleanupEx) when (cleanupEx is IOException or UnauthorizedAccessException)
+                {
+                    Logger.Error("Не удалось удалить несохранённый файл фона", cleanupEx);
+                }
+                return;
+            }
+
             DeleteBackgroundFiles(keep: dest);
             OnPropertyChanged(nameof(HasBackground));
             OnPropertyChanged(nameof(BackgroundName));
@@ -390,8 +411,13 @@ public sealed class SettingsViewModel : ObservableObject
 
     private void ClearBackground()
     {
+        var previousBackground = _settings.BackgroundImage;
         _settings.BackgroundImage = "";
-        _settings.Save();
+        if (!SaveSettings())
+        {
+            _settings.BackgroundImage = previousBackground;
+            return;
+        }
         DeleteBackgroundFiles(keep: null);
         OnPropertyChanged(nameof(HasBackground));
         OnPropertyChanged(nameof(BackgroundName));
@@ -421,18 +447,30 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(property);
         if (property is nameof(ShowAppsTab) or nameof(ShowDebloatTab) or nameof(ShowStoreTab))
             OnPropertyChanged(nameof(ShowApplicationsGroup));
-        _settings.Save();
+        SaveSettings();
+    }
+
+    private bool SaveSettings()
+    {
+        if (_settings.Save())
+            return true;
+
+        Status = "Не удалось сохранить настройки. Проверьте доступ к папке данных и свободное место на диске.";
+        return false;
     }
 
     private void Reset()
     {
         _settings.ResetToDefaults();
-        _settings.Save();
+        var saved = SaveSettings();
         foreach (var p in new[] { nameof(ShowWelcome), nameof(AskRestorePoint), nameof(UseBetaChannel), nameof(ShowTweaksTab), nameof(ShowDebloatTab), nameof(ShowAppsTab), nameof(ShowStoreTab), nameof(ShowApplicationsGroup), nameof(ShowGamesTab), nameof(ShowSystemTab), nameof(ShowMaintenanceTab), nameof(CheckUpdatesOnStartup), nameof(Animations), nameof(UiScalePercent), nameof(ScaleText), nameof(BackgroundBlur), nameof(BackgroundDim), nameof(CardOpacity), nameof(TransparencyEffectsEnabled), nameof(HasBackground), nameof(BackgroundName) })
             OnPropertyChanged(p);
-        DeleteBackgroundFiles(keep: null);
+        if (saved)
+            DeleteBackgroundFiles(keep: null);
         RefreshSelection();
-        Status = "Настройки сброшены к значениям по умолчанию.";
+        if (saved)
+            Status = "Настройки сброшены к значениям по умолчанию.";
+
     }
 
     // ---------- Кэш ----------
