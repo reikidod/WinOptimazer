@@ -18,6 +18,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IUpdateService _updates;
 
     private AppPage _page = AppPage.Dashboard;
+    private readonly PageNavigationHistory<AppPage> _navigationHistory = new();
     private readonly DiagnosticsService _diagnostics = new();
     private readonly OperationHistoryService _history = new();
     private readonly HashSet<AppPage> _initializedPages = new();
