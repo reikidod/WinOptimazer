@@ -455,7 +455,9 @@
             </Grid>
 
             <!-- Страница «Твики» -->
-            <Grid Visibility="{Binding IsTweaksPage, Converter={StaticResource BoolToVis}}" local:Motion.PageTransition="True" Margin="28,24,16,12">
+            <Grid Visibility="{Binding IsTweaksPage, Converter={StaticResource BoolToVis}}"
+                  IsEnabled="{Binding IsTweakStateReady}"
+                  local:Motion.PageTransition="True" Margin="28,24,16,12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
