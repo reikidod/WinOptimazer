@@ -85,7 +85,18 @@ public sealed class DiagnosticsService
             ? new("Права доступа", "Приложение запущено с правами администратора.", "Подтверждайте только те системные изменения, которые понимаете.", DiagnosticLevel.Info)
             : new("Ограниченные права", "Часть системных операций может быть недоступна.", "Запускайте от имени администратора только при необходимости.", DiagnosticLevel.Warning));
 
-        findings.Add(rebootStatusProvider() switch
+        RebootPendingState rebootState;
+        try
+        {
+            rebootState = rebootStatusProvider();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось получить состояние ожидающей перезагрузки", ex);
+            rebootState = RebootPendingState.Unknown;
+        }
+
+        findings.Add(rebootState switch
         {
             RebootPendingState.Pending => new DiagnosticFinding(
                 "Требуется перезагрузка",

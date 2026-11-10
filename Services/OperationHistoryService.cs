@@ -50,6 +50,7 @@ public sealed class OperationHistoryService
     public IReadOnlyList<OperationHistoryEntry> GetRecent(int count = 20)
     {
         if (count <= 0) return [];
+        count = Math.Min(count, MaxEntries);
         lock (_sync)
         {
             if (!File.Exists(_path)) return [];
