@@ -20,6 +20,7 @@ public sealed class DashboardServiceTests : IDisposable
         var snapshot = new SystemSnapshot(
             "Windows test",
             12,
+            37,
             50,
             16UL * 1024 * 1024 * 1024,
             8UL * 1024 * 1024 * 1024,
@@ -28,7 +29,8 @@ public sealed class DashboardServiceTests : IDisposable
             50L * 1024 * 1024 * 1024,
             true);
 
-        Assert.Equal("12 логических процессоров", snapshot.CpuSummary);
+        Assert.Equal("37%", snapshot.CpuSummary);
+        Assert.Equal("12 логических · загрузка", snapshot.CpuLoadSubtitle);
         Assert.Equal("50% занято", snapshot.MemoryLoadSummary);
         Assert.Equal(25d, snapshot.DiskFreePercent, precision: 2);
         Assert.Equal("Подключение доступно", snapshot.NetworkSummary);
@@ -76,6 +78,7 @@ public sealed class DashboardServiceTests : IDisposable
         var snapshot = new SystemSnapshot(
             "Windows test",
             8,
+            40,
             95,
             16UL * 1024 * 1024 * 1024,
             800UL * 1024 * 1024,
