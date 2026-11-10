@@ -496,8 +496,10 @@ public sealed class MainViewModel : ObservableObject
                 return;
             }
 
-            DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
+            // Set the timestamp before publishing findings so dependent summary bindings
+            // observe the completed run instead of the initial "not started" state.
             _lastDiagnosticsAt = DateTime.Now;
+            DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
             OnPropertyChanged(nameof(DiagnosticHeader));
             OnPropertyChanged(nameof(DiagnosticLastRunText));
 
