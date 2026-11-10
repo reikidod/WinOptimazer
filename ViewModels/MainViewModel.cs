@@ -30,6 +30,7 @@ public sealed class MainViewModel : ObservableObject
     private SystemSnapshot? _dashboardSnapshot;
     private IReadOnlyList<DiagnosticFinding> _diagnosticFindings = Array.Empty<DiagnosticFinding>();
     private string _dashboardStatus = "Загружаю состояние компьютера…";
+    private DateTime? _lastDiagnosticsAt;
 
     public SettingsViewModel Settings { get; } = new();
 
@@ -123,8 +124,56 @@ public sealed class MainViewModel : ObservableObject
     public IReadOnlyList<DiagnosticFinding> DiagnosticFindings
     {
         get => _diagnosticFindings;
-        private set => SetField(ref _diagnosticFindings, value);
+        private set
+        {
+            if (SetField(ref _diagnosticFindings, value))
+            {
+                OnPropertyChanged(nameof(DiagnosticHeader));
+                OnPropertyChanged(nameof(DiagnosticSummary));
+            }
+        }
     }
+
+    public string DiagnosticHeader
+    {
+        get
+        {
+            if (_lastDiagnosticsAt is null)
+                return "Диагностика Windows · не запускалась";
+
+            var critical = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Critical);
+            var warnings = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Warning);
+            if (critical > 0)
+                return $"Диагностика Windows · критично: {critical}, предупреждений: {warnings}";
+            return warnings > 0
+                ? $"Диагностика Windows · предупреждений: {warnings}"
+                : "Диагностика Windows · проблем не обнаружено";
+        }
+    }
+
+    public string DiagnosticSummary
+    {
+        get
+        {
+            if (_lastDiagnosticsAt is null)
+                return "Запустите проверку, чтобы получить оценку состояния ПК.";
+
+            var critical = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Critical);
+            var warnings = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Warning);
+            var info = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Info);
+            return critical == 0 && warnings == 0
+                ? $"Замечаний нет · информационных проверок: {info}"
+                : $"Критических: {critical} · предупреждений: {warnings} · информационных: {info}";
+        }
+    }
+
+    public string DiagnosticLastRunText => _lastDiagnosticsAt is DateTime timestamp
+        ? $"Последняя проверка: {timestamp:dd.MM.yyyy HH:mm:ss}"
+        : "Проверка ещё не выполнялась";
+
+    public string EventJournalSummary => RecentOperations.Count == 0
+        ? "Пока нет записей"
+        : $"Последние {RecentOperations.Count} записей";
 
     public IReadOnlyList<DriveSnapshot> AdditionalDrives => DashboardSnapshot?.AdditionalDrives ?? Array.Empty<DriveSnapshot>();
 
@@ -441,6 +490,9 @@ public sealed class MainViewModel : ObservableObject
 
         DashboardStatus = "Проверяю состояние Windows…";
         DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
+        _lastDiagnosticsAt = DateTime.Now;
+        OnPropertyChanged(nameof(DiagnosticHeader));
+        OnPropertyChanged(nameof(DiagnosticLastRunText));
         RecordOperation("Диагностика", "Проверка состояния Windows", "Завершено");
         DashboardStatus = $"Диагностика завершена: найдено замечаний — {DiagnosticFindings.Count(x => x.Level != DiagnosticLevel.Info)}.";
     }
@@ -449,6 +501,7 @@ public sealed class MainViewModel : ObservableObject
     {
         RecentOperations.Clear();
         foreach (var entry in _history.GetRecent(8)) RecentOperations.Add(entry);
+        OnPropertyChanged(nameof(EventJournalSummary));
     }
 
     private void RecordOperation(string category, string operation, string result)
@@ -458,6 +511,7 @@ public sealed class MainViewModel : ObservableObject
             var entry = _history.Record(category, operation, result);
             RecentOperations.Insert(0, entry);
             while (RecentOperations.Count > 8) RecentOperations.RemoveAt(RecentOperations.Count - 1);
+            OnPropertyChanged(nameof(EventJournalSummary));
         }
         catch (Exception ex)
         {
