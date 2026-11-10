@@ -1,5 +1,6 @@
 using System.Security.Principal;
 using Microsoft.Win32;
+using WinOptimizer.Infrastructure;
 
 namespace WinOptimizer.Services;
 
@@ -124,12 +125,28 @@ public sealed class DiagnosticsService
         try
         {
             using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
-            using var cbs = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending");
-            using var wu = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired");
-            using var session = hklm.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Session Manager");
-            return cbs is not null || wu is not null || session?.GetValue("PendingFileRenameOperations") is not null
-                ? RebootPendingState.Pending
-                : RebootPendingState.NotPending;
+
+            // Сохраняем уже подтверждённый признак: ошибка чтения следующего ключа
+            // не должна отменять факт, обнаруженный в предыдущем.
+            using (var cbs = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending"))
+            {
+                if (cbs is not null)
+                    return RebootPendingState.Pending;
+            }
+
+            using (var wu = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"))
+            {
+                if (wu is not null)
+                    return RebootPendingState.Pending;
+            }
+
+            using (var session = hklm.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Session Manager"))
+            {
+                if (session?.GetValue("PendingFileRenameOperations") is not null)
+                    return RebootPendingState.Pending;
+            }
+
+            return RebootPendingState.NotPending;
         }
         catch (Exception ex)
         {
