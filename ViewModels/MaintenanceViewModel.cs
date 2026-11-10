@@ -50,7 +50,7 @@ public sealed class MaintenanceViewModel : ObservableObject
 
     public ICollectionView FilteredScheduledTasks { get; }
 
-    public string[] TaskFilterOptions { get; } = ["Все", "Включены", "Отключены", "Выполняются", "Готовы"];
+    public string[] TaskFilterOptions { get; } = ["Все", "Включены", "Отключены", "Выполняются", "Готовы", "Системные", "Драйверы", "Пользовательские"];
 
     public ICommand ScanCommand { get; }
 

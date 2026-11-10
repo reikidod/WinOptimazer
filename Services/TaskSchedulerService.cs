@@ -21,7 +21,9 @@ public sealed record ScheduledTaskEntry(
     int State,
     DateTime? LastRunTime,
     DateTime? NextRunTime,
-    int LastTaskResult)
+    int LastTaskResult,
+    string? Author = null,
+    string? Description = null)
 {
     public string StateLabel => State switch
     {
@@ -32,8 +34,29 @@ public sealed record ScheduledTaskEntry(
         _ => Enabled ? "Состояние неизвестно" : "Отключена",
     };
 
+    public string PublisherLabel => string.IsNullOrWhiteSpace(Author) ? "Издатель не указан" : Author;
+
+    public string CategoryLabel
+    {
+        get
+        {
+            var metadata = Path + " " + Author;
+            if (ContainsAny(metadata, "nvidia", "amd", "advanced micro devices", "intel", "realtek", "qualcomm", "driver"))
+                return "Драйвер";
+
+            if (Path.StartsWith("\\Microsoft\\Windows\\", StringComparison.OrdinalIgnoreCase) ||
+                (Author?.Contains("Microsoft", StringComparison.OrdinalIgnoreCase) ?? false))
+                return "Системная";
+
+            return "Пользовательская";
+        }
+    }
+
     public string LastRunText => FormatTime(LastRunTime);
     public string NextRunText => FormatTime(NextRunTime);
+
+    private static bool ContainsAny(string source, params string[] values) =>
+        values.Any(value => source.Contains(value, StringComparison.OrdinalIgnoreCase));
 
     private static string FormatTime(DateTime? value) =>
         value is null ? "Нет данных" : value.Value.ToString("dd.MM.yyyy HH:mm", CultureInfo.CurrentCulture);
@@ -104,10 +127,29 @@ public sealed class WindowsTaskSchedulerService : ITaskSchedulerService
             for (var index = 1; index <= taskCount; index++)
             {
                 object? taskObject = null;
+                object? definitionObject = null;
+                object? registrationInfoObject = null;
                 try
                 {
                     taskObject = tasks.Item(index);
                     dynamic task = taskObject;
+                    string? author = null;
+                    string? description = null;
+
+                    try
+                    {
+                        definitionObject = task.Definition;
+                        dynamic definition = definitionObject;
+                        registrationInfoObject = definition.RegistrationInfo;
+                        dynamic registrationInfo = registrationInfoObject;
+                        author = Convert.ToString(registrationInfo.Author, CultureInfo.InvariantCulture);
+                        description = Convert.ToString(registrationInfo.Description, CultureInfo.InvariantCulture);
+                    }
+                    catch (COMException ex)
+                    {
+                        Logger.Error("Не удалось прочитать издателя задачи планировщика", ex);
+                    }
+
                     result.Add(new ScheduledTaskEntry(
                         Convert.ToString(task.Name, CultureInfo.InvariantCulture) ?? string.Empty,
                         Convert.ToString(task.Path, CultureInfo.InvariantCulture) ?? string.Empty,
@@ -115,7 +157,9 @@ public sealed class WindowsTaskSchedulerService : ITaskSchedulerService
                         Convert.ToInt32(task.State, CultureInfo.InvariantCulture),
                         ReadTaskTime(task.LastRunTime),
                         ReadTaskTime(task.NextRunTime),
-                        Convert.ToInt32(task.LastTaskResult, CultureInfo.InvariantCulture)));
+                        Convert.ToInt32(task.LastTaskResult, CultureInfo.InvariantCulture),
+                        author,
+                        description));
                 }
                 catch (COMException ex)
                 {
@@ -123,6 +167,8 @@ public sealed class WindowsTaskSchedulerService : ITaskSchedulerService
                 }
                 finally
                 {
+                    ReleaseComObject(registrationInfoObject);
+                    ReleaseComObject(definitionObject);
                     ReleaseComObject(taskObject);
                 }
             }
@@ -183,9 +229,8 @@ public static class ScheduledTaskFilter
         {
             // Search terms may span folder boundaries, e.g. "windows update"
             // should match "\Microsoft\Windows\UpdateOrchestrator\...".
-            var searchableText = $"{task.Name} {task.Path}"
-                .Replace('\\', ' ')
-                .Replace('/', ' ');
+            var searchableText = task.Name + " " + task.Path + " " + task.Author + " " + task.Description;
+            searchableText = searchableText.Replace('\\', ' ').Replace('/', ' ');
             var terms = searchText.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             if (terms.Any(term => !searchableText.Contains(term, StringComparison.OrdinalIgnoreCase)))
@@ -198,6 +243,9 @@ public static class ScheduledTaskFilter
             "Отключены" => !task.Enabled,
             "Выполняются" => task.State == (int)ScheduledTaskState.Running,
             "Готовы" => task.State == (int)ScheduledTaskState.Ready && task.Enabled,
+            "Системные" => task.CategoryLabel == "Системная",
+            "Драйверы" => task.CategoryLabel == "Драйвер",
+            "Пользовательские" => task.CategoryLabel == "Пользовательская",
             _ => true,
         };
     }

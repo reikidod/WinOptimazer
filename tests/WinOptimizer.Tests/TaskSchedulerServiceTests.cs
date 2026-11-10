@@ -38,13 +38,53 @@ public sealed class TaskSchedulerServiceTests
         Assert.True(ScheduledTaskFilter.Matches(ready, null, "Готовы"));
     }
 
-    private static ScheduledTaskEntry CreateTask(bool enabled = true, int state = (int)ScheduledTaskState.Ready) =>
+    [Fact]
+    public void Filter_CanSearchByPublisher()
+    {
+        var task = CreateTask(path: @"\NVIDIA\NvTmRep", author: "NVIDIA Corporation");
+
+        Assert.True(ScheduledTaskFilter.Matches(task, "nvidia corporation", "Все"));
+    }
+
+    [Fact]
+    public void Category_RecognizesMicrosoftWindowsTasksAsSystem()
+    {
+        var task = CreateTask(author: "Microsoft Corporation");
+
+        Assert.Equal("Системная", task.CategoryLabel);
+        Assert.True(ScheduledTaskFilter.Matches(task, null, "Системные"));
+    }
+
+    [Fact]
+    public void Category_RecognizesHardwareVendorTasksAsDriver()
+    {
+        var task = CreateTask(path: @"\NVIDIA\NvTmRep", author: "NVIDIA Corporation");
+
+        Assert.Equal("Драйвер", task.CategoryLabel);
+        Assert.True(ScheduledTaskFilter.Matches(task, null, "Драйверы"));
+    }
+
+    [Fact]
+    public void Category_UsesUserFallbackForThirdPartyTasks()
+    {
+        var task = CreateTask(path: @"\Acme\Updater", author: "Acme Software");
+
+        Assert.Equal("Пользовательская", task.CategoryLabel);
+        Assert.True(ScheduledTaskFilter.Matches(task, null, "Пользовательские"));
+    }
+
+    private static ScheduledTaskEntry CreateTask(
+        bool enabled = true,
+        int state = (int)ScheduledTaskState.Ready,
+        string path = @"\Microsoft\Windows\UpdateOrchestrator\Schedule Scan",
+        string? author = null) =>
         new(
             "Schedule Scan",
-            @"\Microsoft\Windows\UpdateOrchestrator\Schedule Scan",
+            path,
             enabled,
             state,
             new DateTime(2026, 11, 10, 8, 30, 0),
             null,
-            0);
+            0,
+            author);
 }
