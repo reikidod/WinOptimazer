@@ -953,7 +953,7 @@ public class AdditionalDriveSnapshotTests
         Assert.Equal(@"D:\\", drive.Name);
         Assert.Equal(@"D:\\ · Games", drive.DisplayName);
         Assert.Equal("NTFS", drive.FileSystemText);
-        Assert.Equal(25d, drive.UsedPercent, 2);
+        Assert.Equal(75d, drive.UsedPercent, 2);
         Assert.Contains("25", drive.FreeText);
         Assert.Contains("100", drive.TotalText);
     }
