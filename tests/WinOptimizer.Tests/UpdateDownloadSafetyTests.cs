@@ -23,4 +23,14 @@ public class UpdateDownloadSafetyTests
     {
         Assert.Equal(expected, UpdateService.IsTrustedDownloadUrl(url));
     }
+    [Fact]
+    public async Task CheckAsync_PropagatesCancellationInsteadOfReportingNetworkFailure()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => new UpdateService().CheckAsync(cancellation.Token));
+    }
+
 }
