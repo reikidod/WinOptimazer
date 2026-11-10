@@ -62,6 +62,9 @@ public sealed class DashboardServiceTests : IDisposable
 
         Assert.Equal("—", snapshot.CpuSummary);
         Assert.Equal("Показатель недоступен", snapshot.CpuLoadSubtitle);
+        Assert.True(snapshot.CpuProgressIsIndeterminate);
+        Assert.Equal(0, snapshot.CpuProgressValue);
+        Assert.Equal("Индикатор недоступен", snapshot.CpuProgressDescription);
     }
 
     [Fact]
@@ -81,6 +84,9 @@ public sealed class DashboardServiceTests : IDisposable
 
         Assert.Equal("37%", snapshot.CpuSummary);
         Assert.Equal("8 логических · загрузка", snapshot.CpuLoadSubtitle);
+        Assert.False(snapshot.CpuProgressIsIndeterminate);
+        Assert.Equal(37, snapshot.CpuProgressValue);
+        Assert.Equal("Загрузка процессора сейчас", snapshot.CpuProgressDescription);
     }
 
     [Fact]

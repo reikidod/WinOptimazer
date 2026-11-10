@@ -21,6 +21,9 @@ public sealed record SystemSnapshot(
     public bool CpuAvailable { get; init; } = true;
     public string CpuSummary => CpuAvailable ? $"{CpuPercent:0}%" : "—";
     public string CpuLoadSubtitle => CpuAvailable ? $"{LogicalProcessors} логических · загрузка" : "Показатель недоступен";
+    public double CpuProgressValue => CpuAvailable ? CpuPercent : 0;
+    public bool CpuProgressIsIndeterminate => !CpuAvailable;
+    public string CpuProgressDescription => CpuAvailable ? "Загрузка процессора сейчас" : "Индикатор недоступен";
     public string MemoryUsedText => FormatBytes(TotalMemoryBytes - AvailableMemoryBytes);
     public string MemoryTotalText => FormatBytes(TotalMemoryBytes);
     public string DiskFreeText => FormatBytes((ulong)Math.Max(0, DriveFreeBytes));
