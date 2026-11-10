@@ -29,6 +29,8 @@ public sealed class MainViewModel : ObservableObject
 
     public SettingsViewModel Settings { get; } = new();
 
+    public ProcessMonitorViewModel Processes { get; } = new();
+
     private bool _isBusy;
     private bool _isInfoLoading;
     private bool _isTweakStateReady;
@@ -65,6 +67,8 @@ public sealed class MainViewModel : ObservableObject
         {
             tweak.PropertyChanged += OnTweakPropertyChanged;
         }
+
+        Processes.Start();
 
         ApplyCommand = new AsyncRelayCommand(ApplyAsync, () => IsTweakStateReady && !IsBusy && PendingCount > 0, ReportUnexpected);
         ResetSelectionCommand = new RelayCommand(ResetSelection, () => IsTweakStateReady && !IsBusy && PendingCount > 0);
@@ -597,6 +601,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDashboardPage));
         OnPropertyChanged(nameof(IsTweaksPage));
         OnPropertyChanged(nameof(IsSystemPage));
+        Processes.IsPageVisible = IsSystemPage;
         OnPropertyChanged(nameof(IsMaintenancePage));
         OnPropertyChanged(nameof(IsDebloatPage));
         OnPropertyChanged(nameof(IsAppsPage));

@@ -722,7 +722,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Характеристики ПК" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Система, температуры, процессор, видеокарта, память, накопители" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                        <TextBlock Text="Система, температуры, процессор, видеокарта, память, накопители, процессы" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="Сохранить TXT" Margin="0,0,8,0" Click="OnSaveReport"
@@ -778,6 +778,102 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
+                        <!-- Процессы: разделы свёрнуты; список обновляется, только пока раздел раскрыт -->
+                        <Expander Style="{StaticResource SectionExpander}" Margin="0,6,0,0"
+                                  Header="{Binding Processes.ActiveHeader}"
+                                  IsExpanded="{Binding Processes.ShowActive, Mode=TwoWay}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Processes.ActiveSummary}" Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="2,0,0,8" />
+                                <ContentControl Style="{StaticResource HoverCard}" Margin="0">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,6" TextElement.FontSize="12" TextElement.Foreground="{DynamicResource TextSecondaryBrush}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="86" />
+                                                <ColumnDefinition Width="90" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Процесс" />
+                                            <TextBlock Grid.Column="1" Text="Процессор" TextAlignment="Right" />
+                                            <TextBlock Grid.Column="2" Text="Память" TextAlignment="Right" />
+                                        </Grid>
+                                        <ItemsControl ItemsSource="{Binding Processes.Active}" FontSize="12.5">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,1.5">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="86" />
+                                                            <ColumnDefinition Width="90" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding CpuText}" TextAlignment="Right" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding MemoryText}" TextAlignment="Right" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ContentControl>
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Style="{StaticResource SectionExpander}" Margin="0,10,0,0"
+                                  Header="{Binding Processes.ExitedHeader}"
+                                  IsExpanded="{Binding Processes.ShowExited, Mode=TwoWay}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="2,0,0,8"
+                                           Text="Процессы, которые закрылись с момента запуска WinOptimizer. Показано, сколько они потребляли в последний замер (память — максимум)." />
+                                <TextBlock Style="{StaticResource SecondaryText}" FontSize="12.5" Margin="2,0,0,8"
+                                           Text="Пока ни один процесс не завершился.">
+                                    <TextBlock.Visibility>
+                                        <Binding Path="Processes.Exited.Count">
+                                            <Binding.Converter>
+                                                <local:CountToVisibilityConverter />
+                                            </Binding.Converter>
+                                        </Binding>
+                                    </TextBlock.Visibility>
+                                </TextBlock>
+                                <ContentControl Style="{StaticResource HoverCard}" Margin="0">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,6" TextElement.FontSize="12" TextElement.Foreground="{DynamicResource TextSecondaryBrush}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="64" />
+                                                <ColumnDefinition Width="92" />
+                                                <ColumnDefinition Width="70" />
+                                                <ColumnDefinition Width="78" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Процесс" />
+                                            <TextBlock Grid.Column="1" Text="Закрыт" TextAlignment="Right" />
+                                            <TextBlock Grid.Column="2" Text="Работал" TextAlignment="Right" />
+                                            <TextBlock Grid.Column="3" Text="Процессор" TextAlignment="Right" />
+                                            <TextBlock Grid.Column="4" Text="Память" TextAlignment="Right" />
+                                        </Grid>
+                                        <ItemsControl ItemsSource="{Binding Processes.Exited}" FontSize="12.5">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,1.5">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="64" />
+                                                            <ColumnDefinition Width="92" />
+                                                            <ColumnDefinition Width="70" />
+                                                            <ColumnDefinition Width="78" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding ExitedAtText}" TextAlignment="Right" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding RunTimeText}" TextAlignment="Right" />
+                                                        <TextBlock Grid.Column="3" Text="{Binding CpuText}" TextAlignment="Right" />
+                                                        <TextBlock Grid.Column="4" Text="{Binding MemoryText}" TextAlignment="Right" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ContentControl>
+                            </StackPanel>
+                        </Expander>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
