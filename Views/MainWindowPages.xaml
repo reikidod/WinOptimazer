@@ -108,8 +108,13 @@
                                                                 <TextBlock Text="{Binding ScopeTitle}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
                                                             </Border>
                                                         </WrapPanel>
-                                                        <TextBlock Text="{Binding Command}" ToolTip="{Binding Command}" FontSize="12.5"
-                                                                   TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextDimBrush}" />
+                                                        <Expander Header="Команда запуска" FontSize="12" Margin="0,4,0,0"
+                                                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                 AutomationProperties.Name="Подробности команды автозагрузки">
+                                                            <TextBlock Text="{Binding Command}" ToolTip="{Binding Command}" FontSize="12"
+                                                                       TextWrapping="Wrap" Margin="0,5,0,2"
+                                                                       Foreground="{DynamicResource TextDimBrush}" />
+                                                        </Expander>
                                                         <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" FontSize="12.5" Margin="0,4,0,0"
                                                                    Foreground="{DynamicResource DangerBrush}"
                                                                    Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
@@ -182,30 +187,36 @@
                                                         <TextBlock Text="{Binding Path}" ToolTip="{Binding Path}"
                                                                    FontSize="12" Foreground="{DynamicResource TextDimBrush}"
                                                                    TextTrimming="CharacterEllipsis" />
-                                                        <WrapPanel Margin="0,4,0,0">
-                                                            <TextBlock Text="Издатель: " FontSize="12"
-                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                                                            <TextBlock Text="{Binding PublisherLabel}" FontSize="12" />
-                                                            <TextBlock Text="Категория: " FontSize="12" Margin="12,0,0,0"
-                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                                                            <TextBlock Text="{Binding CategoryLabel}" FontSize="12" />
-                                                        </WrapPanel>
-                                                        <TextBlock Text="{Binding Description}" ToolTip="{Binding Description}"
-                                                                   FontSize="12" Margin="0,4,0,0"
-                                                                   Foreground="{DynamicResource TextDimBrush}"
-                                                                   TextTrimming="CharacterEllipsis"
-                                                                   Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
-                                                        <WrapPanel Margin="0,5,0,0">
-                                                            <TextBlock Text="Последний запуск: " FontSize="12"
-                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                                                            <TextBlock Text="{Binding LastRunText}" FontSize="12" Margin="0,0,12,0" />
-                                                            <TextBlock Text="Следующий: " FontSize="12"
-                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                                                            <TextBlock Text="{Binding NextRunText}" FontSize="12" />
-                                                            <TextBlock Text="Код результата: " FontSize="12" Margin="12,0,0,0"
-                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                                                            <TextBlock Text="{Binding LastTaskResultText}" FontSize="12" />
-                                                        </WrapPanel>
+                                                        <Expander Header="Подробности задачи" FontSize="12" Margin="0,5,0,0"
+                                                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                 AutomationProperties.Name="Подробности задачи планировщика">
+                                                            <StackPanel Margin="0,6,0,0">
+                                                                <WrapPanel>
+                                                                    <TextBlock Text="Издатель: " FontSize="12"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding PublisherLabel}" FontSize="12" />
+                                                                    <TextBlock Text="Категория: " FontSize="12" Margin="12,0,0,0"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding CategoryLabel}" FontSize="12" />
+                                                                </WrapPanel>
+                                                                <TextBlock Text="{Binding Description}" ToolTip="{Binding Description}"
+                                                                           FontSize="12" Margin="0,5,0,0"
+                                                                           Foreground="{DynamicResource TextDimBrush}"
+                                                                           TextWrapping="Wrap"
+                                                                           Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
+                                                                <WrapPanel Margin="0,6,0,0">
+                                                                    <TextBlock Text="Последний запуск: " FontSize="12"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding LastRunText}" FontSize="12" Margin="0,0,12,0" />
+                                                                    <TextBlock Text="Следующий: " FontSize="12"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding NextRunText}" FontSize="12" />
+                                                                    <TextBlock Text="Код результата: " FontSize="12" Margin="12,0,0,0"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding LastTaskResultText}" FontSize="12" />
+                                                                </WrapPanel>
+                                                            </StackPanel>
+                                                        </Expander>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
                                                         <Border Style="{StaticResource Badge}" HorizontalAlignment="Right">
