@@ -6,6 +6,34 @@
         <Style x:Key="MetricCard" TargetType="Border" BasedOn="{StaticResource BorderCard}">
             <Setter Property="Padding" Value="16,14" />
             <Setter Property="MinWidth" Value="140" />
+            <Setter Property="MinHeight" Value="128" />
+        </Style>
+        <Style x:Key="IntervalChip" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Chip" CornerRadius="8" Padding="12,6"
+                                Background="{DynamicResource BgCardBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="#243044" />
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -19,35 +47,75 @@
                        Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
 
             <!-- Метрики -->
-            <UniformGrid Columns="4" Margin="0,0,0,16">
+            <UniformGrid Columns="4" Margin="0,0,0,12">
+                <!-- Процессор: загрузка из системы -->
                 <Border Style="{StaticResource MetricCard}" Margin="0,0,10,10">
-                    <StackPanel>
-                        <TextBlock Text="ЦП" Style="{StaticResource SecondaryText}" FontSize="12" />
-                        <TextBlock Text="{Binding Dashboard.CpuText}" FontSize="26" FontWeight="SemiBold" Margin="0,4,0,0" />
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="32" Height="32">
+                                <Border Background="{DynamicResource AccentBrush}" Opacity="0.16" CornerRadius="10"/>
+                                <Viewbox Width="16" Height="16">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M7,7 H17 V17 H7 Z M10,3 V7 M14,3 V7 M10,17 V21 M14,17 V21 M3,10 H7 M3,14 H7 M17,10 H21 M17,14 H21"
+                                              Stroke="{DynamicResource AccentBrush}"
+                                              StrokeThickness="1.8" StrokeLineJoin="Round"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Grid>
+                            <TextBlock Text="Процессор" Style="{StaticResource SecondaryText}"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <TextBlock Text="{Binding Dashboard.CpuText}" FontSize="30" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Dashboard.CpuSubtitle}" Style="{StaticResource SecondaryText}"
+                                   FontSize="12" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
+
                 <Border Style="{StaticResource MetricCard}" Margin="0,0,10,10">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Память" Style="{StaticResource SecondaryText}" FontSize="12" />
-                        <TextBlock Text="{Binding Dashboard.RamText}" FontSize="15" FontWeight="SemiBold" Margin="0,8,0,0" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Dashboard.RamText}" FontSize="15" FontWeight="SemiBold" Margin="0,12,0,0" TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource MetricCard}" Margin="0,0,10,10">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Темп. ЦП" Style="{StaticResource SecondaryText}" FontSize="12" />
-                        <TextBlock Text="{Binding Dashboard.CpuTempText}" FontSize="22" FontWeight="SemiBold" Margin="0,6,0,0" />
+                        <TextBlock Text="{Binding Dashboard.CpuTempText}" FontSize="22" FontWeight="SemiBold" Margin="0,12,0,0" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource MetricCard}" Margin="0,0,0,10">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Темп. GPU" Style="{StaticResource SecondaryText}" FontSize="12" />
-                        <TextBlock Text="{Binding Dashboard.GpuTempText}" FontSize="22" FontWeight="SemiBold" Margin="0,6,0,0" />
+                        <TextBlock Text="{Binding Dashboard.GpuTempText}" FontSize="22" FontWeight="SemiBold" Margin="0,12,0,0" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
-            <Button Content="Обновить показатели" Command="{Binding Dashboard.RefreshCommand}"
-                    HorizontalAlignment="Left" Margin="0,0,0,20" />
+            <!-- Интервал обновления -->
+            <Grid Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Обновлять" Style="{StaticResource SecondaryText}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="2 с"
+                                 IsChecked="{Binding Dashboard.MonitorIntervalSeconds, Converter={StaticResource BoolToVis}, Mode=OneWay}"
+                                 Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="2" />
+                    <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="3 с"
+                                 Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="3" />
+                    <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="5 с"
+                                 Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="5" />
+                    <RadioButton GroupName="DashInterval" Style="{StaticResource IntervalChip}" Content="10 с"
+                                 Command="{Binding Dashboard.SetIntervalCommand}" CommandParameter="10" />
+                    <TextBlock Text="{Binding Dashboard.IntervalHint}" Style="{StaticResource SecondaryText}"
+                               VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="Обновить сейчас" Command="{Binding Dashboard.RefreshCommand}" />
+            </Grid>
 
             <!-- Быстрые действия -->
             <TextBlock Text="Быстрые действия" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
@@ -61,7 +129,7 @@
             <!-- Профили -->
             <TextBlock Text="Профили оптимизации" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10" />
             <TextBlock Style="{StaticResource SecondaryText}" Margin="0,0,0,10" TextWrapping="Wrap"
-                       Text="Встроенные наборы твиков. Применение — через раздел «Оптимизация системы» (выберите твики профиля вручную в 0.6; авто-применение профиля — следующий шаг)." />
+                       Text="Встроенные наборы твиков. Применение — через раздел «Оптимизация системы»." />
             <ItemsControl ItemsSource="{Binding Dashboard.Profiles}" Margin="0,0,0,20">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
