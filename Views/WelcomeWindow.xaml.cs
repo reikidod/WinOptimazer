@@ -71,7 +71,7 @@ public partial class WelcomeWindow : Window
             // Поэтапное появление: окно → дуга поднимается → заголовок → приветствие → статус.
             BeginAnimation(OpacityProperty, Anim(0, 1, 500, 0, outCubic));
             ArcLayer.BeginAnimation(OpacityProperty, Anim(0, 1, 1100, 80, outCubic));
-            ArcShift.BeginAnimation(TranslateTransform.YProperty, Anim(70, 0, 1500, 0, outSoft));
+            ArcShift.BeginAnimation(TranslateTransform.YProperty, Anim(60, 0, 1500, 0, outSoft));
             TitleText.BeginAnimation(OpacityProperty, Anim(0, 1, 700, 250, outCubic));
             GreetingText.BeginAnimation(OpacityProperty, Anim(0, 1, 800, 380, outCubic));
             GreetingShift.BeginAnimation(TranslateTransform.YProperty, Anim(22, 0, 1100, 380, outSoft));
@@ -83,13 +83,22 @@ public partial class WelcomeWindow : Window
             AnimateDot(Dot3Shift, Dot3, 320);
 
             // Свечение дуги «дышит», пока окно на экране.
-            var breathe = new DoubleAnimation(0.35, 0.85, TimeSpan.FromMilliseconds(1800))
+            var breathe = new DoubleAnimation(0.25, 0.7, TimeSpan.FromMilliseconds(1800))
             {
                 AutoReverse = true,
                 RepeatBehavior = RepeatBehavior.Forever,
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
             };
             ArcGlow.BeginAnimation(OpacityProperty, breathe);
+
+            // Блик бежит по главной линии дуги слева направо с паузой между проходами (диапазон шире видимой части).
+            ShimmerShift.BeginAnimation(TranslateTransform.XProperty,
+                new DoubleAnimation(-1, 1, TimeSpan.FromMilliseconds(2600))
+                {
+                    BeginTime = TimeSpan.FromMilliseconds(1100),
+                    RepeatBehavior = RepeatBehavior.Forever,
+                    EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+                });
 
             var hold = TotalDuration - FadeOutDuration;
             if (hold < TimeSpan.Zero)

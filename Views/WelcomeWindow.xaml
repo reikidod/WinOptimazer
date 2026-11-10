@@ -12,70 +12,98 @@
         UseLayoutRounding="True"
         Topmost="True">
 
-    <Border Margin="26" CornerRadius="22" BorderThickness="1" BorderBrush="#3A5B8FD9" ClipToBounds="True"
-            SnapsToDevicePixels="True">
-        <Border.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Color="#FF0D1017" Offset="0" />
-                <GradientStop Color="#FF121A2A" Offset="1" />
-            </LinearGradientBrush>
-        </Border.Background>
+    <!-- Все цвета берутся из текущей темы (ThemeManager), поэтому окно совпадает с основным интерфейсом. -->
+    <Border Margin="26" CornerRadius="22" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+            Background="{DynamicResource BgWindowBrush}" SnapsToDevicePixels="True">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="44" ShadowDepth="0" Color="#4C86E0" Opacity="0.55" />
+            <DropShadowEffect BlurRadius="40" ShadowDepth="8" Direction="270" Color="Black" Opacity="0.6" />
         </Border.Effect>
 
         <Grid>
-            <!-- Синяя дуга: заливка-«рассвет», светящаяся линия и тонкая яркая линия -->
-            <Grid x:Name="ArcLayer" IsHitTestVisible="False" Opacity="0" RenderTransformOrigin="0.5,1">
+            <Grid.Clip>
+                <RectangleGeometry Rect="0,0,566,346" RadiusX="21" RadiusY="21" />
+            </Grid.Clip>
+
+            <!-- Слегка подсвеченный к низу фон -->
+            <Border IsHitTestVisible="False" Background="{DynamicResource BgSidebarBrush}">
+                <Border.OpacityMask>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="Transparent" Offset="0.15" />
+                        <GradientStop Color="Black" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.OpacityMask>
+            </Border>
+
+            <!-- Дуга: пологий горизонт из трёх концентрических линий, по главной бежит блик -->
+            <Grid x:Name="ArcLayer" IsHitTestVisible="False" Opacity="0">
                 <Grid.RenderTransform>
-                    <TranslateTransform x:Name="ArcShift" Y="70" />
+                    <TranslateTransform x:Name="ArcShift" Y="60" />
                 </Grid.RenderTransform>
 
-                <Path Data="M -90,440 A 520,520 0 0 1 700,440 Z" Stretch="None">
-                    <Path.Fill>
-                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                            <GradientStop Color="#552F6BD1" Offset="0" />
-                            <GradientStop Color="#222A4F96" Offset="0.35" />
-                            <GradientStop Color="#00121A2A" Offset="1" />
+                <!-- Заливка-«рассвет» под дугой -->
+                <Path Data="M -166,432 A 700,700 0 0 1 734,432 Z" Stretch="None"
+                      Fill="{DynamicResource AccentBrush}" Opacity="0.16">
+                    <Path.OpacityMask>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="Black" Offset="0" />
+                            <GradientStop Color="Transparent" Offset="0.75" />
                         </LinearGradientBrush>
-                    </Path.Fill>
+                    </Path.OpacityMask>
                 </Path>
 
-                <Path x:Name="ArcGlow" Data="M -90,440 A 520,520 0 0 1 700,440" Stroke="#7FB2FF" StrokeThickness="10"
-                      Stretch="None" Opacity="0.55">
+                <!-- Внешние тонкие линии -->
+                <Path Data="M -166,462 A 700,700 0 0 1 734,462" Stretch="None"
+                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="1" Opacity="0.24" />
+                <Path Data="M -166,492 A 700,700 0 0 1 734,492" Stretch="None"
+                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="1" Opacity="0.12" />
+
+                <!-- Свечение главной линии («дышит») -->
+                <Path x:Name="ArcGlow" Data="M -166,432 A 700,700 0 0 1 734,432" Stretch="None"
+                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="8" Opacity="0.45">
                     <Path.Effect>
-                        <BlurEffect Radius="16" />
+                        <BlurEffect Radius="14" />
                     </Path.Effect>
                 </Path>
 
-                <Path Data="M -90,440 A 520,520 0 0 1 700,440" StrokeThickness="2.5" Stretch="None">
-                    <Path.Stroke>
+                <!-- Главная линия -->
+                <Path Data="M -166,432 A 700,700 0 0 1 734,432" Stretch="None"
+                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.55" />
+
+                <!-- Бегущий блик -->
+                <Path Data="M -166,432 A 700,700 0 0 1 734,432" Stretch="None"
+                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="3.5"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                    <Path.OpacityMask>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                            <GradientStop Color="#005B9BFF" Offset="0" />
-                            <GradientStop Color="#FF8FC0FF" Offset="0.5" />
-                            <GradientStop Color="#005B9BFF" Offset="1" />
+                            <LinearGradientBrush.RelativeTransform>
+                                <TranslateTransform x:Name="ShimmerShift" X="-1" />
+                            </LinearGradientBrush.RelativeTransform>
+                            <GradientStop Color="Transparent" Offset="0.38" />
+                            <GradientStop Color="Black" Offset="0.5" />
+                            <GradientStop Color="Transparent" Offset="0.62" />
                         </LinearGradientBrush>
-                    </Path.Stroke>
+                    </Path.OpacityMask>
                 </Path>
             </Grid>
 
             <!-- Мягкое свечение за текстом -->
-            <Ellipse Width="420" Height="190" Opacity="0.35" IsHitTestVisible="False" VerticalAlignment="Top" Margin="0,34,0,0">
-                <Ellipse.Fill>
+            <Ellipse Width="420" Height="190" Opacity="0.14" IsHitTestVisible="False"
+                     VerticalAlignment="Top" Margin="0,34,0,0" Fill="{DynamicResource AccentBrush}">
+                <Ellipse.OpacityMask>
                     <RadialGradientBrush>
-                        <GradientStop Color="#663B7DD9" Offset="0" />
-                        <GradientStop Color="#0012141A" Offset="1" />
+                        <GradientStop Color="Black" Offset="0" />
+                        <GradientStop Color="Transparent" Offset="1" />
                     </RadialGradientBrush>
-                </Ellipse.Fill>
+                </Ellipse.OpacityMask>
             </Ellipse>
 
             <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="32,58,32,0">
                 <TextBlock x:Name="TitleText" Text="WinOptimizer" Opacity="0"
-                           FontSize="14" FontWeight="SemiBold" Foreground="#B0C6E4FF"
+                           FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"
                            HorizontalAlignment="Center" Margin="0,0,0,16" />
 
                 <TextBlock x:Name="GreetingText" Text="Добро пожаловать" Opacity="0"
-                           FontSize="32" FontWeight="SemiBold" Foreground="White"
+                           FontSize="32" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                            TextAlignment="Center" TextWrapping="Wrap" MaxWidth="460"
                            HorizontalAlignment="Center" LineHeight="40">
                     <TextBlock.RenderTransform>
@@ -86,27 +114,21 @@
                 <StackPanel x:Name="StatusPanel" Opacity="0" Margin="0,24,0,0" HorizontalAlignment="Center">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBlock x:Name="StatusText" Text="Подготавливаю систему" FontSize="12.5"
-                                   Foreground="#99C2D6F2" VerticalAlignment="Center" />
+                                   Foreground="{DynamicResource TextDimBrush}" VerticalAlignment="Center" />
                         <!-- Три точки по очереди подпрыгивают вместо статичного «…» -->
-                        <Ellipse x:Name="Dot1" Width="4" Height="4" Fill="#99C2D6F2" Margin="5,6,0,0">
+                        <Ellipse x:Name="Dot1" Width="4" Height="4" Fill="{DynamicResource AccentBrush}" Margin="5,6,0,0">
                             <Ellipse.RenderTransform><TranslateTransform x:Name="Dot1Shift" /></Ellipse.RenderTransform>
                         </Ellipse>
-                        <Ellipse x:Name="Dot2" Width="4" Height="4" Fill="#99C2D6F2" Margin="4,6,0,0">
+                        <Ellipse x:Name="Dot2" Width="4" Height="4" Fill="{DynamicResource AccentBrush}" Margin="4,6,0,0">
                             <Ellipse.RenderTransform><TranslateTransform x:Name="Dot2Shift" /></Ellipse.RenderTransform>
                         </Ellipse>
-                        <Ellipse x:Name="Dot3" Width="4" Height="4" Fill="#99C2D6F2" Margin="4,6,0,0">
+                        <Ellipse x:Name="Dot3" Width="4" Height="4" Fill="{DynamicResource AccentBrush}" Margin="4,6,0,0">
                             <Ellipse.RenderTransform><TranslateTransform x:Name="Dot3Shift" /></Ellipse.RenderTransform>
                         </Ellipse>
                     </StackPanel>
-                    <Border Width="170" Height="3" CornerRadius="1.5" Background="#22FFFFFF" Margin="0,12,0,0">
-                        <Border x:Name="ProgressFill" CornerRadius="1.5" HorizontalAlignment="Left" Width="170"
-                                RenderTransformOrigin="0,0.5">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                    <GradientStop Color="#5B9BFF" Offset="0" />
-                                    <GradientStop Color="#A9D0FF" Offset="1" />
-                                </LinearGradientBrush>
-                            </Border.Background>
+                    <Border Width="170" Height="4" CornerRadius="2" Background="{DynamicResource TrackOffBrush}" Margin="0,12,0,0">
+                        <Border x:Name="ProgressFill" CornerRadius="2" HorizontalAlignment="Left" Width="170"
+                                Background="{DynamicResource AccentBrush}" RenderTransformOrigin="0,0.5">
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="ProgressScale" ScaleX="0" />
                             </Border.RenderTransform>
