@@ -114,7 +114,7 @@ public sealed class MaintenanceViewModel : ObservableObject
 
     public bool HasNoScheduledTasks => ScheduledTasks.Count == 0 && !HasTaskSchedulerError;
 
-    public string ScheduledTasksSummary => $"Найдено задач: {ScheduledTasks.Count}";
+    public string ScheduledTasksSummary => $"Показано задач: {FilteredScheduledTasks.Count} из {ScheduledTasks.Count}";
 
     public string TaskSearchText
     {
@@ -122,7 +122,10 @@ public sealed class MaintenanceViewModel : ObservableObject
         set
         {
             if (SetField(ref _taskSearchText, value ?? string.Empty))
+            {
                 FilteredScheduledTasks.Refresh();
+                OnPropertyChanged(nameof(ScheduledTasksSummary));
+            }
         }
     }
 
@@ -132,7 +135,10 @@ public sealed class MaintenanceViewModel : ObservableObject
         set
         {
             if (SetField(ref _taskStatusFilter, value ?? "Все"))
+            {
                 FilteredScheduledTasks.Refresh();
+                OnPropertyChanged(nameof(ScheduledTasksSummary));
+            }
         }
     }
 
@@ -245,9 +251,9 @@ public sealed class MaintenanceViewModel : ObservableObject
                 ScheduledTasks.Add(task);
 
             TaskSchedulerError = null;
+            FilteredScheduledTasks.Refresh();
             OnPropertyChanged(nameof(ScheduledTasksSummary));
             OnPropertyChanged(nameof(HasNoScheduledTasks));
-            FilteredScheduledTasks.Refresh();
         }
         catch (Exception ex) when (IsExpectedFailure(ex))
         {

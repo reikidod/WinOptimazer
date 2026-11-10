@@ -190,6 +190,11 @@
                                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                                             <TextBlock Text="{Binding CategoryLabel}" FontSize="12" />
                                                         </WrapPanel>
+                                                        <TextBlock Text="{Binding Description}" ToolTip="{Binding Description}"
+                                                                   FontSize="12" Margin="0,4,0,0"
+                                                                   Foreground="{DynamicResource TextDimBrush}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
                                                         <WrapPanel Margin="0,5,0,0">
                                                             <TextBlock Text="Последний запуск: " FontSize="12"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
@@ -197,6 +202,9 @@
                                                             <TextBlock Text="Следующий: " FontSize="12"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                                             <TextBlock Text="{Binding NextRunText}" FontSize="12" />
+                                                            <TextBlock Text="Код результата: " FontSize="12" Margin="12,0,0,0"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                            <TextBlock Text="{Binding LastTaskResultText}" FontSize="12" />
                                                         </WrapPanel>
                                                     </StackPanel>
                                                     <Border Grid.Column="1" Style="{StaticResource Badge}"

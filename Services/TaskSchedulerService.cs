@@ -54,6 +54,8 @@ public sealed record ScheduledTaskEntry(
 
     public string LastRunText => FormatTime(LastRunTime);
     public string NextRunText => FormatTime(NextRunTime);
+    public string LastTaskResultText => string.Format(CultureInfo.InvariantCulture, "0x{0:X8}", unchecked((uint)LastTaskResult));
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
 
     private static bool ContainsAny(string source, params string[] values) =>
         values.Any(value => source.Contains(value, StringComparison.OrdinalIgnoreCase));

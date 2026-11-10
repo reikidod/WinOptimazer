@@ -73,11 +73,29 @@ public sealed class TaskSchedulerServiceTests
         Assert.True(ScheduledTaskFilter.Matches(task, null, "Пользовательские"));
     }
 
+    [Fact]
+    public void Filter_CanSearchTaskDescription()
+    {
+        var task = CreateTask(description: "Runs Windows update maintenance");
+
+        Assert.True(ScheduledTaskFilter.Matches(task, "update maintenance", "Все"));
+    }
+
+    [Fact]
+    public void LastTaskResult_IsFormattedAsEightDigitHexadecimal()
+    {
+        var task = CreateTask(lastTaskResult: unchecked((int)0x80070005));
+
+        Assert.Equal("0x80070005", task.LastTaskResultText);
+    }
+
     private static ScheduledTaskEntry CreateTask(
         bool enabled = true,
         int state = (int)ScheduledTaskState.Ready,
         string path = @"\Microsoft\Windows\UpdateOrchestrator\Schedule Scan",
-        string? author = null) =>
+        string? author = null,
+        string? description = null,
+        int lastTaskResult = 0) =>
         new(
             "Schedule Scan",
             path,
@@ -85,6 +103,7 @@ public sealed class TaskSchedulerServiceTests
             state,
             new DateTime(2026, 11, 10, 8, 30, 0),
             null,
-            0,
-            author);
+            lastTaskResult,
+            author,
+            description);
 }
