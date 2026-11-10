@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 
 namespace WinOptimizer.Views;
 
@@ -71,7 +72,17 @@ public partial class WelcomeWindow : Window
             // Поэтапное появление: окно → дуга поднимается → заголовок → приветствие → статус.
             BeginAnimation(OpacityProperty, Anim(0, 1, 500, 0, outCubic));
             ArcLayer.BeginAnimation(OpacityProperty, Anim(0, 1, 1100, 80, outCubic));
-            ArcShift.BeginAnimation(TranslateTransform.YProperty, Anim(60, 0, 1500, 0, outSoft));
+            ArcShift.BeginAnimation(TranslateTransform.YProperty, Anim(40, 0, 1500, 0, outSoft));
+
+            // Линия «прорисовывается» от нижнего левого угла к верхнему правому.
+            ArcMain.BeginAnimation(Shape.StrokeDashOffsetProperty, Anim(600, 0, 1900, 150, outCubic));
+
+            // После появления вся дуга медленно плавает (разные периоды по X и Y, чтобы движение не повторялось).
+            var floatEase = new SineEase { EasingMode = EasingMode.EaseInOut };
+            ArcFloat.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, -9, TimeSpan.FromMilliseconds(3200))
+                { BeginTime = TimeSpan.FromMilliseconds(1500), AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = floatEase });
+            ArcFloat.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(0, 12, TimeSpan.FromMilliseconds(4300))
+                { BeginTime = TimeSpan.FromMilliseconds(1500), AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = floatEase });
             TitleText.BeginAnimation(OpacityProperty, Anim(0, 1, 700, 250, outCubic));
             GreetingText.BeginAnimation(OpacityProperty, Anim(0, 1, 800, 380, outCubic));
             GreetingShift.BeginAnimation(TranslateTransform.YProperty, Anim(22, 0, 1100, 380, outSoft));
@@ -93,9 +104,9 @@ public partial class WelcomeWindow : Window
 
             // Блик бежит по главной линии дуги слева направо с паузой между проходами (диапазон шире видимой части).
             ShimmerShift.BeginAnimation(TranslateTransform.XProperty,
-                new DoubleAnimation(-1, 1, TimeSpan.FromMilliseconds(2600))
+                new DoubleAnimation(-1, 1, TimeSpan.FromMilliseconds(2400))
                 {
-                    BeginTime = TimeSpan.FromMilliseconds(1100),
+                    BeginTime = TimeSpan.FromMilliseconds(1800),
                     RepeatBehavior = RepeatBehavior.Forever,
                     EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
                 });

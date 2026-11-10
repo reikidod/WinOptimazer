@@ -32,6 +32,10 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Equal("50% занято", snapshot.MemoryLoadSummary);
         Assert.Equal(25d, snapshot.DiskFreePercent, precision: 2);
         Assert.Equal("Подключение доступно", snapshot.NetworkSummary);
+        Assert.Equal("8 ГБ", snapshot.MemoryUsedText);
+        Assert.Equal("16 ГБ", snapshot.MemoryTotalText);
+        Assert.Equal("50 ГБ", snapshot.DiskFreeText);
+        Assert.Equal("200 ГБ", snapshot.DiskTotalText);
     }
 
     [Fact]

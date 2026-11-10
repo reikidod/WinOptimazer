@@ -16,9 +16,13 @@ public sealed record SystemSnapshot(
     bool NetworkAvailable)
 {
     public string CpuSummary => $"{LogicalProcessors} логических процессоров";
-    public string MemorySummary => $"{FormatBytes(TotalMemoryBytes - AvailableMemoryBytes)} / {FormatBytes(TotalMemoryBytes)}";
+    public string MemoryUsedText => FormatBytes(TotalMemoryBytes - AvailableMemoryBytes);
+    public string MemoryTotalText => FormatBytes(TotalMemoryBytes);
+    public string DiskFreeText => FormatBytes((ulong)Math.Max(0, DriveFreeBytes));
+    public string DiskTotalText => FormatBytes((ulong)Math.Max(0, DriveTotalBytes));
+    public string MemorySummary => $"{MemoryUsedText} / {MemoryTotalText}";
     public string MemoryLoadSummary => $"{MemoryLoadPercent}% занято";
-    public string DiskSummary => $"{FormatBytes((ulong)Math.Max(0, DriveFreeBytes))} свободно из {FormatBytes((ulong)Math.Max(0, DriveTotalBytes))}";
+    public string DiskSummary => $"{DiskFreeText} свободно из {DiskTotalText}";
     public double DiskFreePercent => DriveTotalBytes <= 0 ? 0 : Math.Clamp(DriveFreeBytes * 100d / DriveTotalBytes, 0, 100);
     public string NetworkSummary => NetworkAvailable ? "Подключение доступно" : "Нет активного сетевого подключения";
 

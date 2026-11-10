@@ -325,37 +325,87 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0" MinHeight="104">
+                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0" MinHeight="128">
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Процессор" Style="{StaticResource SecondaryText}"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.CpuSummary, TargetNullValue='Загрузка…'}"
-                                               FontSize="17" FontWeight="SemiBold" Margin="0,7,0,2"
-                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="Логических процессоров" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Grid Width="32" Height="32">
+                                            <Border Background="{DynamicResource AccentBrush}" Opacity="0.16" CornerRadius="10"/>
+                                            <Viewbox Width="16" Height="16">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M7,7 H17 V17 H7 Z M10,3 V7 M14,3 V7 M10,17 V21 M14,17 V21 M3,10 H7 M3,14 H7 M17,10 H21 M17,14 H21" Stroke="{DynamicResource AccentBrush}"
+                                                          StrokeThickness="1.8" StrokeLineJoin="Round"
+                                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Grid>
+                                        <TextBlock Text="Процессор" Style="{StaticResource SecondaryText}"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                        <TextBlock Text="{Binding DashboardSnapshot.LogicalProcessors, TargetNullValue='…'}"
+                                                   FontSize="30" FontWeight="SemiBold"/>
+                                        <TextBlock Text="логических процессоров" Style="{StaticResource SecondaryText}"
+                                                   FontSize="12" VerticalAlignment="Bottom" Margin="8,0,0,6"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="3,0" MinHeight="104">
+                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="3,0" MinHeight="128">
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Оперативная память" Style="{StaticResource SecondaryText}"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.MemorySummary, TargetNullValue='Загрузка…'}"
-                                               FontSize="17" FontWeight="SemiBold" Margin="0,7,0,2"
-                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}"
-                                               Style="{StaticResource SecondaryText}" FontSize="11"/>
-                                    <ProgressBar Height="5" Margin="0,8,0,0" Maximum="100"
+                                    <StackPanel Orientation="Horizontal">
+                                        <Grid Width="32" Height="32">
+                                            <Border Background="{DynamicResource AccentBrush}" Opacity="0.16" CornerRadius="10"/>
+                                            <Viewbox Width="16" Height="16">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M3,8 H21 V16 H3 Z M7,16 V19 M12,16 V19 M17,16 V19 M7,11 V13 M12,11 V13 M17,11 V13" Stroke="{DynamicResource AccentBrush}"
+                                                          StrokeThickness="1.8" StrokeLineJoin="Round"
+                                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Grid>
+                                        <TextBlock Text="Оперативная память" Style="{StaticResource SecondaryText}"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                        <TextBlock Text="{Binding DashboardSnapshot.MemoryUsedText, TargetNullValue='…'}"
+                                                   FontSize="26" FontWeight="SemiBold"/>
+                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12"
+                                                   VerticalAlignment="Bottom" Margin="8,0,0,5">
+                                            <Run Text="из"/> <Run Text="{Binding DashboardSnapshot.MemoryTotalText, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <ProgressBar Margin="0,10,0,0" Maximum="100"
                                                  Value="{Binding DashboardSnapshot.MemoryLoadPercent, Mode=OneWay}"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}"
+                                               Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,6,0,0"/>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="6,0,0,0" MinHeight="104">
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="6,0,0,0" MinHeight="128">
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Системный диск" Style="{StaticResource SecondaryText}"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.DiskSummary, TargetNullValue='Загрузка…'}"
-                                               FontSize="16" FontWeight="SemiBold" Margin="0,7,0,2"
-                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.SystemDrive}"
-                                               Style="{StaticResource SecondaryText}" FontSize="11"/>
-                                    <ProgressBar Height="5" Margin="0,8,0,0" Maximum="100"
+                                    <StackPanel Orientation="Horizontal">
+                                        <Grid Width="32" Height="32">
+                                            <Border Background="{DynamicResource AccentBrush}" Opacity="0.16" CornerRadius="10"/>
+                                            <Viewbox Width="16" Height="16">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Data="M4,15 H20 V19 H4 Z M4,15 L6.5,6 H17.5 L20,15 M16,17 H17" Stroke="{DynamicResource AccentBrush}"
+                                                          StrokeThickness="1.8" StrokeLineJoin="Round"
+                                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Grid>
+                                        <TextBlock Text="Системный диск" Style="{StaticResource SecondaryText}"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                        <TextBlock Text="{Binding DashboardSnapshot.DiskFreeText, TargetNullValue='…'}"
+                                                   FontSize="26" FontWeight="SemiBold"/>
+                                        <TextBlock Text="свободно" Style="{StaticResource SecondaryText}"
+                                                   FontSize="12" VerticalAlignment="Bottom" Margin="8,0,0,5"/>
+                                    </StackPanel>
+                                    <ProgressBar Margin="0,10,0,0" Maximum="100"
                                                  Value="{Binding DashboardSnapshot.DiskFreePercent, Mode=OneWay}"/>
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,6,0,0">
+                                        <Run Text="из"/> <Run Text="{Binding DashboardSnapshot.DiskTotalText, Mode=OneWay}"/> <Run Text="·"/> <Run Text="{Binding DashboardSnapshot.SystemDrive, Mode=OneWay}"/>
+                                    </TextBlock>
                                 </StackPanel>
                             </Border>
                         </Grid>

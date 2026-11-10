@@ -34,43 +34,46 @@
                 </Border.OpacityMask>
             </Border>
 
-            <!-- Дуга: пологий горизонт из трёх концентрических линий, по главной бежит блик -->
+            <!-- Дуга: S-образная кривая от нижнего левого угла к верхнему правому. Рисуется при появлении,
+                 затем по ней бежит блик, а вся группа плавно «плавает». -->
             <Grid x:Name="ArcLayer" IsHitTestVisible="False" Opacity="0">
                 <Grid.RenderTransform>
-                    <TranslateTransform x:Name="ArcShift" Y="60" />
+                    <TransformGroup>
+                        <TranslateTransform x:Name="ArcShift" Y="40" />
+                        <TranslateTransform x:Name="ArcFloat" />
+                    </TransformGroup>
                 </Grid.RenderTransform>
 
-                <!-- Заливка-«рассвет» под дугой -->
-                <Path Data="M -166,432 A 700,700 0 0 1 734,432 Z" Stretch="None"
-                      Fill="{DynamicResource AccentBrush}" Opacity="0.16">
-                    <Path.OpacityMask>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="Black" Offset="0" />
-                            <GradientStop Color="Transparent" Offset="0.75" />
-                        </LinearGradientBrush>
-                    </Path.OpacityMask>
+                <!-- Лёгкая заливка под кривой -->
+                <Path Data="M -10,332 C 90,296 200,290 290,262 C 380,234 390,130 430,72 S 500,12 560,-4 L 560,346 L -10,346 Z" Stretch="None"
+                      Fill="{DynamicResource AccentBrush}" Opacity="0.08" />
+
+                <!-- Параллельные тонкие линии, смещённые вниз-вправо -->
+                <Path Data="M -10,332 C 90,296 200,290 290,262 C 380,234 390,130 430,72 S 500,12 560,-4" Stretch="None" Stroke="{DynamicResource AccentBrush}"
+                      StrokeThickness="1" Opacity="0.24">
+                    <Path.RenderTransform><TranslateTransform X="16" Y="22" /></Path.RenderTransform>
+                </Path>
+                <Path Data="M -10,332 C 90,296 200,290 290,262 C 380,234 390,130 430,72 S 500,12 560,-4" Stretch="None" Stroke="{DynamicResource AccentBrush}"
+                      StrokeThickness="1" Opacity="0.12">
+                    <Path.RenderTransform><TranslateTransform X="32" Y="44" /></Path.RenderTransform>
                 </Path>
 
-                <!-- Внешние тонкие линии -->
-                <Path Data="M -166,462 A 700,700 0 0 1 734,462" Stretch="None"
-                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="1" Opacity="0.24" />
-                <Path Data="M -166,492 A 700,700 0 0 1 734,492" Stretch="None"
-                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="1" Opacity="0.12" />
-
                 <!-- Свечение главной линии («дышит») -->
-                <Path x:Name="ArcGlow" Data="M -166,432 A 700,700 0 0 1 734,432" Stretch="None"
-                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="8" Opacity="0.45">
+                <Path x:Name="ArcGlow" Data="M -10,332 C 90,296 200,290 290,262 C 380,234 390,130 430,72 S 500,12 560,-4" Stretch="None"
+                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="8" Opacity="0.4">
                     <Path.Effect>
                         <BlurEffect Radius="14" />
                     </Path.Effect>
                 </Path>
 
-                <!-- Главная линия -->
-                <Path Data="M -166,432 A 700,700 0 0 1 734,432" Stretch="None"
-                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.55" />
+                <!-- Главная линия: «прорисовывается» через StrokeDashOffset -->
+                <Path x:Name="ArcMain" Data="M -10,332 C 90,296 200,290 290,262 C 380,234 390,130 430,72 S 500,12 560,-4" Stretch="None"
+                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" Opacity="0.7"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      StrokeDashArray="600 600" StrokeDashOffset="600" />
 
                 <!-- Бегущий блик -->
-                <Path Data="M -166,432 A 700,700 0 0 1 734,432" Stretch="None"
+                <Path Data="M -10,332 C 90,296 200,290 290,262 C 380,234 390,130 430,72 S 500,12 560,-4" Stretch="None"
                       Stroke="{DynamicResource AccentBrush}" StrokeThickness="3.5"
                       StrokeStartLineCap="Round" StrokeEndLineCap="Round">
                     <Path.OpacityMask>
@@ -78,9 +81,9 @@
                             <LinearGradientBrush.RelativeTransform>
                                 <TranslateTransform x:Name="ShimmerShift" X="-1" />
                             </LinearGradientBrush.RelativeTransform>
-                            <GradientStop Color="Transparent" Offset="0.38" />
+                            <GradientStop Color="Transparent" Offset="0.40" />
                             <GradientStop Color="Black" Offset="0.5" />
-                            <GradientStop Color="Transparent" Offset="0.62" />
+                            <GradientStop Color="Transparent" Offset="0.60" />
                         </LinearGradientBrush>
                     </Path.OpacityMask>
                 </Path>
