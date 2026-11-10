@@ -499,12 +499,12 @@
                                                         <TextBlock Text="{Binding Recommendation}" Style="{StaticResource SecondaryText}"
                                                                    FontSize="11" TextWrapping="Wrap" Margin="0,3,0,0"/>
                                                     </StackPanel>
-                                                </Expander>
+                                                </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </StackPanel>
-                            </Border>
+                            </Expander>
                             <Expander Grid.Column="1" Style="{StaticResource SectionExpander}" Header="Журнал событий" IsExpanded="False" Margin="6,0,0,8"
                                       AutomationProperties.Name="Журнал событий и операций">
                                 <StackPanel>
@@ -538,14 +538,14 @@
                                                         <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}"
                                                                    Style="{StaticResource SecondaryText}" FontSize="10"/>
                                                     </StackPanel>
-                                                </Expander>
+                                                </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                     <TextBlock Text="История хранится локально на этом компьютере."
                                                Style="{StaticResource SecondaryText}" FontSize="10" Margin="0,8,0,0"/>
                                 </StackPanel>
-                            </Border>
+                            </Expander>
                         </Grid>
 
                         <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8">
