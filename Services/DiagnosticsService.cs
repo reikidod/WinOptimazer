@@ -10,6 +10,13 @@ public enum DiagnosticLevel
     Critical,
 }
 
+public enum RebootPendingState
+{
+    Pending,
+    NotPending,
+    Unknown,
+}
+
 public sealed record DiagnosticFinding(
     string Title,
     string Message,
@@ -27,9 +34,16 @@ public sealed record DiagnosticFinding(
 /// <summary>Только читает состояние системы. Ничего не меняет и не запускает автоматическое исправление.</summary>
 public sealed class DiagnosticsService
 {
-    public IReadOnlyList<DiagnosticFinding> Run(SystemSnapshot snapshot)
+    public IReadOnlyList<DiagnosticFinding> Run(SystemSnapshot snapshot) =>
+        Run(snapshot, GetRebootPendingState);
+
+    /// <summary>Overload with an injectable read-only probe so diagnostic outcomes can be tested deterministically.</summary>
+    public IReadOnlyList<DiagnosticFinding> Run(
+        SystemSnapshot snapshot,
+        Func<RebootPendingState> rebootStatusProvider)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentNullException.ThrowIfNull(rebootStatusProvider);
         var findings = new List<DiagnosticFinding>();
 
         if (snapshot.DriveTotalBytes > 0)
@@ -70,13 +84,24 @@ public sealed class DiagnosticsService
             ? new("Права доступа", "Приложение запущено с правами администратора.", "Подтверждайте только те системные изменения, которые понимаете.", DiagnosticLevel.Info)
             : new("Ограниченные права", "Часть системных операций может быть недоступна.", "Запускайте от имени администратора только при необходимости.", DiagnosticLevel.Warning));
 
-        if (IsRebootPending())
-            findings.Add(new("Требуется перезагрузка",
+        findings.Add(rebootStatusProvider() switch
+        {
+            RebootPendingState.Pending => new DiagnosticFinding(
+                "Требуется перезагрузка",
                 "В Windows обнаружены признаки ожидающей перезагрузки.",
                 "Сохраните работу и перезагрузите компьютер, когда это будет удобно.",
-                DiagnosticLevel.Warning));
-        else
-            findings.Add(new("Состояние перезагрузки", "Признаки ожидающей перезагрузки не обнаружены.", "Дополнительные действия не требуются.", DiagnosticLevel.Info));
+                DiagnosticLevel.Warning),
+            RebootPendingState.NotPending => new DiagnosticFinding(
+                "Состояние перезагрузки",
+                "Признаки ожидающей перезагрузки не обнаружены.",
+                "Дополнительные действия не требуются.",
+                DiagnosticLevel.Info),
+            _ => new DiagnosticFinding(
+                "Не удалось проверить перезагрузку",
+                "Windows не предоставила доступ к одному или нескольким диагностическим ключам реестра. Наличие ожидающей перезагрузки неизвестно.",
+                "Повторите диагностику с необходимыми правами. Не считайте это подтверждением отсутствия ожидающей перезагрузки.",
+                DiagnosticLevel.Warning),
+        });
 
         return findings;
     }
@@ -94,7 +119,7 @@ public sealed class DiagnosticsService
         }
     }
 
-    private static bool IsRebootPending()
+    private static RebootPendingState GetRebootPendingState()
     {
         try
         {
@@ -102,12 +127,14 @@ public sealed class DiagnosticsService
             using var cbs = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending");
             using var wu = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired");
             using var session = hklm.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Session Manager");
-            return cbs is not null || wu is not null || session?.GetValue("PendingFileRenameOperations") is not null;
+            return cbs is not null || wu is not null || session?.GetValue("PendingFileRenameOperations") is not null
+                ? RebootPendingState.Pending
+                : RebootPendingState.NotPending;
         }
-        catch
+        catch (Exception ex)
         {
-            // Недоступность отдельных диагностических ключей не должна прерывать остальные проверки.
-            return false;
+            Logger.Error("Не удалось проверить ожидающую перезагрузку Windows", ex);
+            return RebootPendingState.Unknown;
         }
     }
 }
