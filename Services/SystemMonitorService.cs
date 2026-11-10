@@ -1,12 +1,14 @@
 using System.ComponentModel;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 
 namespace WinOptimizer.Services;
 
 public sealed record SystemSnapshot(
     string OsDescription,
     int LogicalProcessors,
+    double CpuPercent,
     uint MemoryLoadPercent,
     ulong TotalMemoryBytes,
     ulong AvailableMemoryBytes,
@@ -15,7 +17,8 @@ public sealed record SystemSnapshot(
     long DriveFreeBytes,
     bool NetworkAvailable)
 {
-    public string CpuSummary => $"{LogicalProcessors} логических процессоров";
+    public string CpuSummary => $"{CpuPercent:0}%";
+    public string CpuLoadSubtitle => $"{LogicalProcessors} логических · загрузка";
     public string MemoryUsedText => FormatBytes(TotalMemoryBytes - AvailableMemoryBytes);
     public string MemoryTotalText => FormatBytes(TotalMemoryBytes);
     public string DiskFreeText => FormatBytes((ulong)Math.Max(0, DriveFreeBytes));
@@ -41,13 +44,35 @@ public sealed record SystemSnapshot(
 }
 
 /// <summary>
-/// Быстрый снимок ресурсов Windows без постоянных WMI-опросов и фонового таймера.
-/// Обновляется только по запросу пользователя или при открытии Dashboard.
+/// Снимок ресурсов Windows. CPU — через PerformanceCounter; память/диск — Win32 / DriveInfo.
+/// Collect вызывается по запросу Dashboard (и по таймеру на главной).
 /// </summary>
 public static class SystemMonitorService
 {
+    private static PerformanceCounter? _cpu;
+    private static bool _cpuInitTried;
+
     public static SystemSnapshot Collect()
     {
+        EnsureCpuCounter();
+        double cpuPct = 0;
+        try
+        {
+            if (_cpu is not null)
+            {
+                cpuPct = _cpu.NextValue();
+                if (cpuPct < 0.1)
+                {
+                    System.Threading.Thread.Sleep(120);
+                    cpuPct = _cpu.NextValue();
+                }
+            }
+        }
+        catch
+        {
+            cpuPct = 0;
+        }
+
         var memory = new MemoryStatusEx();
         if (!GlobalMemoryStatusEx(memory))
             throw new Win32Exception(Marshal.GetLastWin32Error(), "Не удалось получить состояние памяти Windows.");
@@ -63,6 +88,7 @@ public static class SystemMonitorService
         return new SystemSnapshot(
             RuntimeInformation.OSDescription,
             Environment.ProcessorCount,
+            Math.Clamp(cpuPct, 0, 100),
             memory.MemoryLoad,
             memory.TotalPhysical,
             memory.AvailablePhysical,
@@ -70,6 +96,21 @@ public static class SystemMonitorService
             total,
             free,
             NetworkInterface.GetIsNetworkAvailable());
+    }
+
+    private static void EnsureCpuCounter()
+    {
+        if (_cpuInitTried) return;
+        _cpuInitTried = true;
+        try
+        {
+            _cpu = new PerformanceCounter("Processor", "% Processor Time", "_Total", readOnly: true);
+            _ = _cpu.NextValue();
+        }
+        catch
+        {
+            _cpu = null;
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
