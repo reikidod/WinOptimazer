@@ -413,9 +413,9 @@
                             </Border>
                         </Grid>
 
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,10">
+                        <Expander Style="{StaticResource SectionExpander}" Header="Другие диски" IsExpanded="False"
+                                  Margin="0,0,0,10" AutomationProperties.Name="Дополнительные накопители">
                             <StackPanel>
-                                <TextBlock Text="Другие диски" FontSize="16" FontWeight="SemiBold" />
                                 <TextBlock Text="Фиксированные и подключённые съёмные накопители, кроме системного тома."
                                            Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,8" />
                                 <TextBlock Text="Другие готовые диски не обнаружены"
@@ -444,7 +444,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </StackPanel>
-                        </Border>
+                        </Expander>
 
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
