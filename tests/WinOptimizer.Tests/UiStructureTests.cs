@@ -10,8 +10,6 @@ namespace WinOptimizer.Tests;
 /// </summary>
 public sealed class UiStructureTests
 {
-    private static readonly XNamespace Presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
-
     private static string RepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
