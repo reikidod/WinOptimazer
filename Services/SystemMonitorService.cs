@@ -17,8 +17,10 @@ public sealed record SystemSnapshot(
     long DriveFreeBytes,
     bool NetworkAvailable)
 {
-    public string CpuSummary => $"{CpuPercent:0}%";
-    public string CpuLoadSubtitle => $"{LogicalProcessors} логических · загрузка";
+    /// <summary>PerformanceCounter может быть недоступен (например, отключены системные счётчики).</summary>
+    public bool CpuAvailable { get; init; } = true;
+    public string CpuSummary => CpuAvailable ? $"{CpuPercent:0}%" : "—";
+    public string CpuLoadSubtitle => CpuAvailable ? $"{LogicalProcessors} логических · загрузка" : "Показатель недоступен";
     public string MemoryUsedText => FormatBytes(TotalMemoryBytes - AvailableMemoryBytes);
     public string MemoryTotalText => FormatBytes(TotalMemoryBytes);
     public string DiskFreeText => FormatBytes((ulong)Math.Max(0, DriveFreeBytes));
@@ -59,6 +61,7 @@ public static class SystemMonitorService
     {
         EnsureCpuCounter();
         double cpuPct = 0;
+        var cpuAvailable = false;
         try
         {
             lock (CpuLock)
@@ -71,12 +74,15 @@ public static class SystemMonitorService
                         System.Threading.Thread.Sleep(120);
                         cpuPct = _cpu.NextValue();
                     }
+                    cpuAvailable = true;
                 }
             }
         }
         catch
         {
+            // Не выдаём недоступный счётчик за реальную загрузку CPU 0%.
             cpuPct = 0;
+            cpuAvailable = false;
         }
 
         var memory = new MemoryStatusEx();
@@ -101,7 +107,10 @@ public static class SystemMonitorService
             systemRoot,
             total,
             free,
-            NetworkInterface.GetIsNetworkAvailable());
+            NetworkInterface.GetIsNetworkAvailable())
+        {
+            CpuAvailable = cpuAvailable,
+        };
     }
 
     private static void EnsureCpuCounter()

@@ -43,6 +43,47 @@ public sealed class DashboardServiceTests : IDisposable
     }
 
     [Fact]
+    public void SystemSnapshot_ShowsUnknownWhenCpuCounterIsUnavailable()
+    {
+        var snapshot = new SystemSnapshot(
+            "Windows test",
+            8,
+            0,
+            40,
+            16UL * 1024 * 1024 * 1024,
+            10UL * 1024 * 1024 * 1024,
+            "C:\\",
+            100L * 1024 * 1024 * 1024,
+            60L * 1024 * 1024 * 1024,
+            true)
+        {
+            CpuAvailable = false,
+        };
+
+        Assert.Equal("—", snapshot.CpuSummary);
+        Assert.Equal("Показатель недоступен", snapshot.CpuLoadSubtitle);
+    }
+
+    [Fact]
+    public void SystemSnapshot_ShowsCpuLoadWhenCounterIsAvailable()
+    {
+        var snapshot = new SystemSnapshot(
+            "Windows test",
+            8,
+            37,
+            40,
+            16UL * 1024 * 1024 * 1024,
+            10UL * 1024 * 1024 * 1024,
+            "C:\\",
+            100L * 1024 * 1024 * 1024,
+            60L * 1024 * 1024 * 1024,
+            true);
+
+        Assert.Equal("37%", snapshot.CpuSummary);
+        Assert.Equal("8 логических · загрузка", snapshot.CpuLoadSubtitle);
+    }
+
+    [Fact]
     public void OperationHistory_StoresAndReturnsNewestFirst()
     {
         Directory.CreateDirectory(_directory);
