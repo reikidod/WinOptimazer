@@ -269,12 +269,16 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Главная панель: лёгкий снимок состояния, без постоянного фонового опроса -->
+            <!-- Главная панель: адаптивная прокрутка и компактные карточки -->
             <Grid Visibility="{Binding IsDashboardPage, Converter={StaticResource BoolToVis}}"
-                  local:Motion.PageTransition="True" Margin="28,24,16,12">
-                <ScrollViewer Style="{StaticResource OverlayScroll}" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,0,16,12">
-                        <Grid Margin="0,0,0,18">
+                  local:Motion.PageTransition="True" Margin="28,24,24,12">
+                <ScrollViewer Style="{StaticResource OverlayScroll}"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="0,0,4,12"
+                              Focusable="False">
+                    <StackPanel Margin="0,0,8,12">
+                        <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -288,92 +292,137 @@
                                     Command="{Binding RefreshDashboardCommand}"/>
                         </Grid>
 
-                        <Grid Margin="0,0,0,12">
+                        <!-- Равные карточки с одинаковой высотой и без повторяющих подписей -->
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0">
-                                <StackPanel>
+                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0" MinHeight="104">
+                                <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Процессор" Style="{StaticResource SecondaryText}"/>
                                     <TextBlock Text="{Binding DashboardSnapshot.CpuSummary, TargetNullValue='Загрузка…'}"
-                                               FontSize="18" FontWeight="SemiBold" Margin="0,6,0,0"/>
-                                    <TextBlock Text="Логические процессоры" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                               FontSize="17" FontWeight="SemiBold" Margin="0,7,0,2"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="Логических процессоров" Style="{StaticResource SecondaryText}" FontSize="11"/>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="4,0">
-                                <StackPanel>
+                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="3,0" MinHeight="104">
+                                <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Оперативная память" Style="{StaticResource SecondaryText}"/>
                                     <TextBlock Text="{Binding DashboardSnapshot.MemorySummary, TargetNullValue='Загрузка…'}"
-                                               FontSize="18" FontWeight="SemiBold" Margin="0,6,0,0"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                               FontSize="17" FontWeight="SemiBold" Margin="0,7,0,2"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}"
+                                               Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                    <ProgressBar Height="5" Margin="0,8,0,0" Maximum="100"
+                                                 Value="{Binding DashboardSnapshot.MemoryLoadPercent}"/>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="8,0,0,0">
-                                <StackPanel>
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="6,0,0,0" MinHeight="104">
+                                <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Системный диск" Style="{StaticResource SecondaryText}"/>
                                     <TextBlock Text="{Binding DashboardSnapshot.DiskSummary, TargetNullValue='Загрузка…'}"
-                                               FontSize="16" FontWeight="SemiBold" Margin="0,6,0,0"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.SystemDrive}" Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                               FontSize="16" FontWeight="SemiBold" Margin="0,7,0,2"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.SystemDrive}"
+                                               Style="{StaticResource SecondaryText}" FontSize="11"/>
+                                    <ProgressBar Height="5" Margin="0,8,0,0" Maximum="100"
+                                                 Value="{Binding DashboardSnapshot.DiskFreePercent}"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
 
-                        <Border Style="{StaticResource DashboardCard}">
-                            <StackPanel>
-                                <TextBlock Text="Система" FontSize="16" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding DashboardSnapshot.OsDescription}" Style="{StaticResource SecondaryText}" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding DashboardSnapshot.NetworkSummary}" Style="{StaticResource SecondaryText}" Margin="0,5,0,0"/>
-                                <TextBlock Text="{Binding DashboardStatus}" Foreground="{DynamicResource AccentBrush}" Margin="0,8,0,0" FontSize="12"/>
-                            </StackPanel>
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Система" FontSize="16" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.OsDescription}"
+                                               Style="{StaticResource SecondaryText}" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding DashboardSnapshot.NetworkSummary}"
+                                               Style="{StaticResource SecondaryText}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding DashboardStatus}"
+                                           Foreground="{DynamicResource AccentBrush}" Margin="16,0,0,0"
+                                           FontSize="11" TextWrapping="Wrap" MaxWidth="230"
+                                           VerticalAlignment="Center" TextAlignment="Right"/>
+                            </Grid>
                         </Border>
 
-                        <Grid Margin="0,8,0,0">
+                        <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1.15*"/>
+                                <ColumnDefinition Width="0.85*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0">
+                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,8">
                                 <StackPanel>
                                     <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="Диагностика" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Диагностика" FontSize="16" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"/>
                                         <Button Grid.Column="1" Content="Проверить" Style="{StaticResource AccentButton}"
                                                 Command="{Binding RunDiagnosticsCommand}" Padding="12,6"/>
                                     </Grid>
                                     <TextBlock Text="Проверка диска, памяти, сети, прав и ожидающей перезагрузки. Ничего не исправляется автоматически."
-                                               Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,8"/>
+                                               Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,8"
+                                               FontSize="12"/>
                                     <ItemsControl ItemsSource="{Binding DiagnosticFindings}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <StackPanel Margin="0,5,0,5">
-                                                    <TextBlock Text="{Binding LevelLabel}" Foreground="{DynamicResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
-                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="0,1,0,0"/>
-                                                    <TextBlock Text="{Binding Message}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding Recommendation}" Style="{StaticResource SecondaryText}" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                                </StackPanel>
+                                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                                                        Padding="0,7,0,8">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding LevelLabel}" Foreground="{DynamicResource AccentBrush}"
+                                                                   FontSize="10" FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="0,2,0,0"
+                                                                   TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Message}" Style="{StaticResource SecondaryText}"
+                                                                   TextWrapping="Wrap" Margin="0,1,0,0"/>
+                                                        <TextBlock Text="{Binding Recommendation}" Style="{StaticResource SecondaryText}"
+                                                                   FontSize="11" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="8,0,0,0">
+                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="6,0,0,8">
                                 <StackPanel>
                                     <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="Последние действия" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="1" Content="Обновить" Command="{Binding RefreshHistoryCommand}" Padding="10,5"/>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Последние действия" FontSize="16" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" Content="Обновить" Command="{Binding RefreshHistoryCommand}"
+                                                Padding="10,5"/>
                                     </Grid>
                                     <ItemsControl ItemsSource="{Binding RecentOperations}" Margin="0,8,0,0">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <StackPanel Margin="0,4,0,6">
-                                                    <TextBlock Text="{Binding Operation}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding Category}" Style="{StaticResource SecondaryText}" FontSize="11"/>
-                                                    <TextBlock Text="{Binding Result}" Style="{StaticResource SecondaryText}" FontSize="11"/>
-                                                    <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Style="{StaticResource SecondaryText}" FontSize="10"/>
-                                                </StackPanel>
+                                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                                                        Padding="0,7,0,8">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Operation}" FontWeight="SemiBold"
+                                                                   TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Category}" Style="{StaticResource SecondaryText}"
+                                                                   FontSize="11" Margin="0,2,0,0"/>
+                                                        <TextBlock Text="{Binding Result}" Style="{StaticResource SecondaryText}"
+                                                                   FontSize="11"/>
+                                                        <TextBlock Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}"
+                                                                   Style="{StaticResource SecondaryText}" FontSize="10"/>
+                                                    </StackPanel>
+                                                </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -385,13 +434,19 @@
 
                         <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8">
                             <StackPanel>
-                                <TextBlock Text="Быстрые действия" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                <TextBlock Text="Быстрые действия" FontSize="16" FontWeight="SemiBold"
+                                           Margin="0,0,0,10"/>
                                 <WrapPanel>
-                                    <Button Content="Оптимизация" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Tweaks"/>
-                                    <Button Content="Приложения" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Apps"/>
-                                    <Button Content="Игры" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Games"/>
-                                    <Button Content="Обслуживание" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="Maintenance"/>
-                                    <Button Content="Мой ПК" Margin="0,0,8,8" Command="{Binding NavigateCommand}" CommandParameter="System"/>
+                                    <Button Content="Оптимизация" Margin="0,0,8,8"
+                                            Command="{Binding NavigateCommand}" CommandParameter="Tweaks"/>
+                                    <Button Content="Приложения" Margin="0,0,8,8"
+                                            Command="{Binding NavigateCommand}" CommandParameter="Apps"/>
+                                    <Button Content="Игры" Margin="0,0,8,8"
+                                            Command="{Binding NavigateCommand}" CommandParameter="Games"/>
+                                    <Button Content="Обслуживание" Margin="0,0,8,8"
+                                            Command="{Binding NavigateCommand}" CommandParameter="Maintenance"/>
+                                    <Button Content="Мой ПК" Margin="0,0,8,8"
+                                            Command="{Binding NavigateCommand}" CommandParameter="System"/>
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
