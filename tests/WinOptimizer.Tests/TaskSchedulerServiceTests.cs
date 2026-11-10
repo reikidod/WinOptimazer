@@ -82,36 +82,20 @@ public sealed class TaskSchedulerServiceTests
     }
 
     [Fact]
-    public void ManagementPolicy_AllowsOnlyUserTasks()
+    public void WindowsTaskSchedulerService_ExposesOnlyReadOperations()
     {
-        var userTask = CreateTask(path: @"\Acme\Updater", author: "Acme Software");
-        var systemTask = CreateTask(path: @"\Microsoft\Office\Update", author: "Microsoft Corporation");
-        var windowsTask = CreateTask(path: @"\Microsoft\Windows\UpdateOrchestrator\Scan");
-        var driverTask = CreateTask(path: @"\Intel\DriverUpdate", author: "Intel Corporation");
+        var interfaces = typeof(WindowsTaskSchedulerService).GetInterfaces();
+        Assert.Equal(new[] { typeof(ITaskSchedulerService) }, interfaces);
 
-        Assert.True(userTask.CanChangeEnabledState);
-        Assert.False(systemTask.CanChangeEnabledState);
-        Assert.False(windowsTask.CanChangeEnabledState);
-        Assert.False(driverTask.CanChangeEnabledState);
-    }
+        var methods = typeof(WindowsTaskSchedulerService).GetMethods(
+            System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.DeclaredOnly);
 
-    [Fact]
-    public void ManagementPolicy_RejectsInvalidTaskPaths()
-    {
-        var relativePath = CreateTask(path: @"Acme\Updater", author: "Acme Software");
-        var traversalPath = CreateTask(path: @"\Acme\..\Windows\Task", author: "Acme Software");
-
-        Assert.False(relativePath.CanChangeEnabledState);
-        Assert.False(traversalPath.CanChangeEnabledState);
-    }
-
-    [Theory]
-    [InlineData(true, "Отключить")]
-    [InlineData(false, "Включить")]
-    public void EnabledActionLabel_ReflectsCurrentState(bool enabled, string expected)
-    {
-        var task = CreateTask(enabled: enabled);
-        Assert.Equal(expected, task.EnabledActionLabel);
+        Assert.Collection(methods, method =>
+            Assert.Equal(nameof(ITaskSchedulerService.GetTasks), method.Name));
+        Assert.Null(typeof(ScheduledTaskEntry).GetProperty("CanChangeEnabledState"));
+        Assert.Null(typeof(ScheduledTaskEntry).GetProperty("EnabledActionLabel"));
     }
 
     [Fact]
