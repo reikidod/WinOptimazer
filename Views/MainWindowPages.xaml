@@ -108,8 +108,8 @@
                                                                 <TextBlock Text="{Binding ScopeTitle}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
                                                             </Border>
                                                         </WrapPanel>
-                                                        <Expander Header="Команда запуска" FontSize="12" Margin="0,4,0,0"
-                                                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                                        <Expander Style="{StaticResource SectionExpander}" Header="Команда запуска" IsExpanded="False"
+                                                                 Margin="0,4,0,0"
                                                                  AutomationProperties.Name="Подробности команды автозагрузки">
                                                             <TextBlock Text="{Binding Command}" ToolTip="{Binding Command}" FontSize="12"
                                                                        TextWrapping="Wrap" Margin="0,5,0,2"
@@ -189,8 +189,8 @@
                                                         <TextBlock Text="{Binding Path}" ToolTip="{Binding Path}"
                                                                    FontSize="12" Foreground="{DynamicResource TextDimBrush}"
                                                                    TextTrimming="CharacterEllipsis" />
-                                                        <Expander Header="Подробности задачи" FontSize="12" Margin="0,5,0,0"
-                                                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                                        <Expander Style="{StaticResource SectionExpander}" Header="Подробности задачи" IsExpanded="False"
+                                                                 Margin="0,5,0,0"
                                                                  AutomationProperties.Name="Подробности задачи планировщика">
                                                             <StackPanel Margin="0,6,0,0">
                                                                 <WrapPanel>
