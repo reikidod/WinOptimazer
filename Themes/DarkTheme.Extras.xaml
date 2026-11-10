@@ -201,7 +201,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Expander">
                     <StackPanel>
-                        <ToggleButton x:Name="HeaderToggle" Cursor="Hand" Focusable="False"
+                        <ToggleButton x:Name="HeaderToggle" Cursor="Hand" Focusable="True"
                                       IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
