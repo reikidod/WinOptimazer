@@ -1,4 +1,5 @@
 using WinOptimizer.Services;
+using WinOptimizer.Views;
 using Xunit;
 
 namespace WinOptimizer.Tests;
@@ -40,6 +41,55 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Equal("16 ГБ", snapshot.MemoryTotalText);
         Assert.Equal("50 ГБ", snapshot.DiskFreeText);
         Assert.Equal("200 ГБ", snapshot.DiskTotalText);
+    }
+
+    [Fact]
+    public void DriveSnapshot_FormatsCapacityAndClampsFreeSpace()
+    {
+        var drive = SystemMonitorService.CreateDriveSnapshot(
+            "D:\\", "  Games  ", " NTFS ", 100L * 1024 * 1024 * 1024,
+            25L * 1024 * 1024 * 1024, DriveType.Fixed);
+
+        Assert.Equal("D:\\ · Games", drive.DisplayName);
+        Assert.Equal("Внутренний диск · NTFS", drive.StorageTypeText);
+        Assert.Equal("75 ГБ", drive.UsedText);
+        Assert.Equal("25 ГБ", drive.FreeText);
+        Assert.Equal("100 ГБ", drive.TotalText);
+        Assert.Equal(75d, drive.UsedPercent, precision: 2);
+        Assert.Equal("75 ГБ занято · 25 ГБ свободно из 100 ГБ", drive.UsageSummary);
+    }
+
+    [Fact]
+    public void DriveSnapshot_IdentifiesRemovableStorageAndClampsInvalidFreeSpace()
+    {
+        var drive = SystemMonitorService.CreateDriveSnapshot(
+            "E:\\", null, null, 10L * 1024 * 1024 * 1024,
+            20L * 1024 * 1024 * 1024, DriveType.Removable);
+
+        Assert.Equal("E:\\", drive.DisplayName);
+        Assert.Equal("Съёмный накопитель · Файловая система не определена", drive.StorageTypeText);
+        Assert.Equal(0L, drive.UsedPercent);
+        Assert.Equal("0 Б занято · 10 ГБ свободно из 10 ГБ", drive.UsageSummary);
+    }
+
+    [Theory]
+    [InlineData(-10, 26)]
+    [InlineData(0, 26)]
+    [InlineData(50, 13)]
+    [InlineData(100, 0)]
+    [InlineData(110, 0)]
+    public void ArcDashOffset_ClampsProgressAndMapsToDashOffset(double progress, double expected)
+    {
+        Assert.Equal(expected, Motion.ArcDashOffset(progress), precision: 3);
+    }
+
+    [Fact]
+    public void CreateDriveSnapshot_RejectsMissingNameAndNonPositiveCapacity()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            SystemMonitorService.CreateDriveSnapshot(" ", "Disk", "NTFS", 100, 50));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            SystemMonitorService.CreateDriveSnapshot("D:\\", "Disk", "NTFS", 0, 0));
     }
 
     [Fact]

@@ -453,15 +453,11 @@
                                                 <StackPanel>
                                                     <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
                                                                TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Text="{Binding FileSystemText}" Style="{StaticResource SecondaryText}"
+                                                    <TextBlock Text="{Binding StorageTypeText}" Style="{StaticResource SecondaryText}"
                                                                FontSize="11" Margin="0,2,0,7" />
                                                     <ProgressBar Maximum="100" Value="{Binding UsedPercent, Mode=OneWay}" Height="7" />
-                                                    <TextBlock Margin="0,6,0,0" FontSize="11"
-                                                               Foreground="{DynamicResource TextSecondaryBrush}">
-                                                        <Run Text="{Binding FreeText, Mode=OneWay}" />
-                                                        <Run Text=" свободно из " />
-                                                        <Run Text="{Binding TotalText, Mode=OneWay}" />
-                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding UsageSummary, Mode=OneWay}" Margin="0,6,0,0" FontSize="11"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>

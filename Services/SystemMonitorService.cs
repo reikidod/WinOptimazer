@@ -58,10 +58,22 @@ public sealed record DriveSnapshot(
     long TotalBytes,
     long FreeBytes)
 {
+    public DriveType DriveType { get; init; } = DriveType.Fixed;
     public string DisplayName => string.IsNullOrWhiteSpace(Label) ? Name : $"{Name} · {Label}";
     public string FreeText => FormatBytes((ulong)Math.Max(0, FreeBytes));
+    public string UsedText => FormatBytes((ulong)Math.Max(0, TotalBytes - FreeBytes));
     public string TotalText => FormatBytes((ulong)Math.Max(0, TotalBytes));
+    public string DriveTypeText => DriveType switch
+    {
+        DriveType.Fixed => "Внутренний диск",
+        DriveType.Removable => "Съёмный накопитель",
+        DriveType.Network => "Сетевой диск",
+        DriveType.CDRom => "Оптический привод",
+        _ => "Тип накопителя не определён",
+    };
     public string FileSystemText => string.IsNullOrWhiteSpace(FileSystem) ? "Файловая система не определена" : FileSystem;
+    public string StorageTypeText => $"{DriveTypeText} · {FileSystemText}";
+    public string UsageSummary => $"{UsedText} занято · {FreeText} свободно из {TotalText}";
     public double UsedPercent => TotalBytes <= 0 ? 0 : Math.Clamp((TotalBytes - FreeBytes) * 100d / TotalBytes, 0, 100);
 
     private static string FormatBytes(ulong bytes)
@@ -174,7 +186,7 @@ public static class SystemMonitorService
                 try { fileSystem = drive.DriveFormat; }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException) { fileSystem = string.Empty; }
 
-                result.Add(CreateDriveSnapshot(drive.Name, label, fileSystem, total, drive.AvailableFreeSpace));
+                result.Add(CreateDriveSnapshot(drive.Name, label, fileSystem, total, drive.AvailableFreeSpace, drive.DriveType));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or Win32Exception or ArgumentException)
             {
@@ -186,7 +198,7 @@ public static class SystemMonitorService
     }
 
     /// <summary>Нормализует показатели тома; вынесено отдельно для детерминированных тестов.</summary>
-    public static DriveSnapshot CreateDriveSnapshot(string name, string? label, string? fileSystem, long totalBytes, long freeBytes)
+    public static DriveSnapshot CreateDriveSnapshot(string name, string? label, string? fileSystem, long totalBytes, long freeBytes, DriveType driveType = DriveType.Fixed)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Имя диска обязательно.", nameof(name));
         if (totalBytes <= 0) throw new ArgumentOutOfRangeException(nameof(totalBytes));
@@ -196,7 +208,10 @@ public static class SystemMonitorService
             label?.Trim() ?? string.Empty,
             fileSystem?.Trim() ?? string.Empty,
             totalBytes,
-            Math.Clamp(freeBytes, 0, totalBytes));
+            Math.Clamp(freeBytes, 0, totalBytes))
+        {
+            DriveType = driveType,
+        };
     }
 
     private static void EnsureCpuCounter()
