@@ -1008,7 +1008,7 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <Border Width="44" Height="44" CornerRadius="10" Background="#22FFFFFF"
+                                            <Border Width="44" Height="44" CornerRadius="10" Background="{DynamicResource BgCardHoverBrush}"
                                                     Margin="0,0,12,0" ClipToBounds="True">
                                                 <Grid>
                                                     <TextBlock Text="{Binding Initial}" FontSize="20" FontWeight="SemiBold"
@@ -1108,7 +1108,7 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" />
-                                                <Border Style="{StaticResource Badge}" Margin="10,0,0,0" Background="#22FFFFFF">
+                                                <Border Style="{StaticResource Badge}" Margin="10,0,0,0" Background="{DynamicResource BgCardHoverBrush}">
                                                     <TextBlock Text="{Binding Platform}" FontSize="11" />
                                                 </Border>
                                             </StackPanel>
@@ -1146,7 +1146,7 @@
                                             <TextBlock Text="{Binding Result.Headline}" FontSize="13.5" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
                                             <TextBlock Text="{Binding WarningsText}" Margin="0,6,0,0" FontSize="12.5" TextWrapping="Wrap"
-                                                       Foreground="#E3B341"
+                                                       Foreground="{DynamicResource WarnBrush}"
                                                        Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVis}}" />
                                             <ItemsControl ItemsSource="{Binding Result.Settings}" Margin="0,8,0,0">
                                                 <ItemsControl.ItemTemplate>
