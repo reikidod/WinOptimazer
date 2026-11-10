@@ -666,9 +666,10 @@
                     </Grid>
                 </Border>
 
-                <StackPanel Grid.Row="2" Margin="0,0,16,10">
-                    <TextBlock Text="Сложные твики · ручная настройка" FontSize="14" FontWeight="SemiBold"
-                               Margin="0,0,0,8" />
+                <Expander Grid.Row="2" Header="Категории сложных твиков · ручная настройка" IsExpanded="False"
+                          Margin="0,0,16,10" Padding="10,6"
+                          Foreground="{DynamicResource TextSecondaryBrush}"
+                          AutomationProperties.Name="Фильтры категорий сложных твиков">
                     <ItemsControl ItemsSource="{Binding TweakCategories}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -683,7 +684,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </StackPanel>
+                </Expander>
 
                 <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl ItemsSource="{Binding FilteredTweaks}" Margin="0,0,16,8">
