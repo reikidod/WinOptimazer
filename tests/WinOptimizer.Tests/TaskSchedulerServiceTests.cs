@@ -84,10 +84,10 @@ public sealed class TaskSchedulerServiceTests
     [Fact]
     public void ManagementPolicy_AllowsOnlyUserTasks()
     {
-        var userTask = CreateTask(path: @"\\Acme\\Updater", author: "Acme Software");
-        var systemTask = CreateTask(path: @"\\Microsoft\\Office\\Update", author: "Microsoft Corporation");
-        var windowsTask = CreateTask(path: @"\\Microsoft\\Windows\\UpdateOrchestrator\\Scan");
-        var driverTask = CreateTask(path: @"\\Intel\\DriverUpdate", author: "Intel Corporation");
+        var userTask = CreateTask(path: @"\Acme\Updater", author: "Acme Software");
+        var systemTask = CreateTask(path: @"\Microsoft\Office\Update", author: "Microsoft Corporation");
+        var windowsTask = CreateTask(path: @"\Microsoft\Windows\UpdateOrchestrator\Scan");
+        var driverTask = CreateTask(path: @"\Intel\DriverUpdate", author: "Intel Corporation");
 
         Assert.True(userTask.CanChangeEnabledState);
         Assert.False(systemTask.CanChangeEnabledState);
@@ -98,8 +98,8 @@ public sealed class TaskSchedulerServiceTests
     [Fact]
     public void ManagementPolicy_RejectsInvalidTaskPaths()
     {
-        var relativePath = CreateTask(path: @"Acme\\Updater", author: "Acme Software");
-        var traversalPath = CreateTask(path: @"\\Acme\\..\\Windows\\Task", author: "Acme Software");
+        var relativePath = CreateTask(path: @"Acme\Updater", author: "Acme Software");
+        var traversalPath = CreateTask(path: @"\Acme\..\Windows\Task", author: "Acme Software");
 
         Assert.False(relativePath.CanChangeEnabledState);
         Assert.False(traversalPath.CanChangeEnabledState);

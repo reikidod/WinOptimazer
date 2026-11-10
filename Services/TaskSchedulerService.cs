@@ -85,14 +85,14 @@ public static class ScheduledTaskManagementPolicy
         if (task is null || string.IsNullOrWhiteSpace(task.Path)) return false;
 
         var path = task.Path.Trim();
-        if (!path.StartsWith(@"\\", StringComparison.Ordinal) ||
+        if (!path.StartsWith(@"\", StringComparison.Ordinal) ||
             path.Any(char.IsControl) ||
             path.Split('\\').Any(segment => segment is "." or ".."))
             return false;
 
         // Microsoft-задачи блокируются по всему дереву, не только в \Windows.
-        if (path.StartsWith(@"\\Microsoft\\", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith(@"\\Windows\\", StringComparison.OrdinalIgnoreCase))
+        if (path.StartsWith(@"\Microsoft\", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(@"\Windows\", StringComparison.OrdinalIgnoreCase))
             return false;
 
         return task.CategoryLabel == "Пользовательская";
@@ -155,7 +155,7 @@ public sealed class WindowsTaskSchedulerService : ITaskSchedulerService, ITaskSc
         if (string.IsNullOrWhiteSpace(taskPath))
             throw new ArgumentException("Путь задачи обязателен.", nameof(taskPath));
 
-        if (!taskPath.StartsWith(@"\\", StringComparison.Ordinal) ||
+        if (!taskPath.StartsWith(@"\", StringComparison.Ordinal) ||
             taskPath.Any(char.IsControl) ||
             taskPath.Split('\\').Any(segment => segment is "." or ".."))
             throw new ArgumentException("Укажите полный корректный путь задачи планировщика.", nameof(taskPath));
