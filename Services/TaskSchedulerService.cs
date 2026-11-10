@@ -56,6 +56,8 @@ public sealed record ScheduledTaskEntry(
     public string NextRunText => FormatTime(NextRunTime);
     public string LastTaskResultText => string.Format(CultureInfo.InvariantCulture, "0x{0:X8}", unchecked((uint)LastTaskResult));
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+    public bool CanChangeEnabledState => ScheduledTaskManagementPolicy.CanChange(this);
+    public string EnabledActionLabel => Enabled ? "Отключить" : "Включить";
 
     private static bool ContainsAny(string source, params string[] values) =>
         values.Any(value => source.Contains(value, StringComparison.OrdinalIgnoreCase));
@@ -69,13 +71,41 @@ public interface ITaskSchedulerService
     IReadOnlyList<ScheduledTaskEntry> GetTasks();
 }
 
+/// <summary>Обратимое управление только пользовательскими задачами планировщика.</summary>
+public interface ITaskSchedulerManagementService
+{
+    void SetEnabled(string taskPath, bool enabled);
+}
+
+/// <summary>Не разрешает менять системные, драйверные и некорректно адресованные задачи.</summary>
+public static class ScheduledTaskManagementPolicy
+{
+    public static bool CanChange(ScheduledTaskEntry? task)
+    {
+        if (task is null || string.IsNullOrWhiteSpace(task.Path)) return false;
+
+        var path = task.Path.Trim();
+        if (!path.StartsWith(@"\\", StringComparison.Ordinal) ||
+            path.Any(char.IsControl) ||
+            path.Split('\\').Any(segment => segment is "." or ".."))
+            return false;
+
+        // Microsoft-задачи блокируются по всему дереву, не только в \Windows.
+        if (path.StartsWith(@"\\Microsoft\\", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(@"\\Windows\\", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return task.CategoryLabel == "Пользовательская";
+    }
+}
+
 /// <summary>
 /// Read-only доступ к Windows Task Scheduler через штатный COM API.
 /// Сервис только читает определения и состояние задач — он не запускает,
 /// не останавливает, не включает и не отключает задания.
 /// </summary>
 [SupportedOSPlatform("windows")]
-public sealed class WindowsTaskSchedulerService : ITaskSchedulerService
+public sealed class WindowsTaskSchedulerService : ITaskSchedulerService, ITaskSchedulerManagementService
 {
     private const int IncludeHiddenTasks = 1;
 
@@ -110,6 +140,90 @@ public sealed class WindowsTaskSchedulerService : ITaskSchedulerService
         finally
         {
             ReleaseComObject(rootFolder);
+            ReleaseComObject(serviceObject);
+        }
+    }
+
+    /// <summary>
+    /// Включает или отключает только пользовательскую задачу.
+    /// Уже выполняющийся экземпляр не останавливается; состояние можно вернуть обратным действием.
+    /// </summary>
+    public void SetEnabled(string taskPath, bool enabled)
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException("Планировщик задач доступен только в Windows.");
+
+        if (string.IsNullOrWhiteSpace(taskPath))
+            throw new ArgumentException("Путь задачи обязателен.", nameof(taskPath));
+
+        if (!taskPath.StartsWith(@"\\", StringComparison.Ordinal) ||
+            taskPath.Any(char.IsControl) ||
+            taskPath.Split('\\').Any(segment => segment is "." or ".."))
+            throw new ArgumentException("Укажите полный корректный путь задачи планировщика.", nameof(taskPath));
+
+        var serviceType = Type.GetTypeFromProgID("Schedule.Service", throwOnError: false)
+            ?? throw new InvalidOperationException("Компонент планировщика задач Windows недоступен.");
+
+        object serviceObject = Activator.CreateInstance(serviceType)
+            ?? throw new InvalidOperationException("Не удалось создать подключение к планировщику.");
+
+        object? taskObject = null;
+        object? definitionObject = null;
+        object? registrationInfoObject = null;
+        try
+        {
+            dynamic service = serviceObject;
+            service.Connect(null, null, null, null);
+            taskObject = service.GetTask(taskPath);
+            dynamic task = taskObject;
+
+            var actualPath = Convert.ToString(task.Path, CultureInfo.InvariantCulture) ?? string.Empty;
+            if (!string.Equals(actualPath, taskPath, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Планировщик вернул задачу с другим путём. Изменение отменено.");
+
+            var name = Convert.ToString(task.Name, CultureInfo.InvariantCulture) ?? string.Empty;
+            var wasEnabled = Convert.ToBoolean(task.Enabled, CultureInfo.InvariantCulture);
+            var state = Convert.ToInt32(task.State, CultureInfo.InvariantCulture);
+            string? author = null;
+
+            try
+            {
+                definitionObject = task.Definition;
+                dynamic definition = definitionObject;
+                registrationInfoObject = definition.RegistrationInfo;
+                dynamic registrationInfo = registrationInfoObject;
+                author = Convert.ToString(registrationInfo.Author, CultureInfo.InvariantCulture);
+            }
+            catch (COMException ex)
+            {
+                Logger.Error("Не удалось проверить издателя задачи перед изменением", ex);
+                throw new InvalidOperationException("Не удалось проверить издателя задачи. Изменение запрещено.", ex);
+            }
+
+            var entry = new ScheduledTaskEntry(
+                name, actualPath, wasEnabled, state, null, null, 0, author);
+            if (!ScheduledTaskManagementPolicy.CanChange(entry))
+                throw new UnauthorizedAccessException("Изменять можно только пользовательские задачи. Системные задачи Microsoft и задачи драйверов доступны только для просмотра.");
+
+            if (wasEnabled == enabled) return;
+
+            task.Enabled = enabled;
+            var actualEnabled = Convert.ToBoolean(task.Enabled, CultureInfo.InvariantCulture);
+            if (actualEnabled != enabled)
+                throw new InvalidOperationException("Планировщик не подтвердил изменение состояния задачи.");
+
+            Logger.Info($"Задача планировщика {(enabled ? "включена" : "отключена")}: {actualPath}");
+        }
+        catch (COMException ex)
+        {
+            Logger.Error("Не удалось изменить состояние задачи планировщика Windows", ex);
+            throw new InvalidOperationException("Не удалось изменить задачу. Возможно, недостаточно прав или задача защищена Windows.", ex);
+        }
+        finally
+        {
+            ReleaseComObject(registrationInfoObject);
+            ReleaseComObject(definitionObject);
+            ReleaseComObject(taskObject);
             ReleaseComObject(serviceObject);
         }
     }

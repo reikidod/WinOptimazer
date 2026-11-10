@@ -136,7 +136,7 @@
                                     <StackPanel>
                                         <TextBlock Text="Планировщик задач Windows" FontSize="16" FontWeight="SemiBold" />
                                         <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,0" LineHeight="21"
-                                                   Text="Просмотр задач, включая вложенные папки и скрытые задания. Доступен поиск и фильтрация. Этот раздел работает только на чтение: задачи не запускаются, не останавливаются и не отключаются." />
+                                                   Text="Просмотр скрытых и вложенных задач, поиск и фильтрация. Можно включать и отключать только пользовательские задачи после подтверждения. Системные задачи и задачи драйверов защищены; уже выполняющиеся экземпляры не останавливаются." />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="Обновить" VerticalAlignment="Top" Margin="24,0,0,0"
                                             Command="{Binding RefreshScheduledTasksCommand}" />
@@ -207,11 +207,17 @@
                                                             <TextBlock Text="{Binding LastTaskResultText}" FontSize="12" />
                                                         </WrapPanel>
                                                     </StackPanel>
-                                                    <Border Grid.Column="1" Style="{StaticResource Badge}"
-                                                            VerticalAlignment="Center" Margin="16,0,0,0">
-                                                        <TextBlock Text="{Binding StateLabel}" FontSize="12"
-                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
-                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                                                        <Border Style="{StaticResource Badge}" HorizontalAlignment="Right">
+                                                            <TextBlock Text="{Binding StateLabel}" FontSize="12"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                        </Border>
+                                                        <Button Content="{Binding EnabledActionLabel}" Margin="0,6,0,0" Padding="10,4"
+                                                                Visibility="{Binding CanChangeEnabledState, Converter={StaticResource BoolToVis}}"
+                                                                Command="{Binding DataContext.Maintenance.ToggleScheduledTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip="Изменение обратимо; перед действием появится подтверждение." />
+                                                    </StackPanel>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>

@@ -82,6 +82,39 @@ public sealed class TaskSchedulerServiceTests
     }
 
     [Fact]
+    public void ManagementPolicy_AllowsOnlyUserTasks()
+    {
+        var userTask = CreateTask(path: @"\\Acme\\Updater", author: "Acme Software");
+        var systemTask = CreateTask(path: @"\\Microsoft\\Office\\Update", author: "Microsoft Corporation");
+        var windowsTask = CreateTask(path: @"\\Microsoft\\Windows\\UpdateOrchestrator\\Scan");
+        var driverTask = CreateTask(path: @"\\Intel\\DriverUpdate", author: "Intel Corporation");
+
+        Assert.True(userTask.CanChangeEnabledState);
+        Assert.False(systemTask.CanChangeEnabledState);
+        Assert.False(windowsTask.CanChangeEnabledState);
+        Assert.False(driverTask.CanChangeEnabledState);
+    }
+
+    [Fact]
+    public void ManagementPolicy_RejectsInvalidTaskPaths()
+    {
+        var relativePath = CreateTask(path: @"Acme\\Updater", author: "Acme Software");
+        var traversalPath = CreateTask(path: @"\\Acme\\..\\Windows\\Task", author: "Acme Software");
+
+        Assert.False(relativePath.CanChangeEnabledState);
+        Assert.False(traversalPath.CanChangeEnabledState);
+    }
+
+    [Theory]
+    [InlineData(true, "Отключить")]
+    [InlineData(false, "Включить")]
+    public void EnabledActionLabel_ReflectsCurrentState(bool enabled, string expected)
+    {
+        var task = CreateTask(enabled: enabled);
+        Assert.Equal(expected, task.EnabledActionLabel);
+    }
+
+    [Fact]
     public void LastTaskResult_IsFormattedAsEightDigitHexadecimal()
     {
         var task = CreateTask(lastTaskResult: unchecked((int)0x80070005));
