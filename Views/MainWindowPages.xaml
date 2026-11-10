@@ -250,8 +250,10 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Удаление приложений" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Все установленные программы и приложения Windows. Удаляйте штатным деинсталлятором и сразу стирайте остатки: папки, ярлыки, записи реестра — как в Geek Uninstaller. Если программа не удаляется, её можно снести принудительно."
+                        <Expander Header="О возможностях удаления" IsExpanded="False" Margin="0,4,0,0">
+                            <TextBlock Text="Все установленные программы и приложения Windows. Удаляйте штатным деинсталлятором и сразу стирайте остатки: папки, ярлыки, записи реестра — как в Geek Uninstaller. Если программа не удаляется, её можно снести принудительно."
                                    Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                        </Expander>
                         <WrapPanel Margin="0,10,0,0">
                             <Button Content="Установка" Margin="0,0,8,0"
                                     Visibility="{Binding Settings.ShowAppsTab, Converter={StaticResource BoolToVis}}"
@@ -457,6 +459,8 @@
                 </StackPanel>
                 <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,16,8">
+                        <Expander Header="Рекомендуемые файлы и утилиты" IsExpanded="False" Margin="0,0,0,12">
+                            <StackPanel>
                         <TextBlock Text="Рекомендуемые файлы" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4" />
                         <TextBlock Text="Библиотеки и утилиты для тонкой настройки. Файл скачивается по кнопке и проверяется по контрольной сумме перед запуском."
                                    Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,0,0,12" />
@@ -534,6 +538,9 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
+                            </StackPanel>
+                        </Expander>
+
                         <TextBlock Text="Каталог приложений" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,10" />
                         <ItemsControl ItemsSource="{Binding Apps.Apps}">
                             <ItemsControl.ItemTemplate>
@@ -558,7 +565,8 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <TextBlock Text="Zapret (Flowseal)" FontSize="16" FontWeight="SemiBold" Margin="0,20,0,8" />
+                        <Expander Header="Zapret (Flowseal)" IsExpanded="False" Margin="0,8,0,0">
+
                         <ContentControl Style="{StaticResource HoverCard}">
                             <StackPanel>
                                 <TextBlock TextWrapping="Wrap" Style="{StaticResource SecondaryText}"
@@ -582,7 +590,10 @@
                             </StackPanel>
                         </ContentControl>
 
-                        <TextBlock Text="TG WS Proxy (Flowseal)" FontSize="16" FontWeight="SemiBold" Margin="0,20,0,8" />
+                        </Expander>
+
+                        <Expander Header="TG WS Proxy (Flowseal)" IsExpanded="False" Margin="0,8,0,0">
+
                         <ContentControl Style="{StaticResource HoverCard}">
                             <StackPanel>
                                 <TextBlock TextWrapping="Wrap" Style="{StaticResource SecondaryText}"
@@ -604,6 +615,7 @@
                                 </WrapPanel>
                             </StackPanel>
                         </ContentControl>
+                        </Expander>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
