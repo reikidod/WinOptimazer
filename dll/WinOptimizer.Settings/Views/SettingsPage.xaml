@@ -38,7 +38,7 @@
                             </Grid.RowDefinitions>
                             <ToggleButton x:Name="HeaderButton" Grid.Row="0"
                                           IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                                          Focusable="False" HorizontalContentAlignment="Stretch"
+                                          Focusable="True" Cursor="Hand" HorizontalContentAlignment="Stretch"
                                           Padding="14,12" Background="{DynamicResource BgCardBrush}"
                                           BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                           Foreground="{TemplateBinding Foreground}">
