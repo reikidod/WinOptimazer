@@ -81,7 +81,7 @@
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
-                                <ContentPresenter ContentSource="Header"
+                                <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
                                                   ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
                                                   ContentTemplateSelector="{Binding HeaderTemplateSelector, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
                                                   ContentStringFormat="{Binding HeaderStringFormat, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
