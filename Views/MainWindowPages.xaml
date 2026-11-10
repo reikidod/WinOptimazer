@@ -125,7 +125,7 @@
                             </StackPanel>
                         </ContentControl>
 
-                        <!-- Планировщик задач: обратимое управление пользовательскими задачами с подтверждением -->
+                        <!-- Планировщик задач: безопасный режим только для чтения -->
                         <ContentControl Style="{StaticResource HoverCard}" Margin="0,0,0,12">
                             <StackPanel>
                                 <Grid>
@@ -136,7 +136,7 @@
                                     <StackPanel>
                                         <TextBlock Text="Планировщик задач Windows" FontSize="16" FontWeight="SemiBold" />
                                         <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,0" LineHeight="21"
-                                                   Text="Просмотр скрытых и вложенных задач, поиск и фильтрация. Можно включать и отключать только пользовательские задачи после подтверждения. Системные задачи и задачи драйверов защищены; уже выполняющиеся экземпляры не останавливаются." />
+                                                   Text="Просмотр скрытых и вложенных задач, поиск и фильтрация по состоянию и категории. Приложение не включает, не отключает, не удаляет и не редактирует задачи Windows." />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="Обновить" VerticalAlignment="Top" Margin="24,0,0,0"
                                             Command="{Binding RefreshScheduledTasksCommand}" />
@@ -212,11 +212,6 @@
                                                             <TextBlock Text="{Binding StateLabel}" FontSize="12"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                                         </Border>
-                                                        <Button Content="{Binding EnabledActionLabel}" Margin="0,6,0,0" Padding="10,4"
-                                                                Visibility="{Binding CanChangeEnabledState, Converter={StaticResource BoolToVis}}"
-                                                                Command="{Binding DataContext.Maintenance.ToggleScheduledTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                CommandParameter="{Binding}"
-                                                                ToolTip="Изменение обратимо; перед действием появится подтверждение." />
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
