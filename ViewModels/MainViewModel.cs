@@ -21,6 +21,7 @@ public sealed class MainViewModel : ObservableObject
     private AppPage _page = AppPage.Dashboard;
     private readonly PageNavigationHistory<AppPage> _navigationHistory = new();
     private readonly DispatcherTimer _dashboardTimer;
+    private readonly SemaphoreSlim _dashboardRefreshGate = new(1, 1);
     private bool _dashboardRefreshing;
     private bool _isHistoryNavigation;
     private readonly DiagnosticsService _diagnostics = new();
@@ -346,7 +347,7 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             DashboardStatus = "Обновляю системные показатели…";
-            DashboardSnapshot = await Task.Run(SystemMonitorService.Collect);
+            DashboardSnapshot = await CollectDashboardSnapshotAsync();
             RefreshRecentOperations();
             DashboardStatus = $"Обновлено: {DateTime.Now:HH:mm:ss}";
         }
@@ -354,6 +355,19 @@ public sealed class MainViewModel : ObservableObject
         {
             Logger.Error("Не удалось обновить панель состояния", ex);
             DashboardStatus = "Не удалось получить часть показателей: " + ex.Message;
+        }
+    }
+
+    private async Task<SystemSnapshot> CollectDashboardSnapshotAsync()
+    {
+        await _dashboardRefreshGate.WaitAsync();
+        try
+        {
+            return await Task.Run(SystemMonitorService.Collect);
+        }
+        finally
+        {
+            _dashboardRefreshGate.Release();
         }
     }
 
@@ -365,7 +379,7 @@ public sealed class MainViewModel : ObservableObject
         _dashboardRefreshing = true;
         try
         {
-            DashboardSnapshot = await Task.Run(SystemMonitorService.Collect);
+            DashboardSnapshot = await CollectDashboardSnapshotAsync();
             DashboardStatus = $"Обновлено: {DateTime.Now:HH:mm:ss}";
         }
         catch (Exception ex)

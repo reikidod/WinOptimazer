@@ -777,6 +777,19 @@ public class TemperatureReaderTests
         Assert.Equal(expected, TemperatureReader.ZoneName(raw));
 }
 
+public class SystemMonitorServiceTests
+{
+    [Fact]
+    public async Task Collect_SupportsConcurrentDashboardRefreshes()
+    {
+        var samples = await Task.WhenAll(
+            Enumerable.Range(0, 4).Select(_ => Task.Run(SystemMonitorService.Collect)));
+
+        Assert.Equal(4, samples.Length);
+        Assert.All(samples, sample => Assert.InRange(sample.CpuPercent, 0d, 100d));
+    }
+}
+
 public class MasonryLayoutTests
 {
     [Theory]

@@ -106,16 +106,22 @@ public static class SystemMonitorService
 
     private static void EnsureCpuCounter()
     {
-        if (_cpuInitTried) return;
-        _cpuInitTried = true;
-        try
+        // Dashboard can be refreshed manually while its timer is running.
+        // Guard initialization with the same lock used for NextValue().
+        lock (CpuLock)
         {
-            _cpu = new PerformanceCounter("Processor", "% Processor Time", "_Total", readOnly: true);
-            _ = _cpu.NextValue();
-        }
-        catch
-        {
-            _cpu = null;
+            if (_cpuInitTried) return;
+            _cpuInitTried = true;
+            try
+            {
+                _cpu = new PerformanceCounter("Processor", "% Processor Time", "_Total", readOnly: true);
+                _ = _cpu.NextValue();
+            }
+            catch
+            {
+                _cpu?.Dispose();
+                _cpu = null;
+            }
         }
     }
 
