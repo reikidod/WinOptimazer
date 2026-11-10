@@ -11,6 +11,7 @@ public sealed class StartupServiceTests
         var store = new FakeStartupStore();
         store.Run[StartupScope.CurrentUser]["Updater"] = "\"C:\\Tools\\Updater.exe\" /background";
         store.Folders[StartupScope.CurrentUserFolder].Add(@"C:\Users\Test\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Chat.lnk");
+        store.Folders[StartupScope.CurrentUserFolder].Add(@"C:\Users\Test\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\desktop.ini");
         store.Folders[StartupScope.AllUsersFolder].Add(@"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Monitor.lnk");
 
         var entries = new StartupService(store).GetEntries();
@@ -18,7 +19,19 @@ public sealed class StartupServiceTests
         Assert.Contains(entries, entry => entry.Name == "Updater" && entry.Scope == StartupScope.CurrentUser);
         Assert.Contains(entries, entry => entry.Name == "Chat" && entry.Scope == StartupScope.CurrentUserFolder);
         Assert.Contains(entries, entry => entry.Name == "Monitor" && entry.Scope == StartupScope.AllUsersFolder);
+        Assert.DoesNotContain(entries, entry => entry.Name.Equals("desktop", StringComparison.OrdinalIgnoreCase));
         Assert.Equal(3, entries.Count);
+    }
+
+    [Theory]
+    [InlineData(@"C:\Users\Test\Startup\desktop.ini")]
+    [InlineData(@"C:\ProgramData\Startup\DESKTOP.INI")]
+    public void GetEntries_ExcludesWindowsDesktopMetadataFiles(string path)
+    {
+        var store = new FakeStartupStore();
+        store.Folders[StartupScope.CurrentUserFolder].Add(path);
+
+        Assert.Empty(new StartupService(store).GetEntries());
     }
 
     [Fact]

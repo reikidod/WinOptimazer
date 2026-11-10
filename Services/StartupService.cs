@@ -105,7 +105,9 @@ public sealed class StartupService : IStartupService
         foreach (var scope in FolderScopes)
         {
             var approved = _store.ReadApproved(scope);
-            foreach (var path in _store.ReadStartupFolder(scope).OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase))
+            foreach (var path in _store.ReadStartupFolder(scope)
+                         .Where(IsVisibleStartupEntry)
+                         .OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase))
             {
                 var approvalName = approved.Keys.FirstOrDefault(key =>
                     string.Equals(key, path, StringComparison.OrdinalIgnoreCase) ||
@@ -118,6 +120,10 @@ public sealed class StartupService : IStartupService
 
         return result;
     }
+
+    private static bool IsVisibleStartupEntry(string path) =>
+        !string.IsNullOrWhiteSpace(path) &&
+        !string.Equals(Path.GetFileName(path), "desktop.ini", StringComparison.OrdinalIgnoreCase);
 
     public void SetEnabled(StartupEntry entry, bool enabled)
     {
@@ -203,11 +209,32 @@ public sealed class WindowsStartupStore : IStartupStore
 
         try
         {
-            return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly).ToArray();
+            return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
+                .Where(IsLaunchCandidate)
+                .ToArray();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return [];
+        }
+    }
+
+    private static bool IsLaunchCandidate(string path)
+    {
+        if (string.Equals(Path.GetFileName(path), "desktop.ini", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        try
+        {
+            var attributes = File.GetAttributes(path);
+            return (attributes & (FileAttributes.Hidden | FileAttributes.System)) == 0;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Не показываем служебный файл, если его атрибуты нельзя безопасно прочитать.
+            return false;
         }
     }
 
