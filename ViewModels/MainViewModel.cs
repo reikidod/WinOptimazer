@@ -476,25 +476,49 @@ public sealed class MainViewModel : ObservableObject
 
     private async Task RunDiagnosticsAsync()
     {
-        var snapshot = DashboardSnapshot;
-        if (snapshot is null)
-        {
-            await RefreshDashboardAsync();
-            snapshot = DashboardSnapshot;
-        }
-        if (snapshot is null)
-        {
-            DashboardStatus = "Диагностика недоступна: не удалось получить системные показатели.";
-            return;
-        }
+        if (IsBusy) return;
 
+        IsBusy = true;
         DashboardStatus = "Проверяю состояние Windows…";
-        DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
-        _lastDiagnosticsAt = DateTime.Now;
-        OnPropertyChanged(nameof(DiagnosticHeader));
-        OnPropertyChanged(nameof(DiagnosticLastRunText));
-        RecordOperation("Диагностика", "Проверка состояния Windows", "Завершено");
-        DashboardStatus = $"Диагностика завершена: найдено замечаний — {DiagnosticFindings.Count(x => x.Level != DiagnosticLevel.Info)}.";
+        try
+        {
+            var snapshot = DashboardSnapshot;
+            if (snapshot is null)
+            {
+                await RefreshDashboardAsync();
+                snapshot = DashboardSnapshot;
+            }
+
+            if (snapshot is null)
+            {
+                DashboardStatus = "Диагностика недоступна: не удалось получить системные показатели.";
+                RecordOperation("Диагностика", "Проверка состояния Windows", "Не удалось получить системные показатели");
+                return;
+            }
+
+            DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
+            _lastDiagnosticsAt = DateTime.Now;
+            OnPropertyChanged(nameof(DiagnosticHeader));
+            OnPropertyChanged(nameof(DiagnosticLastRunText));
+
+            var issueCount = DiagnosticFindings.Count(x => x.Level != DiagnosticLevel.Info);
+            RecordOperation("Диагностика", "Проверка состояния Windows",
+                issueCount == 0 ? "Замечаний не обнаружено" : $"Найдено замечаний: {issueCount}");
+            DashboardStatus = issueCount == 0
+                ? "Диагностика завершена: замечаний не обнаружено."
+                : $"Диагностика завершена: найдено замечаний — {issueCount}.";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось выполнить диагностику Windows", ex);
+            RecordOperation("Диагностика", "Проверка состояния Windows", "Ошибка: " + ex.Message);
+            DashboardStatus = "Не удалось завершить диагностику. Подробности записаны в технический журнал.";
+            throw;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void RefreshRecentOperations()
