@@ -285,67 +285,73 @@
                                     <TextBlock Text="{Binding Settings.BackgroundName}" VerticalAlignment="Center"
                                                Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12.5" />
                                 </WrapPanel>
-                                <Grid Margin="0,10,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="170" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="52" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="Размытие" FontSize="13.5" />
-                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="0 — чёткая картинка" />
+                                <Expander Header="Дополнительные параметры оформления" Margin="0,10,0,0"
+                                          FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}"
+                                          AutomationProperties.Name="Дополнительные параметры фона">
+                                    <StackPanel Margin="0,8,0,0">
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="52" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Размытие" FontSize="13.5" />
+                                            <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="0 — чёткая картинка" />
+                                        </StackPanel>
+                                        <Slider Grid.Column="1" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                Margin="12,0" VerticalAlignment="Center" Value="{Binding Settings.BackgroundBlur, Mode=TwoWay}"
+                                                AutomationProperties.Name="Размытие" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Settings.BackgroundBlur, StringFormat={}{0}%}" HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
+                                    </Grid>
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="52" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Затемнение" FontSize="13.5" />
+                                            <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="Чем темнее, тем лучше виден текст" />
+                                        </StackPanel>
+                                        <Slider Grid.Column="1" Minimum="0" Maximum="90" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                Margin="12,0" VerticalAlignment="Center" Value="{Binding Settings.BackgroundDim, Mode=TwoWay}"
+                                                AutomationProperties.Name="Затемнение" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Settings.BackgroundDim, StringFormat={}{0}%}" HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
+                                    </Grid>
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,16,0">
+                                            <TextBlock Text="Эффекты прозрачности" FontSize="13.5" FontWeight="SemiBold" />
+                                            <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="Отключите, чтобы сделать модули и боковую панель непрозрачными" />
+                                        </StackPanel>
+                                        <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                                  IsChecked="{Binding Settings.TransparencyEffectsEnabled, Mode=TwoWay}"
+                                                  AutomationProperties.Name="Эффекты прозрачности" />
+                                    </Grid>
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="52" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Прозрачность модулей" FontSize="13.5" />
+                                            <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="Меньше значение — сильнее просвечивает фон" />
+                                        </StackPanel>
+                                        <Slider Grid.Column="1" Minimum="50" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                Margin="12,0" VerticalAlignment="Center" Value="{Binding Settings.CardOpacity, Mode=TwoWay}"
+                                                AutomationProperties.Name="Прозрачность модулей" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Settings.CardOpacity, StringFormat={}{0}%}" HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
+                                    </Grid>
                                     </StackPanel>
-                                    <Slider Grid.Column="1" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
-                                            Margin="12,0" VerticalAlignment="Center" Value="{Binding Settings.BackgroundBlur, Mode=TwoWay}"
-                                            AutomationProperties.Name="Размытие" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Settings.BackgroundBlur, StringFormat={}{0}%}" HorizontalAlignment="Right"
-                                               VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
-                                </Grid>
-                                <Grid Margin="0,10,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="170" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="52" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="Затемнение" FontSize="13.5" />
-                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="Чем темнее, тем лучше виден текст" />
-                                    </StackPanel>
-                                    <Slider Grid.Column="1" Minimum="0" Maximum="90" TickFrequency="1" IsSnapToTickEnabled="True"
-                                            Margin="12,0" VerticalAlignment="Center" Value="{Binding Settings.BackgroundDim, Mode=TwoWay}"
-                                            AutomationProperties.Name="Затемнение" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Settings.BackgroundDim, StringFormat={}{0}%}" HorizontalAlignment="Right"
-                                               VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
-                                </Grid>
-                                <Grid Margin="0,10,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Margin="0,0,16,0">
-                                        <TextBlock Text="Эффекты прозрачности" FontSize="13.5" FontWeight="SemiBold" />
-                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="Отключите, чтобы сделать модули и боковую панель непрозрачными" />
-                                    </StackPanel>
-                                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
-                                              IsChecked="{Binding Settings.TransparencyEffectsEnabled, Mode=TwoWay}"
-                                              AutomationProperties.Name="Эффекты прозрачности" />
-                                </Grid>
-                                <Grid Margin="0,10,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="170" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="52" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="Прозрачность модулей" FontSize="13.5" />
-                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="11.5" Text="Меньше значение — сильнее просвечивает фон" />
-                                    </StackPanel>
-                                    <Slider Grid.Column="1" Minimum="50" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
-                                            Margin="12,0" VerticalAlignment="Center" Value="{Binding Settings.CardOpacity, Mode=TwoWay}"
-                                            AutomationProperties.Name="Прозрачность модулей" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Settings.CardOpacity, StringFormat={}{0}%}" HorizontalAlignment="Right"
-                                               VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}" />
-                                </Grid>
+                                </Expander>
                             </StackPanel>
                         </Border>
 
