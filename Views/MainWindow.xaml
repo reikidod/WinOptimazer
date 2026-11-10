@@ -657,7 +657,7 @@
                     </Grid>
                 </Border>
 
-                <Expander Grid.Row="2" Style="{StaticResource SectionExpander}" Header="Категории сложных твиков · ручная настройка" IsExpanded="False"
+                <Expander Grid.Row="2" Style="{StaticResource SectionExpander}" Header="Фильтры сложных твиков" IsExpanded="False"
                           Margin="0,0,16,10" Padding="10,6"
                           Foreground="{DynamicResource TextSecondaryBrush}"
                           AutomationProperties.Name="Фильтры категорий сложных твиков">
