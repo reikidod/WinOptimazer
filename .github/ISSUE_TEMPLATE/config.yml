@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Telegram автора
+    url: https://t.me/iseedeadp3pole
+    about: Быстрый вопрос или обратная связь
+  - name: Релизы и список изменений
+    url: https://github.com/reikidod/WinOptimazer/releases
+    about: Что нового в последних версиях

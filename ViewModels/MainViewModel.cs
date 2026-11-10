@@ -815,10 +815,7 @@ public sealed class MainViewModel : ObservableObject
             _pendingDownloadUrl = result.DownloadUrl;
             if (result.UpdateAvailable && result.DownloadUrl is not null)
             {
-                var ok = _dialogs.Confirm(
-                    "Обновление WinOptimizer",
-                    $"{result.Message}\n\nСкачать и установить сейчас?\n\nРепозиторий: github.com/{_updates.GitHubRepo}");
-                if (ok)
+                if (AskInstallUpdate(result))
                     await ApplyUpdateAsync();
             }
         }
@@ -827,6 +824,17 @@ public sealed class MainViewModel : ObservableObject
             Logger.Error("Startup update check", ex);
             UpdateStatus = "Проверка обновлений не удалась";
         }
+    }
+
+    /// <summary>Окно «доступно обновление»: версия, краткий список изменений из описания релиза, выбор «Установить / Позже».</summary>
+    private bool AskInstallUpdate(UpdateCheckResult result)
+    {
+        var notes = ReleaseNotesFormatter.Summarize(result.ReleaseNotes);
+        var message = notes.Length == 0
+            ? result.Message
+            : $"{result.Message}\n\nЧто изменилось:\n{notes}";
+        return _dialogs.Ask("Обновление WinOptimizer", message, "Установить", cancel: "Позже",
+            kind: DialogKind.Default, subtitle: "Доступна новая версия") == DialogChoice.Primary;
     }
 
     private async Task CheckUpdateAsync()
@@ -841,7 +849,7 @@ public sealed class MainViewModel : ObservableObject
             _pendingDownloadUrl = result.DownloadUrl;
             if (result.UpdateAvailable && result.DownloadUrl is not null)
             {
-                if (_dialogs.Confirm("Обновление", result.Message + "\n\nУстановить сейчас?"))
+                if (AskInstallUpdate(result))
                     await ApplyUpdateAsync();
             }
             else

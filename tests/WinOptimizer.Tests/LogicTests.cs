@@ -831,3 +831,40 @@ public class PowerPlanNamesTests
     [Fact]
     public void OemEncoding_IsAvailable() => Assert.NotNull(WinOptimizer.Services.ProcessRunner.OemEncoding);
 }
+
+
+public class ReleaseNotesFormatterTests
+{
+    [Fact]
+    public void Summarize_StripsCommitPrefixTrailersAndPullRefs()
+    {
+        var text = "fix(ui): OneWay binding for progress bars (#7)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nClaude-Session: https://claude.ai/x";
+        Assert.Equal("• Исправлено: OneWay binding for progress bars", ReleaseNotesFormatter.Summarize(text));
+    }
+
+    [Fact]
+    public void Summarize_LimitsItemsAndMarksTheRest()
+    {
+        var text = string.Join('\n', Enumerable.Range(1, 10).Select(i => $"- Пункт {i}"));
+        var result = ReleaseNotesFormatter.Summarize(text, maxItems: 3);
+        Assert.Equal("• Пункт 1\n• Пункт 2\n• Пункт 3\n• …и другие изменения", result);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   \n\n")]
+    [InlineData("## Что нового\nFull Changelog: https://github.com/a/b")]
+    public void Summarize_ReturnsEmptyWhenNothingUseful(string? text) =>
+        Assert.Equal(string.Empty, ReleaseNotesFormatter.Summarize(text));
+
+    [Fact]
+    public void Summarize_TruncatesLongLinesAndDeduplicates()
+    {
+        var long_ = new string('а', 300);
+        var result = ReleaseNotesFormatter.Summarize($"{long_}\nОдно и то же\nодно и то же");
+        var lines = result.Split('\n');
+        Assert.Equal(2, lines.Length);
+        Assert.EndsWith("…", lines[0]);
+    }
+}
