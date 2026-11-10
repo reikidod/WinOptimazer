@@ -205,6 +205,11 @@ public sealed class UpdateService : IUpdateService
             return new UpdateCheckResult(false, current, latest, notes, download,
                 $"У вас актуальная версия {current}.");
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Отмена — штатный исход запроса, а не ошибка связи с GitHub.
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Error("Update check failed", ex);
