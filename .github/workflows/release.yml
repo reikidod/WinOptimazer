@@ -94,6 +94,49 @@ jobs:
           $u = Start-Process "$dir\unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
           if ($u.ExitCode -ne 0) { throw "Удаление завершилось с кодом $($u.ExitCode)" }
 
+      - name: Upgrade smoke test (предыдущая версия -> текущая)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Берём последний релиз того же канала. На первом релизе канала тест пропускается.
+          $releases = gh release list --limit 100 --json tagName,isPrerelease | ConvertFrom-Json
+          $previous = $releases | Where-Object {
+            if ($env:CHANNEL -eq 'beta') { $_.isPrerelease -and $_.tagName.EndsWith('-beta') }
+            else { -not $_.isPrerelease }
+          } | Select-Object -First 1
+          if ($null -eq $previous) {
+            Write-Host "Предыдущий релиз канала $env:CHANNEL не найден; upgrade smoke test пропущен."
+            exit 0
+          }
+
+          $previousDir = Join-Path $env:RUNNER_TEMP 'wo-previous-installer'
+          $installDir = Join-Path $env:RUNNER_TEMP 'wo-upgrade'
+          New-Item -ItemType Directory -Force $previousDir | Out-Null
+          gh release download $previous.tagName --pattern 'WinOptimizer-Setup.exe' --dir $previousDir
+          if ($LASTEXITCODE -ne 0) { throw "Не удалось скачать предыдущий установщик $($previous.tagName)" }
+          $oldSetup = Join-Path $previousDir 'WinOptimizer-Setup.exe'
+          if (-not (Test-Path $oldSetup)) { throw 'Предыдущий установщик не найден после скачивания' }
+
+          $old = Start-Process $oldSetup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=$installDir" -Wait -PassThru
+          if ($old.ExitCode -ne 0) { throw "Установка предыдущей версии завершилась с кодом $($old.ExitCode)" }
+          if (-not (Test-Path "$installDir\WinOptimizer.exe")) { throw 'Предыдущая версия не установлена' }
+          $oldVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
+          Write-Host "Установлена предыдущая версия: $oldVersion"
+
+          # Устанавливаем текущую версию поверх предыдущей с тем же AppId и каталогом.
+          $upgrade = Start-Process dist\WinOptimizer-Setup.exe -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=$installDir" -Wait -PassThru
+          if ($upgrade.ExitCode -ne 0) { throw "Обновление завершилось с кодом $($upgrade.ExitCode)" }
+          if (-not (Test-Path "$installDir\WinOptimizer.exe")) { throw 'После обновления WinOptimizer.exe отсутствует' }
+          $newVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
+          Write-Host "Версия после обновления: $newVersion"
+          if ($newVersion -notlike "$env:VERSION*") { throw "Ожидалась версия $env:VERSION, получена $newVersion" }
+
+          $uninstaller = Get-ChildItem $installDir -Filter 'unins*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if ($null -eq $uninstaller) { throw 'После обновления не найден деинсталлятор' }
+          $remove = Start-Process $uninstaller.FullName -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($remove.ExitCode -ne 0) { throw "Удаление после обновления завершилось с кодом $($remove.ExitCode)" }
+
       - name: Smoke test (запуск собранного приложения)
         shell: pwsh
         run: |
