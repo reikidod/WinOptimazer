@@ -153,6 +153,47 @@ public sealed partial class MainViewModel
         SelectPage(page, true);
     }
 
+    /// <summary>Переход к предыдущему открытому разделу (Mouse 4 / кнопка «Назад»).</summary>
+    public bool NavigateBack() => NavigateHistory(forward: false);
+
+    /// <summary>Возврат к разделу, из которого был выполнен переход назад (Mouse 5 / «Вперёд»).</summary>
+    public bool NavigateForward() => NavigateHistory(forward: true);
+
+    private bool _isHistoryNavigation;
+
+    private bool NavigateHistory(bool forward)
+    {
+        var target = _page;
+        var moved = forward
+            ? _navigationHistory.TryForward(_page, IsPageVisible, out target)
+            : _navigationHistory.TryBack(_page, IsPageVisible, out target);
+        if (!moved) return false;
+
+        _isHistoryNavigation = true;
+        try
+        {
+            SelectPage(target, true);
+        }
+        finally
+        {
+            _isHistoryNavigation = false;
+        }
+
+        return true;
+    }
+
+    private static bool IsPageVisible(AppPage page) => page switch
+    {
+        AppPage.Tweaks => AppSettings.Current.IsTabVisible("Tweaks"),
+        AppPage.Debloat => AppSettings.Current.IsTabVisible("Debloat"),
+        AppPage.Apps => AppSettings.Current.IsTabVisible("Apps"),
+        AppPage.Store => AppSettings.Current.IsTabVisible("Store"),
+        AppPage.Games => AppSettings.Current.IsTabVisible("Games"),
+        AppPage.System => AppSettings.Current.IsTabVisible("System"),
+        AppPage.Maintenance => AppSettings.Current.IsTabVisible("Maintenance"),
+        _ => true,
+    };
+
     private async Task InitializePageAsync(AppPage page)
     {
         if (!_initializedPages.Add(page)) return;
@@ -226,6 +267,9 @@ public sealed partial class MainViewModel
     {
         if (!selected || _page == page)
             return;
+
+        if (!_isHistoryNavigation)
+            _navigationHistory.Record(_page, page);
 
         _page = page;
         OnPropertyChanged(nameof(IsDashboardPage));
