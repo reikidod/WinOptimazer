@@ -255,19 +255,15 @@
                             Command="{Binding CheckUpdateCommand}"
                             ToolTip="ЛКМ — проверить обновления; ПКМ — дополнительные действия">
                         <Button.ContextMenu>
-                            <ContextMenu Background="{DynamicResource BgCardBrush}"
-                                         Foreground="{DynamicResource TextPrimaryBrush}"
-                                         BorderBrush="{DynamicResource BorderBrush}"
-                                         BorderThickness="1"
-                                         Padding="4">
-                                <MenuItem Header="Проверить наличие обновлений"
+                            <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                <MenuItem Style="{StaticResource DarkMenuItem}" Header="Проверить наличие обновлений"
                                           Command="{Binding PlacementTarget.DataContext.CheckUpdateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                                <MenuItem Header="Скачать и установить обновление"
+                                <MenuItem Style="{StaticResource DarkMenuItem}" Header="Скачать и установить обновление"
                                           Command="{Binding PlacementTarget.DataContext.ApplyUpdateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                           IsEnabled="{Binding PlacementTarget.DataContext.UpdateAvailable, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                           ToolTip="Доступно после успешной проверки обновлений" />
-                                <Separator />
-                                <MenuItem Header="Открыть страницу релизов GitHub"
+                                <Separator Style="{StaticResource DarkMenuSeparator}" />
+                                <MenuItem Style="{StaticResource DarkMenuItem}" Header="Открыть страницу релизов GitHub"
                                           Command="{Binding PlacementTarget.DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                           CommandParameter="https://github.com/reikidod/WinOptimazer/releases" />
                             </ContextMenu>
@@ -336,7 +332,7 @@
                                     <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}"
                                                Style="{StaticResource SecondaryText}" FontSize="11"/>
                                     <ProgressBar Height="5" Margin="0,8,0,0" Maximum="100"
-                                                 Value="{Binding DashboardSnapshot.MemoryLoadPercent}"/>
+                                                 Value="{Binding DashboardSnapshot.MemoryLoadPercent, Mode=OneWay}"/>
                                 </StackPanel>
                             </Border>
                             <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="6,0,0,0" MinHeight="104">
@@ -348,7 +344,7 @@
                                     <TextBlock Text="{Binding DashboardSnapshot.SystemDrive}"
                                                Style="{StaticResource SecondaryText}" FontSize="11"/>
                                     <ProgressBar Height="5" Margin="0,8,0,0" Maximum="100"
-                                                 Value="{Binding DashboardSnapshot.DiskFreePercent}"/>
+                                                 Value="{Binding DashboardSnapshot.DiskFreePercent, Mode=OneWay}"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
