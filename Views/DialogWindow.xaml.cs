@@ -66,35 +66,39 @@ public partial class DialogWindow : Window
             case DialogKind.RestorePoint:
                 IconText.Text = "💾";
                 SubtitleText.Text = subtitle ?? "Снимок системы перед изменениями";
-                SetHeader("#3D6B4F", "#2A4A38");
+                SetAccent("SuccessBrush");
                 break;
             case DialogKind.Warning:
                 IconText.Text = "⚠";
                 SubtitleText.Text = subtitle ?? "Проверьте перед продолжением";
-                SetHeader("#6B5A2E", "#4A3E20");
+                SetAccent("WarnBrush");
                 break;
             case DialogKind.Success:
                 IconText.Text = "✓";
                 SubtitleText.Text = subtitle ?? "Готово";
-                SetHeader("#2E5A45", "#1E3D30");
+                SetAccent("SuccessBrush");
                 break;
             case DialogKind.Danger:
                 IconText.Text = "✕";
                 SubtitleText.Text = subtitle ?? "Это действие может быть необратимым";
-                SetHeader("#6B3A3A", "#4A2828");
+                SetAccent("DangerBrush");
                 break;
             default:
                 IconText.Text = "ℹ";
                 SubtitleText.Text = subtitle ?? "WinOptimizer";
-                SetHeader("#3A4A66", "#2A3344");
+                SetAccent("AccentBrush");
                 break;
         }
     }
 
-    private void SetHeader(string c0, string c1)
+    /// <summary>Цвет значка берётся из текущей темы (ThemeManager подменяет кисти), заголовок остаётся нейтральным.</summary>
+    private void SetAccent(string brushKey)
     {
-        HeaderColor0.Color = (Color)ColorConverter.ConvertFromString(c0)!;
-        HeaderColor1.Color = (Color)ColorConverter.ConvertFromString(c1)!;
+        if (TryFindResource(brushKey) is not SolidColorBrush brush) return;
+        var c = brush.Color;
+        IconBadge.Background = new SolidColorBrush(Color.FromArgb(0x33, c.R, c.G, c.B));
+        IconBadge.BorderBrush = new SolidColorBrush(Color.FromArgb(0x66, c.R, c.G, c.B));
+        IconText.Foreground = brush;
     }
 
     protected override void OnSourceInitialized(EventArgs e)

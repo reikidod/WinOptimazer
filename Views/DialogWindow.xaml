@@ -31,28 +31,25 @@
             </Grid.RowDefinitions>
 
             <!-- Шапка -->
-            <Border x:Name="HeaderBar" CornerRadius="18,18,0,0" Padding="24,20">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop x:Name="HeaderColor0" Color="#3A4A66" Offset="0" />
-                        <GradientStop x:Name="HeaderColor1" Color="#2A3344" Offset="1" />
-                    </LinearGradientBrush>
-                </Border.Background>
+            <Border x:Name="HeaderBar" CornerRadius="18,18,0,0" Padding="24,20"
+                    Background="{DynamicResource BgCardBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Border Width="52" Height="52" CornerRadius="16" Background="#28FFFFFF"
+                    <Border x:Name="IconBadge" Width="52" Height="52" CornerRadius="16" BorderThickness="1"
+                            Background="#28FFFFFF" BorderBrush="#33FFFFFF"
                             VerticalAlignment="Center" Margin="0,0,16,0">
                         <TextBlock x:Name="IconText" Text="💾" FontSize="24"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock x:Name="TitleText" FontSize="19" FontWeight="SemiBold"
-                                   TextWrapping="Wrap" Foreground="White" />
+                                   TextWrapping="Wrap" Foreground="{DynamicResource TextPrimaryBrush}" />
                         <TextBlock x:Name="SubtitleText" FontSize="12.5" Margin="0,5,0,0"
-                                   Foreground="#B8E6E7EA" TextWrapping="Wrap" />
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
             </Border>
