@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Security;
+using System.Runtime.InteropServices;
+using System.Windows.Data;
 using System.Windows.Input;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.Services;
@@ -16,30 +18,47 @@ public sealed class MaintenanceViewModel : ObservableObject
     private readonly ICleanupService _cleanup;
     private readonly IStartupService _startup;
     private readonly IDialogService _dialogs;
+    private readonly ITaskSchedulerService _taskScheduler;
 
     private bool _isBusy;
     private string _cleanupSummary = "Ещё не проверялось";
     private string? _startupError;
+    private string? _taskSchedulerError;
+    private string _taskSearchText = string.Empty;
+    private string _taskStatusFilter = "Все";
 
-    public MaintenanceViewModel(ICleanupService cleanup, IStartupService startup, IDialogService dialogs)
+    public MaintenanceViewModel(ICleanupService cleanup, IStartupService startup, IDialogService dialogs, ITaskSchedulerService? taskScheduler = null)
     {
         _cleanup = cleanup ?? throw new ArgumentNullException(nameof(cleanup));
         _startup = startup ?? throw new ArgumentNullException(nameof(startup));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
+        _taskScheduler = taskScheduler ?? new WindowsTaskSchedulerService();
+        FilteredScheduledTasks = CollectionViewSource.GetDefaultView(ScheduledTasks);
+        FilteredScheduledTasks.Filter = item =>
+            item is ScheduledTaskEntry task && ScheduledTaskFilter.Matches(task, TaskSearchText, TaskStatusFilter);
 
         ScanCommand = new AsyncRelayCommand(ScanAsync, () => !IsBusy, ReportUnexpected);
         CleanCommand = new AsyncRelayCommand(CleanAsync, () => !IsBusy, ReportUnexpected);
         RefreshStartupCommand = new AsyncRelayCommand(LoadStartupAsync, () => !IsBusy, ReportUnexpected);
+        RefreshScheduledTasksCommand = new AsyncRelayCommand(LoadScheduledTasksAsync, () => !IsBusy, ReportUnexpected);
         OpenRestoreCommand = new RelayCommand(OpenSystemRestore);
     }
 
     public ObservableCollection<StartupItemViewModel> StartupItems { get; } = new();
+
+    public ObservableCollection<ScheduledTaskEntry> ScheduledTasks { get; } = new();
+
+    public ICollectionView FilteredScheduledTasks { get; }
+
+    public string[] TaskFilterOptions { get; } = ["Все", "Включены", "Отключены", "Выполняются", "Готовы"];
 
     public ICommand ScanCommand { get; }
 
     public ICommand CleanCommand { get; }
 
     public ICommand RefreshStartupCommand { get; }
+
+    public ICommand RefreshScheduledTasksCommand { get; }
 
     public ICommand OpenRestoreCommand { get; }
 
@@ -78,11 +97,51 @@ public sealed class MaintenanceViewModel : ObservableObject
 
     public bool HasNoStartupItems => StartupItems.Count == 0 && !HasStartupError;
 
+    public string? TaskSchedulerError
+    {
+        get => _taskSchedulerError;
+        private set
+        {
+            if (SetField(ref _taskSchedulerError, value))
+            {
+                OnPropertyChanged(nameof(HasTaskSchedulerError));
+                OnPropertyChanged(nameof(HasNoScheduledTasks));
+            }
+        }
+    }
+
+    public bool HasTaskSchedulerError => !string.IsNullOrEmpty(TaskSchedulerError);
+
+    public bool HasNoScheduledTasks => ScheduledTasks.Count == 0 && !HasTaskSchedulerError;
+
+    public string ScheduledTasksSummary => $"Найдено задач: {ScheduledTasks.Count}";
+
+    public string TaskSearchText
+    {
+        get => _taskSearchText;
+        set
+        {
+            if (SetField(ref _taskSearchText, value ?? string.Empty))
+                FilteredScheduledTasks.Refresh();
+        }
+    }
+
+    public string TaskStatusFilter
+    {
+        get => _taskStatusFilter;
+        set
+        {
+            if (SetField(ref _taskStatusFilter, value ?? "Все"))
+                FilteredScheduledTasks.Refresh();
+        }
+    }
+
     public async Task InitializeAsync()
     {
         // Ошибки здесь не критичны: страница просто покажет «не удалось», остальное приложение работает.
         await ScanAsync();
         await LoadStartupAsync();
+        await LoadScheduledTasksAsync();
     }
 
     private async Task ScanAsync()
@@ -175,6 +234,32 @@ public sealed class MaintenanceViewModel : ObservableObject
         }
     }
 
+    private async Task LoadScheduledTasksAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var tasks = await Task.Run(_taskScheduler.GetTasks);
+            ScheduledTasks.Clear();
+            foreach (var task in tasks)
+                ScheduledTasks.Add(task);
+
+            TaskSchedulerError = null;
+            OnPropertyChanged(nameof(ScheduledTasksSummary));
+            OnPropertyChanged(nameof(HasNoScheduledTasks));
+            FilteredScheduledTasks.Refresh();
+        }
+        catch (Exception ex) when (IsExpectedFailure(ex))
+        {
+            Logger.Error("Не удалось прочитать задачи планировщика Windows", ex);
+            TaskSchedulerError = "Не удалось прочитать задачи планировщика: " + ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     private void OpenSystemRestore()
     {
         try
@@ -190,7 +275,7 @@ public sealed class MaintenanceViewModel : ObservableObject
     }
 
     private static bool IsExpectedFailure(Exception ex) =>
-        ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException or ArgumentException;
+        ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException or ArgumentException or COMException;
 
     private void ReportUnexpected(Exception ex) =>
         _dialogs.Info("Непредвиденная ошибка", $"{ex.Message}{Environment.NewLine}{Environment.NewLine}Подробности записаны в {AppPaths.LogFile}");
