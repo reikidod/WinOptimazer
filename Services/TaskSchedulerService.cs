@@ -179,11 +179,17 @@ public static class ScheduledTaskFilter
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        if (!string.IsNullOrWhiteSpace(searchText) &&
-            !task.Name.Contains(searchText, StringComparison.CurrentCultureIgnoreCase) &&
-            !task.Path.Contains(searchText, StringComparison.CurrentCultureIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(searchText))
         {
-            return false;
+            // Search terms may span folder boundaries, e.g. "windows update"
+            // should match "\Microsoft\Windows\UpdateOrchestrator\...".
+            var searchableText = $"{task.Name} {task.Path}"
+                .Replace('\\', ' ')
+                .Replace('/', ' ');
+            var terms = searchText.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (terms.Any(term => !searchableText.Contains(term, StringComparison.OrdinalIgnoreCase)))
+                return false;
         }
 
         return statusFilter switch
