@@ -67,6 +67,44 @@ public sealed class StartupServiceTests
         Assert.Equal(0x03, store.Writes[(StartupScope.CurrentUser, "Updater")][0]);
     }
 
+    [Fact]
+    public void SetEnabled_RejectsEntryThatIsNoLongerRegistered()
+    {
+        var store = new FakeStartupStore();
+        store.Run[StartupScope.CurrentUser]["Updater"] = "updater.exe";
+        var service = new StartupService(store);
+        var staleEntry = new StartupEntry(StartupScope.CurrentUser, "Removed", "removed.exe", true, "Removed");
+
+        var error = Assert.Throws<InvalidOperationException>(() => service.SetEnabled(staleEntry, false));
+
+        Assert.Contains("больше не найден", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(store.Writes);
+    }
+
+    [Fact]
+    public void SetEnabled_RejectsForgedApprovalName()
+    {
+        var store = new FakeStartupStore();
+        store.Run[StartupScope.CurrentUser]["Updater"] = "updater.exe";
+        var service = new StartupService(store);
+        var realEntry = Assert.Single(service.GetEntries());
+        var forgedEntry = realEntry with { ApprovalName = "AnotherApplication" };
+
+        Assert.Throws<InvalidOperationException>(() => service.SetEnabled(forgedEntry, false));
+        Assert.Empty(store.Writes);
+    }
+
+    [Fact]
+    public void SetEnabled_RejectsUnknownScope()
+    {
+        var store = new FakeStartupStore();
+        var service = new StartupService(store);
+        var invalidEntry = new StartupEntry((StartupScope)999, "Updater", "updater.exe", true);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => service.SetEnabled(invalidEntry, false));
+        Assert.Empty(store.Writes);
+    }
+
     private sealed class FakeStartupStore : IStartupStore
     {
         public Dictionary<StartupScope, Dictionary<string, string>> Run { get; } =

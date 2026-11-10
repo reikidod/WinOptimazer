@@ -128,7 +128,31 @@ public sealed class StartupService : IStartupService
     public void SetEnabled(StartupEntry entry, bool enabled)
     {
         ArgumentNullException.ThrowIfNull(entry);
-        _store.WriteApproved(entry.Scope, entry.ApprovalName ?? entry.Name, StartupApproval.Create(enabled, _utcNow()));
+
+        if (!Enum.IsDefined(entry.Scope))
+            throw new ArgumentOutOfRangeException(nameof(entry), "Неизвестный источник автозагрузки.");
+        if (string.IsNullOrWhiteSpace(entry.Name) || string.IsNullOrWhiteSpace(entry.Command))
+            throw new ArgumentException("У элемента автозагрузки отсутствует имя или команда.", nameof(entry));
+
+        var approvalName = entry.ApprovalName ?? entry.Name;
+        if (string.IsNullOrWhiteSpace(approvalName))
+            throw new ArgumentException("У элемента автозагрузки отсутствует идентификатор StartupApproved.", nameof(entry));
+
+        // Не доверяем объекту из UI: запись могла исчезнуть или быть подменена после сканирования.
+        // Повторно сверяем источник, имя, команду и ключ StartupApproved перед записью в реестр.
+        var currentEntry = GetEntries().FirstOrDefault(candidate =>
+            candidate.Scope == entry.Scope &&
+            string.Equals(candidate.Name, entry.Name, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(candidate.Command, entry.Command, StringComparison.Ordinal) &&
+            string.Equals(candidate.ApprovalName ?? candidate.Name, approvalName, StringComparison.OrdinalIgnoreCase));
+
+        if (currentEntry is null)
+            throw new InvalidOperationException("Элемент автозагрузки больше не найден или его данные изменились. Обновите список.");
+
+        _store.WriteApproved(
+            currentEntry.Scope,
+            currentEntry.ApprovalName ?? currentEntry.Name,
+            StartupApproval.Create(enabled, _utcNow()));
     }
 }
 
