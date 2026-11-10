@@ -75,6 +75,27 @@ public sealed class DashboardServiceTests : IDisposable
     }
 
     [Fact]
+    public void Diagnostics_DoesNotReportNoRebootWhenRegistryCheckIsUnknown()
+    {
+        var snapshot = new SystemSnapshot(
+            "Windows test",
+            8,
+            35,
+            16UL * 1024 * 1024 * 1024,
+            10UL * 1024 * 1024 * 1024,
+            "C:\\\\",
+            100L * 1024 * 1024 * 1024,
+            60L * 1024 * 1024 * 1024,
+            true);
+
+        var findings = new DiagnosticsService().Run(snapshot, () => RebootPendingState.Unknown);
+
+        var rebootFinding = Assert.Single(findings, x => x.Title.Contains("перезагрузку", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(DiagnosticLevel.Warning, rebootFinding.Level);
+        Assert.Contains("неизвестно", rebootFinding.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Diagnostics_ReportsLowDiskAndHighMemory()
     {
         var snapshot = new SystemSnapshot(
