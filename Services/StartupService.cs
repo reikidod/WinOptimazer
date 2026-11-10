@@ -9,15 +9,19 @@ public enum StartupScope
     CurrentUser,
     AllUsers,
     AllUsers32,
+    CurrentUserFolder,
+    AllUsersFolder,
 }
 
-public sealed record StartupEntry(StartupScope Scope, string Name, string Command, bool Enabled)
+public sealed record StartupEntry(StartupScope Scope, string Name, string Command, bool Enabled, string? ApprovalName = null)
 {
     public string ScopeTitle => Scope switch
     {
-        StartupScope.CurrentUser => "Только для вас",
-        StartupScope.AllUsers => "Для всех пользователей",
-        _ => "Для всех (32-бит)",
+        StartupScope.CurrentUser => "Реестр · только для вас",
+        StartupScope.AllUsers => "Реестр · все пользователи",
+        StartupScope.AllUsers32 => "Реестр · все (32-бит)",
+        StartupScope.CurrentUserFolder => "Папка автозагрузки · только для вас",
+        _ => "Папка автозагрузки · все пользователи",
     };
 }
 
@@ -27,6 +31,8 @@ public interface IStartupStore
     IReadOnlyDictionary<string, string> ReadRunValues(StartupScope scope);
 
     IReadOnlyDictionary<string, byte[]> ReadApproved(StartupScope scope);
+
+    IReadOnlyList<string> ReadStartupFolder(StartupScope scope);
 
     void WriteApproved(StartupScope scope, string name, byte[] data);
 }
@@ -65,13 +71,14 @@ public static class StartupApproval
 }
 
 /// <summary>
-/// Менеджер автозагрузки: показывает программы из ключей Run и включает/отключает их
-/// так же, как диспетчер задач (через StartupApproved). Записи из реестра не удаляются —
-/// отключение полностью обратимо. Папка «Автозагрузка» и планировщик заданий не затрагиваются.
+/// Менеджер автозагрузки: показывает записи Run и файлы из пользовательской/общей папок Startup.
+/// Состояние переключается через StartupApproved — исходные записи и файлы не удаляются.
+/// Планировщик заданий намеренно не изменяется.
 /// </summary>
 public sealed class StartupService : IStartupService
 {
-    private static readonly StartupScope[] Scopes = [StartupScope.CurrentUser, StartupScope.AllUsers, StartupScope.AllUsers32];
+    private static readonly StartupScope[] RegistryScopes = [StartupScope.CurrentUser, StartupScope.AllUsers, StartupScope.AllUsers32];
+    private static readonly StartupScope[] FolderScopes = [StartupScope.CurrentUserFolder, StartupScope.AllUsersFolder];
 
     private readonly IStartupStore _store;
     private readonly Func<DateTime> _utcNow;
@@ -85,13 +92,27 @@ public sealed class StartupService : IStartupService
     public IReadOnlyList<StartupEntry> GetEntries()
     {
         var result = new List<StartupEntry>();
-        foreach (var scope in Scopes)
+        foreach (var scope in RegistryScopes)
         {
             var approved = _store.ReadApproved(scope);
             foreach (var (name, command) in _store.ReadRunValues(scope).OrderBy(p => p.Key, StringComparer.CurrentCultureIgnoreCase))
             {
                 approved.TryGetValue(name, out var data);
-                result.Add(new StartupEntry(scope, name, command, StartupApproval.IsEnabled(data)));
+                result.Add(new StartupEntry(scope, name, command, StartupApproval.IsEnabled(data), name));
+            }
+        }
+
+        foreach (var scope in FolderScopes)
+        {
+            var approved = _store.ReadApproved(scope);
+            foreach (var path in _store.ReadStartupFolder(scope).OrderBy(p => p, StringComparer.CurrentCultureIgnoreCase))
+            {
+                var approvalName = approved.Keys.FirstOrDefault(key =>
+                    string.Equals(key, path, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(key, Path.GetFileName(path), StringComparison.OrdinalIgnoreCase)) ?? path;
+                approved.TryGetValue(approvalName, out var data);
+                result.Add(new StartupEntry(scope, Path.GetFileNameWithoutExtension(path), path,
+                    StartupApproval.IsEnabled(data), approvalName));
             }
         }
 
@@ -101,7 +122,7 @@ public sealed class StartupService : IStartupService
     public void SetEnabled(StartupEntry entry, bool enabled)
     {
         ArgumentNullException.ThrowIfNull(entry);
-        _store.WriteApproved(entry.Scope, entry.Name, StartupApproval.Create(enabled, _utcNow()));
+        _store.WriteApproved(entry.Scope, entry.ApprovalName ?? entry.Name, StartupApproval.Create(enabled, _utcNow()));
     }
 }
 
@@ -116,7 +137,10 @@ public sealed class WindowsStartupStore : IStartupStore
     {
         StartupScope.CurrentUser => (RegistryHive.CurrentUser, RunKey, ApprovedRoot + "Run"),
         StartupScope.AllUsers => (RegistryHive.LocalMachine, RunKey, ApprovedRoot + "Run"),
-        _ => (RegistryHive.LocalMachine, Run32Key, ApprovedRoot + "Run32"),
+        StartupScope.AllUsers32 => (RegistryHive.LocalMachine, Run32Key, ApprovedRoot + "Run32"),
+        StartupScope.CurrentUserFolder => (RegistryHive.CurrentUser, string.Empty, ApprovedRoot + "StartupFolder"),
+        StartupScope.AllUsersFolder => (RegistryHive.LocalMachine, string.Empty, ApprovedRoot + "StartupFolder"),
+        _ => throw new ArgumentOutOfRangeException(nameof(scope)),
     };
 
     public IReadOnlyDictionary<string, string> ReadRunValues(StartupScope scope)
@@ -164,6 +188,27 @@ public sealed class WindowsStartupStore : IStartupStore
         }
 
         return result;
+    }
+
+    public IReadOnlyList<string> ReadStartupFolder(StartupScope scope)
+    {
+        var folder = scope switch
+        {
+            StartupScope.CurrentUserFolder => Environment.GetFolderPath(Environment.SpecialFolder.Startup),
+            StartupScope.AllUsersFolder => Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup),
+            _ => throw new ArgumentOutOfRangeException(nameof(scope), "Для этого источника папка автозагрузки не используется."),
+        };
+
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder)) return [];
+
+        try
+        {
+            return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly).ToArray();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
     }
 
     public void WriteApproved(StartupScope scope, string name, byte[] data)
