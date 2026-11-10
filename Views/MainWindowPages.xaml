@@ -71,7 +71,7 @@
                                     <StackPanel>
                                         <TextBlock Text="Автозагрузка" FontSize="16" FontWeight="SemiBold" />
                                         <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,0" LineHeight="21"
-                                                   Text="Программы из ключей Run реестра. Отключение обратимо: запись не удаляется, программа просто не запускается при входе (так же работает диспетчер задач). Папка «Автозагрузка» и планировщик заданий здесь не показываются." />
+                                                   Text="Записи Run реестра и файлы из пользовательской и общей папок «Автозагрузка». Отключение обратимо через StartupApproved: исходные записи и файлы не удаляются. Задачи планировщика пока не изменяются." />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="Обновить" VerticalAlignment="Top" Margin="24,0,0,0"
                                             Command="{Binding RefreshStartupCommand}" />
@@ -79,7 +79,7 @@
 
                                 <TextBlock Text="{Binding StartupError}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" Margin="0,12,0,0"
                                            Visibility="{Binding HasStartupError, Converter={StaticResource BoolToVis}}" />
-                                <TextBlock Text="В автозагрузке реестра ничего не найдено." Style="{StaticResource SecondaryText}" Margin="0,12,0,0"
+                                <TextBlock Text="В поддерживаемых источниках автозагрузки ничего не найдено." Style="{StaticResource SecondaryText}" Margin="0,12,0,0"
                                            Visibility="{Binding HasNoStartupItems, Converter={StaticResource BoolToVis}}" />
 
                                 <ItemsControl ItemsSource="{Binding StartupItems}" Margin="0,12,0,0">
