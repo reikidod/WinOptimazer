@@ -111,8 +111,16 @@ public sealed class SettingsViewModel : ObservableObject
         set
         {
             if (UseBetaChannel == value) return;
+
+            var previousChannel = _settings.UpdateChannel;
             _settings.UpdateChannel = value ? AppSettings.BetaChannel : AppSettings.StableChannel;
-            Commit(nameof(UseBetaChannel));
+            if (!Commit(nameof(UseBetaChannel)))
+            {
+                _settings.UpdateChannel = previousChannel;
+                OnPropertyChanged(nameof(UseBetaChannel));
+                return;
+            }
+
             Status = value
                 ? "Канал: бета. Нажмите «Проверить обновления», чтобы получить свежую бету."
                 : "Канал: стабильный. Если установлена бета, она предложит вернуться на стабильную версию.";
@@ -442,12 +450,12 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
-    private void Commit(string property)
+    private bool Commit(string property)
     {
         OnPropertyChanged(property);
         if (property is nameof(ShowAppsTab) or nameof(ShowDebloatTab) or nameof(ShowStoreTab))
             OnPropertyChanged(nameof(ShowApplicationsGroup));
-        SaveSettings();
+        return SaveSettings();
     }
 
     private bool SaveSettings()
