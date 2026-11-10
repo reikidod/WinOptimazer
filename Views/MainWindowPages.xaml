@@ -124,6 +124,85 @@
                                 </ItemsControl>
                             </StackPanel>
                         </ContentControl>
+
+                        <!-- Планировщик задач: только чтение, без команд изменения состояния -->
+                        <ContentControl Style="{StaticResource HoverCard}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Планировщик задач Windows" FontSize="16" FontWeight="SemiBold" />
+                                        <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,0" LineHeight="21"
+                                                   Text="Просмотр задач, включая вложенные папки и скрытые задания. Доступен поиск и фильтрация. Этот раздел работает только на чтение: задачи не запускаются, не останавливаются и не отключаются." />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Обновить" VerticalAlignment="Top" Margin="24,0,0,0"
+                                            Command="{Binding RefreshScheduledTasksCommand}" />
+                                </Grid>
+
+                                <TextBlock Text="{Binding TaskSchedulerError}" Foreground="{DynamicResource DangerBrush}"
+                                           TextWrapping="Wrap" Margin="0,12,0,0"
+                                           Visibility="{Binding HasTaskSchedulerError, Converter={StaticResource BoolToVis}}" />
+                                <TextBlock Text="Задачи планировщика не найдены." Style="{StaticResource SecondaryText}" Margin="0,12,0,0"
+                                           Visibility="{Binding HasNoScheduledTasks, Converter={StaticResource BoolToVis}}" />
+
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding TaskSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             Tag="Поиск по названию или пути задачи..."
+                                             ToolTip="Поиск по названию или пути задачи"
+                                             Margin="0,0,12,0"
+                                             AutomationProperties.Name="Поиск задач планировщика" />
+                                    <ComboBox Grid.Column="1" Width="170"
+                                              ItemsSource="{Binding TaskFilterOptions}"
+                                              SelectedItem="{Binding TaskStatusFilter, Mode=TwoWay}"
+                                              AutomationProperties.Name="Фильтр задач планировщика" />
+                                </Grid>
+
+                                <TextBlock Text="{Binding ScheduledTasksSummary}" Style="{StaticResource SecondaryText}" Margin="0,10,0,4" />
+
+                                <ItemsControl ItemsSource="{Binding FilteredScheduledTasks}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="8" Padding="12,9" Margin="0,0,0,4"
+                                                    Background="Transparent">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Path}" ToolTip="{Binding Path}"
+                                                                   FontSize="12" Foreground="{DynamicResource TextDimBrush}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <WrapPanel Margin="0,5,0,0">
+                                                            <TextBlock Text="Последний запуск: " FontSize="12"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                            <TextBlock Text="{Binding LastRunText}" FontSize="12" Margin="0,0,12,0" />
+                                                            <TextBlock Text="Следующий: " FontSize="12"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                            <TextBlock Text="{Binding NextRunText}" FontSize="12" />
+                                                        </WrapPanel>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" Style="{StaticResource Badge}"
+                                                            VerticalAlignment="Center" Margin="16,0,0,0">
+                                                        <TextBlock Text="{Binding StateLabel}" FontSize="12"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ContentControl>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
