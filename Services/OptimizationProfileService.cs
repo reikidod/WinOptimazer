@@ -15,10 +15,16 @@ public sealed record OptimizationProfile(
 public static class OptimizationProfileService
 {
     private const int CurrentSchemaVersion = 1;
+    private const long MaxProfileFileSizeBytes = 2 * 1024 * 1024;
+    private const int MaxSelectedTweakCount = 4096;
+    private const int MaxNameLength = 128;
+    private const int MaxTweakIdLength = 256;
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public static OptimizationProfile Create(string name, IEnumerable<string> selectedTweakIds) =>
-        new(
+    public static OptimizationProfile Create(string name, IEnumerable<string> selectedTweakIds)
+    {
+        ArgumentNullException.ThrowIfNull(selectedTweakIds);
+        return new OptimizationProfile(
             CurrentSchemaVersion,
             string.IsNullOrWhiteSpace(name) ? "Мой профиль" : name.Trim(),
             DateTimeOffset.Now,
@@ -28,6 +34,7 @@ public static class OptimizationProfileService
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
                 .ToArray());
+    }
 
     public static void Save(string path, OptimizationProfile profile)
     {
@@ -54,7 +61,14 @@ public static class OptimizationProfileService
     public static OptimizationProfile Load(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        var json = File.ReadAllText(path);
+        var fullPath = Path.GetFullPath(path);
+        var fileInfo = new FileInfo(fullPath);
+        if (!fileInfo.Exists)
+            throw new FileNotFoundException("Файл профиля не найден.", fullPath);
+        if (fileInfo.Length > MaxProfileFileSizeBytes)
+            throw new InvalidDataException("Размер файла профиля превышает допустимые 2 МБ.");
+
+        var json = File.ReadAllText(fullPath);
         var profile = JsonSerializer.Deserialize<OptimizationProfile>(json)
                       ?? throw new InvalidDataException("Файл профиля пуст или имеет неверный формат.");
         Validate(profile);
@@ -67,7 +81,20 @@ public static class OptimizationProfileService
             throw new InvalidDataException($"Версия профиля {profile.SchemaVersion} не поддерживается.");
         if (string.IsNullOrWhiteSpace(profile.Name))
             throw new InvalidDataException("У профиля отсутствует название.");
+        if (profile.Name.Length > MaxNameLength)
+            throw new InvalidDataException($"Название профиля не может быть длиннее {MaxNameLength} символов.");
         if (profile.SelectedTweakIds is null)
             throw new InvalidDataException("В профиле отсутствует список твиков.");
+        if (profile.SelectedTweakIds.Count > MaxSelectedTweakCount)
+            throw new InvalidDataException($"Профиль содержит слишком много твиков (максимум {MaxSelectedTweakCount}).");
+
+        var uniqueIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var id in profile.SelectedTweakIds)
+        {
+            if (string.IsNullOrWhiteSpace(id) || id.Length > MaxTweakIdLength)
+                throw new InvalidDataException("Профиль содержит пустой или слишком длинный идентификатор твика.");
+            if (!uniqueIds.Add(id.Trim()))
+                throw new InvalidDataException($"Профиль содержит повторяющийся идентификатор «{id}».");
+        }
     }
 }

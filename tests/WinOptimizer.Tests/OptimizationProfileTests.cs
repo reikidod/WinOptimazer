@@ -28,6 +28,42 @@ public sealed class OptimizationProfileTests : IDisposable
     }
 
     [Fact]
+    public void Load_RejectsFilesLargerThanTwoMegabytes()
+    {
+        Directory.CreateDirectory(_directory);
+        var path = Path.Combine(_directory, "oversized.json");
+        File.WriteAllBytes(path, new byte[2 * 1024 * 1024 + 1]);
+
+        Assert.Throws<InvalidDataException>(() => OptimizationProfileService.Load(path));
+    }
+
+    [Fact]
+    public void Load_RejectsNullOrBlankTweakIdentifiers()
+    {
+        Directory.CreateDirectory(_directory);
+        var path = Path.Combine(_directory, "invalid-ids.json");
+        File.WriteAllText(path, """{"SchemaVersion":1,"Name":"Broken","CreatedAt":"2026-01-01T00:00:00+00:00","SelectedTweakIds":[null,"   "]}""");
+
+        Assert.Throws<InvalidDataException>(() => OptimizationProfileService.Load(path));
+    }
+
+    [Fact]
+    public void Load_RejectsDuplicateTweakIdentifiers()
+    {
+        Directory.CreateDirectory(_directory);
+        var path = Path.Combine(_directory, "duplicates.json");
+        File.WriteAllText(path, """{"SchemaVersion":1,"Name":"Duplicate","CreatedAt":"2026-01-01T00:00:00+00:00","SelectedTweakIds":["gpu.high","GPU.HIGH"]}""");
+
+        Assert.Throws<InvalidDataException>(() => OptimizationProfileService.Load(path));
+    }
+
+    [Fact]
+    public void Create_RejectsNullSelectionCollection()
+    {
+        Assert.Throws<ArgumentNullException>(() => OptimizationProfileService.Create("Profile", null!));
+    }
+
+    [Fact]
     public void Load_RejectsUnsupportedSchema()
     {
         Directory.CreateDirectory(_directory);
