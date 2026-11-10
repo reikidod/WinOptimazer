@@ -25,6 +25,8 @@ public sealed record SystemSnapshot(
     public string DiskTotalText => FormatBytes((ulong)Math.Max(0, DriveTotalBytes));
     public string MemorySummary => $"{MemoryUsedText} / {MemoryTotalText}";
     public string MemoryLoadSummary => $"{MemoryLoadPercent}% занято";
+    public string MemoryLoadValue => $"{MemoryLoadPercent}%";
+    public string MemoryUsageSubtitle => $"{MemoryUsedText} из {MemoryTotalText}";
     public string DiskSummary => $"{DiskFreeText} свободно из {DiskTotalText}";
     public double DiskFreePercent => DriveTotalBytes <= 0 ? 0 : Math.Clamp(DriveFreeBytes * 100d / DriveTotalBytes, 0, 100);
     public string NetworkSummary => NetworkAvailable ? "Подключение доступно" : "Нет активного сетевого подключения";

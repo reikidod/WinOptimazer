@@ -32,6 +32,8 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Equal("37%", snapshot.CpuSummary);
         Assert.Equal("12 логических · загрузка", snapshot.CpuLoadSubtitle);
         Assert.Equal("50% занято", snapshot.MemoryLoadSummary);
+        Assert.Equal("50%", snapshot.MemoryLoadValue);
+        Assert.Equal("8 ГБ из 16 ГБ", snapshot.MemoryUsageSubtitle);
         Assert.Equal(25d, snapshot.DiskFreePercent, precision: 2);
         Assert.Equal("Подключение доступно", snapshot.NetworkSummary);
         Assert.Equal("8 ГБ", snapshot.MemoryUsedText);

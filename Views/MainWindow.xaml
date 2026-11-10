@@ -370,16 +370,14 @@
                                                    VerticalAlignment="Center" Margin="10,0,0,0"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                                        <TextBlock Text="{Binding DashboardSnapshot.MemoryUsedText, TargetNullValue='…'}"
+                                        <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadValue, TargetNullValue='…'}"
                                                    FontSize="26" FontWeight="SemiBold"/>
-                                        <TextBlock Style="{StaticResource SecondaryText}" FontSize="12"
-                                                   VerticalAlignment="Bottom" Margin="8,0,0,5">
-                                            <Run Text="из"/> <Run Text="{Binding DashboardSnapshot.MemoryTotalText, Mode=OneWay}"/>
-                                        </TextBlock>
+                                        <TextBlock Text="{Binding DashboardSnapshot.MemoryUsageSubtitle}" Style="{StaticResource SecondaryText}"
+                                                   FontSize="12" VerticalAlignment="Bottom" Margin="8,0,0,5"/>
                                     </StackPanel>
                                     <ProgressBar Margin="0,10,0,0" Maximum="100"
                                                  Value="{Binding DashboardSnapshot.MemoryLoadPercent, Mode=OneWay}"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadSummary}"
+                                    <TextBlock Text="Загрузка памяти сейчас"
                                                Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,6,0,0"/>
                                 </StackPanel>
                             </Border>
