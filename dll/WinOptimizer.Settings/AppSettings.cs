@@ -7,6 +7,8 @@ public sealed class AppSettings
 {
     public static readonly int[] TargetFpsOptions = { 0, 30, 60, 90, 120, 144, 240 };
     public static readonly int[] ScaleOptions = { 90, 100, 110, 125 };
+    /// <summary>Интервал опроса Dashboard (ЦП/RAM), секунды.</summary>
+    public static readonly int[] MonitorIntervalOptions = { 2, 3, 5, 10 };
 
     /// <summary>Вкладки, которые можно скрыть (имена элементов AppPage). «Настройки» скрыть нельзя.</summary>
     public static readonly string[] HideableTabs = { "Tweaks", "Debloat", "Apps", "Store", "Games", "System", "Maintenance" };
@@ -68,6 +70,9 @@ public sealed class AppSettings
     /// <summary>Масштаб интерфейса в процентах (90–125).</summary>
     public int UiScalePercent { get; set; } = 100;
 
+    /// <summary>Как часто обновлять загрузку ЦП/памяти на главной, секунды (2–10).</summary>
+    public int MonitorIntervalSeconds { get; set; } = 3;
+
     public double UiScale => UiScalePercent / 100.0;
 
     private static AppSettings? _current;
@@ -99,14 +104,10 @@ public sealed class AppSettings
             if (!string.IsNullOrEmpty(directory))
                 Directory.CreateDirectory(directory);
 
-            // Сначала записываем полный JSON во временный файл рядом с settings.json.
-            // Если приложение завершится во время записи, предыдущие настройки останутся целыми.
             temporaryPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
             var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(temporaryPath, json);
 
-            // Замена в пределах одного тома: читатели увидят либо старый, либо новый файл,
-            // но не частично записанный JSON.
             File.Move(temporaryPath, path, overwrite: true);
             temporaryPath = null;
         }
@@ -157,7 +158,8 @@ public sealed class AppSettings
         BackgroundBlurPercent = Math.Clamp(BackgroundBlurPercent, 0, 100);
         BackgroundDimPercent = Math.Clamp(BackgroundDimPercent, 0, 90);
         CardOpacityPercent = Math.Clamp(CardOpacityPercent, 50, 100);
-        // Файл фона могли удалить вручную: тогда просто работаем без фона.
+        if (!MonitorIntervalOptions.Contains(MonitorIntervalSeconds))
+            MonitorIntervalSeconds = 3;
         if (!string.IsNullOrEmpty(BackgroundImage) && !File.Exists(BackgroundImage)) BackgroundImage = "";
         if (UpdateChannel != StableChannel && UpdateChannel != BetaChannel) UpdateChannel = StableChannel;
     }
@@ -179,5 +181,6 @@ public sealed class AppSettings
         BackgroundDimPercent = 45;
         CardOpacityPercent = 88;
         TransparencyEffectsEnabled = true;
+        MonitorIntervalSeconds = 3;
     }
 }
