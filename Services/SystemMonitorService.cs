@@ -50,6 +50,7 @@ public sealed record SystemSnapshot(
 public static class SystemMonitorService
 {
     private static PerformanceCounter? _cpu;
+    private static readonly object CpuLock = new();
     private static bool _cpuInitTried;
 
     public static SystemSnapshot Collect()
@@ -58,13 +59,16 @@ public static class SystemMonitorService
         double cpuPct = 0;
         try
         {
-            if (_cpu is not null)
+            lock (CpuLock)
             {
-                cpuPct = _cpu.NextValue();
-                if (cpuPct < 0.1)
+                if (_cpu is not null)
                 {
-                    System.Threading.Thread.Sleep(120);
                     cpuPct = _cpu.NextValue();
+                    if (cpuPct < 0.1)
+                    {
+                        System.Threading.Thread.Sleep(120);
+                        cpuPct = _cpu.NextValue();
+                    }
                 }
             }
         }

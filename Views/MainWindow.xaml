@@ -342,11 +342,15 @@
                                                    VerticalAlignment="Center" Margin="10,0,0,0"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                                        <TextBlock Text="{Binding DashboardSnapshot.LogicalProcessors, TargetNullValue='…'}"
-                                                   FontSize="30" FontWeight="SemiBold"/>
-                                        <TextBlock Text="логических процессоров" Style="{StaticResource SecondaryText}"
-                                                   FontSize="12" VerticalAlignment="Bottom" Margin="8,0,0,6"/>
+                                        <TextBlock Text="{Binding DashboardSnapshot.CpuSummary, TargetNullValue='…'}"
+                                                   FontSize="26" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding DashboardSnapshot.CpuLoadSubtitle}" Style="{StaticResource SecondaryText}"
+                                                   FontSize="12" VerticalAlignment="Bottom" Margin="8,0,0,5"/>
                                     </StackPanel>
+                                    <ProgressBar Margin="0,10,0,0" Maximum="100"
+                                                 Value="{Binding DashboardSnapshot.CpuPercent, Mode=OneWay}"/>
+                                    <TextBlock Text="Загрузка процессора сейчас"
+                                               Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,6,0,0"/>
                                 </StackPanel>
                             </Border>
                             <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="3,0" MinHeight="128">

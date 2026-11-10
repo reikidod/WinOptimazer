@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Security;
 using System.Windows.Input;
+using System.Windows.Threading;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.Services;
 using WinOptimizer.Tweaks;
@@ -19,6 +20,8 @@ public sealed class MainViewModel : ObservableObject
 
     private AppPage _page = AppPage.Dashboard;
     private readonly PageNavigationHistory<AppPage> _navigationHistory = new();
+    private readonly DispatcherTimer _dashboardTimer;
+    private bool _dashboardRefreshing;
     private bool _isHistoryNavigation;
     private readonly DiagnosticsService _diagnostics = new();
     private readonly OperationHistoryService _history = new();
@@ -67,6 +70,11 @@ public sealed class MainViewModel : ObservableObject
         {
             tweak.PropertyChanged += OnTweakPropertyChanged;
         }
+
+        // Показатели на панели обновляются сами, пока она открыта (процессор меняется каждую секунду).
+        _dashboardTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(2) };
+        _dashboardTimer.Tick += async (_, _) => await RefreshDashboardQuietAsync();
+        _dashboardTimer.Start();
 
         Processes.Start();
 
@@ -346,6 +354,27 @@ public sealed class MainViewModel : ObservableObject
         {
             Logger.Error("Не удалось обновить панель состояния", ex);
             DashboardStatus = "Не удалось получить часть показателей: " + ex.Message;
+        }
+    }
+
+    /// <summary>Фоновое обновление показателей без смены текста статуса «Обновляю…» (чтобы он не мигал).</summary>
+    private async Task RefreshDashboardQuietAsync()
+    {
+        if (!IsDashboardPage || _dashboardRefreshing || IsBusy) return;
+
+        _dashboardRefreshing = true;
+        try
+        {
+            DashboardSnapshot = await Task.Run(SystemMonitorService.Collect);
+            DashboardStatus = $"Обновлено: {DateTime.Now:HH:mm:ss}";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось обновить панель состояния", ex);
+        }
+        finally
+        {
+            _dashboardRefreshing = false;
         }
     }
 
