@@ -891,3 +891,50 @@ public class ReleaseNotesFormatterTests
         Assert.EndsWith("…", lines[0]);
     }
 }
+
+public class OptimizationPresetTests
+{
+    [Fact]
+    public void Presets_AreOrderedAndProgressivelyExpand()
+    {
+        var light = OptimizationPresetService.Find("light")!;
+        var medium = OptimizationPresetService.Find("medium")!;
+        var aggressive = OptimizationPresetService.Find("aggressive")!;
+
+        Assert.NotNull(light);
+        Assert.NotNull(medium);
+        Assert.NotNull(aggressive);
+        Assert.True(light.TweakIds.Count < medium.TweakIds.Count);
+        Assert.True(medium.TweakIds.Count < aggressive.TweakIds.Count);
+        Assert.All(light.TweakIds, id => Assert.Contains(id, medium.TweakIds));
+        Assert.All(medium.TweakIds, id => Assert.Contains(id, aggressive.TweakIds));
+    }
+
+    [Fact]
+    public void Presets_ContainOnlyKnownAndUniqueTweakIds()
+    {
+        var catalog = TweakCatalog.Create(new BackupStore(Path.Combine(Path.GetTempPath(), "wo-preset-catalog.json")));
+        var known = catalog.Select(t => t.Info.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var preset in OptimizationPresetService.All)
+        {
+            Assert.Equal(preset.TweakIds.Count, preset.TweakIds.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            Assert.All(preset.TweakIds, id => Assert.Contains(id, known));
+        }
+    }
+
+    [Fact]
+    public void Presets_NeverDisableCoreSecurityOrWindowsUpdate()
+    {
+        var forbidden = new[]
+        {
+            "vbs-off", "hvci-off", "spectre-meltdown-off",
+            "firewall-disable-all-profiles", "firewall-disable-domain",
+            "firewall-disable-private", "firewall-disable-public",
+            "windows-update-disable", "driver-update-disable",
+        };
+
+        foreach (var preset in OptimizationPresetService.All)
+            Assert.DoesNotContain(preset.TweakIds, id => forbidden.Contains(id, StringComparer.OrdinalIgnoreCase));
+    }
+}

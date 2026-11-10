@@ -42,6 +42,7 @@ public sealed class MainViewModel : ObservableObject
     private string _statusText = "Готово";
 
     private string _tweakCategory = "Все";
+    private string _selectedOptimizationPresetId = "light";
 
     public MainViewModel(
         IReadOnlyList<ITweak> tweaks,
@@ -84,6 +85,7 @@ public sealed class MainViewModel : ObservableObject
         CreateRestorePointCommand = new AsyncRelayCommand(CreateManualRestorePointAsync, () => !IsBusy, ReportUnexpected);
         RefreshInfoCommand = new AsyncRelayCommand(RefreshInfoAsync, () => !IsInfoLoading, ReportUnexpected);
         SetCategoryCommand = new RelayCommand<string>(SetCategory);
+        SelectOptimizationPresetCommand = new RelayCommand<string>(SelectOptimizationPreset);
         ToggleGroupCommand = new RelayCommand<TweakViewModel>(ToggleGroup);
         OpenLinkCommand = new RelayCommand<string>(OpenLink);
         CheckUpdateCommand = new AsyncRelayCommand(CheckUpdateAsync, () => !IsBusy, ReportUnexpected);
@@ -177,6 +179,23 @@ public sealed class MainViewModel : ObservableObject
     public GamesViewModel Games { get; }
 
     public ICommand SetCategoryCommand { get; }
+
+    public ICommand SelectOptimizationPresetCommand { get; }
+
+    public IReadOnlyList<OptimizationPreset> OptimizationPresets => OptimizationPresetService.All;
+
+    public OptimizationPreset SelectedOptimizationPreset =>
+        OptimizationPresetService.Find(_selectedOptimizationPresetId) ?? OptimizationPresetService.All[0];
+
+    public double GaugeNeedleAngle => _selectedOptimizationPresetId switch
+    {
+        "medium" => 0,
+        "aggressive" => 60,
+        _ => -60,
+    };
+
+    public string PresetSelectionSummary =>
+        $"В наборе {SelectedOptimizationPreset.TweakIds.Count} твиков. Уже применённые изменения вне набора сохраняются без изменений.";
 
     public ICommand ToggleGroupCommand { get; }
 
@@ -590,6 +609,33 @@ public sealed class MainViewModel : ObservableObject
         if (!IsTweakStateReady || IsBusy) return;
         if (!string.IsNullOrWhiteSpace(category))
             TweakCategory = category;
+    }
+
+    private void SelectOptimizationPreset(string? presetId)
+    {
+        if (!IsTweakStateReady || IsBusy) return;
+
+        var preset = OptimizationPresetService.Find(presetId);
+        if (preset is null) return;
+
+        _selectedOptimizationPresetId = preset.Id;
+        OnPropertyChanged(nameof(SelectedOptimizationPreset));
+        OnPropertyChanged(nameof(GaugeNeedleAngle));
+        OnPropertyChanged(nameof(PresetSelectionSummary));
+
+        var included = preset.TweakIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var tweak in Tweaks)
+        {
+            if (!tweak.IsAvailable) continue;
+
+            if (included.Contains(tweak.Tweak.Info.Id))
+                tweak.IsSelected = true;
+            else if (!tweak.IsApplied)
+                tweak.IsSelected = false;
+        }
+
+        TweakCategory = "Все";
+        StatusText = $"Подготовлен набор «{preset.Title}». Проверьте выбранные твики и нажмите «Применить».";
     }
 
     private void ToggleGroup(TweakViewModel? header)
