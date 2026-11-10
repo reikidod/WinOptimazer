@@ -117,7 +117,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
+          $changelog = Get-Content CHANGELOG.md -Raw
+          $header = "## $($env:VERSION) Beta"
+          $pattern = "(?ms)^" + [regex]::Escape($header) + "[^\r\n]*\r?\n(.*?)(?=^## |\z)"
+          $match = [regex]::Match($changelog, $pattern)
+          if ($match.Success) {
+            $match.Groups[1].Value.Trim() | Set-Content -Path notes.md -Encoding utf8
+          } else {
+            git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
+          }
           if ($env:CHANNEL -eq 'beta') {
             $tag = "v$env:VERSION-beta"
             gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title "$tag (бета)" --notes-file notes.md --prerelease
