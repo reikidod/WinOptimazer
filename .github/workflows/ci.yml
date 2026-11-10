@@ -5,6 +5,7 @@ on:
     branches: [beta]
   push:
     branches:
+      - beta
       - "feature/**"
   workflow_dispatch:
 
