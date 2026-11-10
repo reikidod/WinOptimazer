@@ -20,7 +20,7 @@ public sealed class DashboardServiceTests : IDisposable
         var snapshot = new SystemSnapshot(
             "Windows test",
             12,
-            49,
+            50,
             16UL * 1024 * 1024 * 1024,
             8UL * 1024 * 1024 * 1024,
             "C:\\\\",
