@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using System.Windows.Interop;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.ViewModels;
 
@@ -16,6 +17,11 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
     private bool _copyFeedbackActive;
+    private HwndSource? _windowSource;
+
+    private const int WmXButtonDown = 0x020B;
+    private const int XButton1 = 0x0001; // Mouse 4 — назад
+    private const int XButton2 = 0x0002; // Mouse 5 — вперёд
 
     public MainWindow(MainViewModel viewModel)
     {
@@ -25,7 +31,12 @@ public partial class MainWindow : Window
         ApplyScale();
         ApplyBackground();
         AppSettings.Changed += OnSettingsChanged;
-        Closed += (_, _) => AppSettings.Changed -= OnSettingsChanged;
+        Closed += (_, _) =>
+        {
+            AppSettings.Changed -= OnSettingsChanged;
+            _windowSource?.RemoveHook(WindowProc);
+            _windowSource = null;
+        };
         DataContext = viewModel;
         Loaded += OnLoaded;
     }
@@ -150,7 +161,28 @@ public partial class MainWindow : Window
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
+        var handle = new WindowInteropHelper(this).Handle;
+        _windowSource = HwndSource.FromHwnd(handle);
+        _windowSource?.AddHook(WindowProc);
         NativeMethods.UseDarkTitleBar(this);
+    }
+
+    /// <summary>Обрабатывает аппаратные боковые кнопки мыши на уровне окна Win32.</summary>
+    private IntPtr WindowProc(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (message != WmXButtonDown) return IntPtr.Zero;
+
+        var button = (int)((wParam.ToInt64() >> 16) & 0xffff);
+        var navigated = button switch
+        {
+            XButton1 => _viewModel.NavigateBack(),
+            XButton2 => _viewModel.NavigateForward(),
+            _ => false,
+        };
+
+        if (!navigated) return IntPtr.Zero;
+        handled = true;
+        return new IntPtr(1);
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
