@@ -139,15 +139,15 @@ public sealed class MainViewModel : ObservableObject
         get
         {
             if (_lastDiagnosticsAt is null)
-                return "Диагностика Windows · не запускалась";
+                return "Диагностика · не запускалась";
 
             var critical = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Critical);
             var warnings = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Warning);
             if (critical > 0)
-                return $"Диагностика Windows · критично: {critical}, предупреждений: {warnings}";
+                return $"Диагностика · крит.: {critical} · предупр.: {warnings}";
             return warnings > 0
-                ? $"Диагностика Windows · предупреждений: {warnings}"
-                : "Диагностика Windows · проблем не обнаружено";
+                ? $"Диагностика · предупреждений: {warnings}"
+                : "Диагностика · всё в порядке";
         }
     }
 
