@@ -29,6 +29,7 @@ public sealed class MainViewModel : ObservableObject
 
     private bool _isBusy;
     private bool _isInfoLoading;
+    private bool _isTweakStateReady;
     private bool _rebootRequired;
     private string _statusText = "Готово";
 
@@ -63,8 +64,8 @@ public sealed class MainViewModel : ObservableObject
             tweak.PropertyChanged += OnTweakPropertyChanged;
         }
 
-        ApplyCommand = new AsyncRelayCommand(ApplyAsync, () => !IsBusy && PendingCount > 0, ReportUnexpected);
-        ResetSelectionCommand = new RelayCommand(ResetSelection, () => !IsBusy && PendingCount > 0);
+        ApplyCommand = new AsyncRelayCommand(ApplyAsync, () => IsTweakStateReady && !IsBusy && PendingCount > 0, ReportUnexpected);
+        ResetSelectionCommand = new RelayCommand(ResetSelection, () => IsTweakStateReady && !IsBusy && PendingCount > 0);
         CreateRestorePointCommand = new AsyncRelayCommand(CreateManualRestorePointAsync, () => !IsBusy, ReportUnexpected);
         RefreshInfoCommand = new AsyncRelayCommand(RefreshInfoAsync, () => !IsInfoLoading, ReportUnexpected);
         SetCategoryCommand = new RelayCommand<string>(SetCategory);
@@ -79,8 +80,8 @@ public sealed class MainViewModel : ObservableObject
         NavigateCommand = new RelayCommand<string>(Navigate);
         RefreshHistoryCommand = new RelayCommand(RefreshRecentOperations);
         RefreshRecentOperations();
-        SaveProfileCommand = new RelayCommand(SaveProfile);
-        LoadProfileCommand = new RelayCommand(LoadProfile);
+        SaveProfileCommand = new RelayCommand(SaveProfile, () => IsTweakStateReady && !IsBusy);
+        LoadProfileCommand = new RelayCommand(LoadProfile, () => IsTweakStateReady && !IsBusy);
 
     }
 
@@ -274,6 +275,16 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    public bool IsTweakStateReady
+    {
+        get => _isTweakStateReady;
+        private set
+        {
+            if (SetField(ref _isTweakStateReady, value))
+                CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
     public bool IsInfoLoading
     {
         get => _isInfoLoading;
@@ -374,6 +385,7 @@ public sealed class MainViewModel : ObservableObject
 
     private void SaveProfile()
     {
+        if (!IsTweakStateReady || IsBusy) return;
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Title = "Сохранить профиль оптимизации",
@@ -404,6 +416,7 @@ public sealed class MainViewModel : ObservableObject
 
     private void LoadProfile()
     {
+        if (!IsTweakStateReady || IsBusy) return;
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Title = "Загрузить профиль оптимизации",
@@ -484,12 +497,14 @@ public sealed class MainViewModel : ObservableObject
 
     private void SetCategory(string? category)
     {
+        if (!IsTweakStateReady || IsBusy) return;
         if (!string.IsNullOrWhiteSpace(category))
             TweakCategory = category;
     }
 
     private void ToggleGroup(TweakViewModel? header)
     {
+        if (!IsTweakStateReady || IsBusy) return;
         if (header is null || !header.IsGroupHeader) return;
         header.IsGroupExpanded = !header.IsGroupExpanded;
         OnPropertyChanged(nameof(FilteredTweaks));
@@ -561,6 +576,7 @@ public sealed class MainViewModel : ObservableObject
 
     private void ResetSelection()
     {
+        if (!IsTweakStateReady || IsBusy) return;
         foreach (var tweak in Tweaks)
         {
             tweak.IsSelected = tweak.IsApplied;
@@ -569,6 +585,7 @@ public sealed class MainViewModel : ObservableObject
 
     private async Task ApplyAsync()
     {
+        if (!IsTweakStateReady || IsBusy) return;
         var changes = Tweaks.Where(t => t.IsChanged && t.IsAvailable).ToList();
         if (changes.Count == 0)
         {
@@ -724,11 +741,22 @@ public sealed class MainViewModel : ObservableObject
 
     private async Task RefreshTweakStatesAsync()
     {
-        var snapshot = Tweaks.ToList();
-        var states = await Task.Run(() => snapshot.Select(t => (Vm: t, State: ReadState(t.Tweak))).ToList());
-        foreach (var (vm, state) in states)
+        IsTweakStateReady = false;
+        StatusText = "Считываю текущее состояние твиков…";
+        try
         {
-            vm.SetState(state.Applied, state.Error);
+            var snapshot = Tweaks.ToList();
+            var states = await Task.Run(() => snapshot.Select(t => (Vm: t, State: ReadState(t.Tweak))).ToList());
+            foreach (var (vm, state) in states)
+            {
+                vm.SetState(state.Applied, state.Error);
+            }
+        }
+        finally
+        {
+            IsTweakStateReady = true;
+            if (StatusText == "Считываю текущее состояние твиков…")
+                StatusText = "Готово";
         }
     }
 
