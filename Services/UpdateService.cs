@@ -78,6 +78,24 @@ public sealed class UpdateService : IUpdateService
         return installerInstall ? setup ?? zip ?? anyExe : zip ?? setup ?? anyExe;
     }
 
+    /// <summary>
+    /// Принимает только ссылки на assets релизов этого репозитория.
+    /// GitHub может перенаправить такую ссылку на собственный CDN после начала загрузки.
+    /// </summary>
+    internal static bool IsTrustedDownloadUrl(string? downloadUrl)
+    {
+        if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var uri))
+            return false;
+
+        return uri.Scheme == Uri.UriSchemeHttps
+               && uri.IsDefaultPort
+               && string.IsNullOrEmpty(uri.UserInfo)
+               && uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+               && uri.AbsolutePath.StartsWith(
+                   $"/{DefaultOwner}/{DefaultRepo}/releases/download/",
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>Канал, из которого собрана запущенная версия: «beta» по метке в версии, иначе «stable».</summary>
     internal string InstalledChannel => ChannelOfLabel(DisplayVersion);
 
@@ -198,19 +216,34 @@ public sealed class UpdateService : IUpdateService
     public async Task<(bool Ok, string Message)> DownloadAndInstallAsync(
         string downloadUrl, IProgress<string>? progress = null, CancellationToken ct = default)
     {
+        string? temporaryDownload = null;
         try
         {
+            if (!IsTrustedDownloadUrl(downloadUrl))
+                return (false, "Ссылка на обновление не принадлежит релизам WinOptimizer на GitHub.");
+
+            ct.ThrowIfCancellationRequested();
             Directory.CreateDirectory(AppPaths.DownloadsDirectory);
-            var name = Path.GetFileName(new Uri(downloadUrl).AbsolutePath);
+            var uri = new Uri(downloadUrl, UriKind.Absolute);
+            var name = Path.GetFileName(uri.AbsolutePath);
             if (string.IsNullOrWhiteSpace(name)) name = "WinOptimizer-update.bin";
             var path = Path.Combine(AppPaths.DownloadsDirectory, name);
+            temporaryDownload = path + "." + Guid.NewGuid().ToString("N") + ".download";
 
             progress?.Report("Скачиваю обновление…");
-            await using (var fs = File.Create(path))
+            await using (var fs = new FileStream(
+                temporaryDownload, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                bufferSize: 81920, options: FileOptions.Asynchronous | FileOptions.SequentialScan))
             {
-                await using var stream = await Http.GetStreamAsync(downloadUrl, ct).ConfigureAwait(false);
+                await using var stream = await Http.GetStreamAsync(uri, ct).ConfigureAwait(false);
                 await stream.CopyToAsync(fs, ct).ConfigureAwait(false);
+                await fs.FlushAsync(ct).ConfigureAwait(false);
             }
+
+            ct.ThrowIfCancellationRequested();
+            // Готовый файл заменяется только после успешной загрузки: обрыв сети не оставит битый asset.
+            File.Move(temporaryDownload, path, overwrite: true);
+            temporaryDownload = null;
 
             if (path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
@@ -298,10 +331,26 @@ public sealed class UpdateService : IUpdateService
 
             return (false, "Неизвестный формат файла обновления.");
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            Logger.Info("Загрузка обновления отменена пользователем.");
+            return (false, "Загрузка обновления отменена.");
+        }
         catch (Exception ex)
         {
             Logger.Error("Update install failed", ex);
             return (false, ex.Message);
+        }
+        finally
+        {
+            if (temporaryDownload is not null)
+            {
+                try { File.Delete(temporaryDownload); }
+                catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
+                {
+                    Logger.Error("Не удалось удалить неполный файл обновления", cleanupError);
+                }
+            }
         }
     }
 
