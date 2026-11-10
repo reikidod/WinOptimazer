@@ -250,7 +250,8 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="Удаление приложений" Style="{StaticResource PageTitle}" />
-                        <Expander Header="О возможностях удаления" IsExpanded="False" Margin="0,4,0,0">
+                        <Expander Style="{StaticResource SectionExpander}" Header="О возможностях удаления" IsExpanded="False" Margin="0,4,0,0"
+                                  AutomationProperties.Name="О возможностях удаления приложений">
                             <TextBlock Text="Все установленные программы и приложения Windows. Удаляйте штатным деинсталлятором и сразу стирайте остатки: папки, ярлыки, записи реестра — как в Geek Uninstaller. Если программа не удаляется, её можно снести принудительно."
                                    Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                         </Expander>
@@ -459,7 +460,8 @@
                 </StackPanel>
                 <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,16,8">
-                        <Expander Header="Рекомендуемые файлы и утилиты" IsExpanded="False" Margin="0,0,0,12">
+                        <Expander Style="{StaticResource SectionExpander}" Header="Рекомендуемые файлы и утилиты" IsExpanded="False" Margin="0,0,0,12"
+                                  AutomationProperties.Name="Рекомендуемые файлы и утилиты">
                             <StackPanel>
                         <TextBlock Text="Рекомендуемые файлы" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4" />
                         <TextBlock Text="Библиотеки и утилиты для тонкой настройки. Файл скачивается по кнопке и проверяется по контрольной сумме перед запуском."
@@ -565,7 +567,8 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <Expander Header="Zapret (Flowseal)" IsExpanded="False" Margin="0,8,0,0">
+                        <Expander Style="{StaticResource SectionExpander}" Header="Zapret (Flowseal)" IsExpanded="False" Margin="0,8,0,0"
+                                  AutomationProperties.Name="Управление Zapret Flowseal">
 
                         <ContentControl Style="{StaticResource HoverCard}">
                             <StackPanel>
@@ -592,7 +595,8 @@
 
                         </Expander>
 
-                        <Expander Header="TG WS Proxy (Flowseal)" IsExpanded="False" Margin="0,8,0,0">
+                        <Expander Style="{StaticResource SectionExpander}" Header="TG WS Proxy (Flowseal)" IsExpanded="False" Margin="0,8,0,0"
+                                  AutomationProperties.Name="Управление TG WS Proxy Flowseal">
 
                         <ContentControl Style="{StaticResource HoverCard}">
                             <StackPanel>

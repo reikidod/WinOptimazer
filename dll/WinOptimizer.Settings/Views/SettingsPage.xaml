@@ -23,6 +23,91 @@
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
             <Setter Property="Margin" Value="2,16,0,8" />
         </Style>
+        <Style x:Key="SettingsSectionExpander" TargetType="{x:Type Expander}">
+            <Setter Property="Margin" Value="0,0,16,10" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Expander}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ToggleButton x:Name="HeaderButton" Grid.Row="0"
+                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                          Focusable="True" Cursor="Hand" HorizontalContentAlignment="Stretch"
+                                          Padding="14,12" Background="{DynamicResource BgCardBrush}"
+                                          BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                          Foreground="{TemplateBinding Foreground}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                        <Border x:Name="HeaderBorder" Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="12" Padding="{TemplateBinding Padding}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="24" />
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True" />
+                                                <Path x:Name="Chevron" Grid.Column="1"
+                                                      Data="M 1,1 L 6,6 L 11,1"
+                                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.8"
+                                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      RenderTransformOrigin="0.5,0.5">
+                                                    <Path.RenderTransform><RotateTransform Angle="-90" /></Path.RenderTransform>
+                                                </Path>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                                                <Setter TargetName="HeaderBorder" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Chevron" Property="RenderTransform">
+                                                    <Setter.Value><RotateTransform Angle="0" /></Setter.Value>
+                                                </Setter>
+                                                <Setter TargetName="HeaderBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                                <Setter TargetName="HeaderBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
+                                                  ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
+                                                  ContentTemplateSelector="{Binding HeaderTemplateSelector, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
+                                                  ContentStringFormat="{Binding HeaderStringFormat, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
+                                                  VerticalAlignment="Center"
+                                                  TextBlock.FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType={x:Type Expander}}}"
+                                                  TextBlock.FontWeight="SemiBold" />
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ExpandSite" Grid.Row="1" Margin="0,8,0,0"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                                              Visibility="Collapsed"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="HeaderButton" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
             <Grid Margin="24,20,12,12">
                 <Grid.RowDefinitions>
@@ -43,7 +128,9 @@
 
                 <ScrollViewer Style="{StaticResource OverlayScroll}" Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,0,8">
-                        <TextBlock Text="Запуск" Style="{StaticResource SettingsSectionTitle}" />
+                        <Expander Header="Запуск" IsExpanded="true" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: Запуск">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -102,7 +189,12 @@
                             </Grid>
                         </Border>
 
-                        <TextBlock Text="Безопасность" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Безопасность" IsExpanded="true" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: Безопасность">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -118,7 +210,12 @@
                             </Grid>
                         </Border>
 
-                        <TextBlock Text="Вкладки" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Вкладки" IsExpanded="false" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: Вкладки">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Какие вкладки показывать" FontSize="14.5" FontWeight="SemiBold" />
@@ -190,7 +287,12 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Тема и цвета" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Тема и цвета" IsExpanded="false" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: Тема и цвета">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Тема приложения" FontSize="14.5" FontWeight="SemiBold" />
@@ -272,7 +374,12 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Фон" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Фон" IsExpanded="false" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: Фон">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Свой фон" FontSize="14.5" FontWeight="SemiBold" />
@@ -285,8 +392,7 @@
                                     <TextBlock Text="{Binding Settings.BackgroundName}" VerticalAlignment="Center"
                                                Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12.5" />
                                 </WrapPanel>
-                                <Expander Header="Дополнительные параметры оформления" Margin="0,10,0,0"
-                                          FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}"
+                                <Expander Header="Дополнительные параметры оформления" Style="{StaticResource SettingsSectionExpander}" Margin="0,10,0,0"
                                           AutomationProperties.Name="Дополнительные параметры фона">
                                     <StackPanel Margin="0,8,0,0">
                                     <Grid Margin="0,10,0,0">
@@ -355,7 +461,12 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Внешний вид" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Внешний вид" IsExpanded="true" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: Внешний вид">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -386,7 +497,12 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Данные и диагностика" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="Данные и диагностика" IsExpanded="false" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: Данные и диагностика">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="Журнал и папка данных" FontSize="14.5" FontWeight="SemiBold" />
@@ -407,7 +523,12 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="О программе" Style="{StaticResource SettingsSectionTitle}" />
+                                                    </StackPanel>
+                        </Expander>
+
+                        <Expander Header="О программе" IsExpanded="false" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: О программе">
+                            <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
                                 <TextBlock Text="{Binding VersionLabel, StringFormat=WinOptimizer {0}}" FontSize="14.5" FontWeight="SemiBold" />
@@ -427,7 +548,10 @@
                                 <TextBlock Text="{Binding Settings.Status}" Margin="0,6,0,0" Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
-                    </StackPanel>
+                                                </StackPanel>
+                        </Expander>
+
+                        </StackPanel>
                 </ScrollViewer>
             </Grid>
 </UserControl>
