@@ -458,9 +458,9 @@
                                                     <ProgressBar Maximum="100" Value="{Binding UsedPercent, Mode=OneWay}" Height="7" />
                                                     <TextBlock Margin="0,6,0,0" FontSize="11"
                                                                Foreground="{DynamicResource TextSecondaryBrush}">
-                                                        <Run Text="{Binding FreeText}" />
+                                                        <Run Text="{Binding FreeText, Mode=OneWay}" />
                                                         <Run Text=" свободно из " />
-                                                        <Run Text="{Binding TotalText}" />
+                                                        <Run Text="{Binding TotalText, Mode=OneWay}" />
                                                     </TextBlock>
                                                 </StackPanel>
                                             </Border>
