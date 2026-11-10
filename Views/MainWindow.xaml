@@ -433,6 +433,43 @@
                             </Grid>
                         </Border>
 
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="Другие диски" FontSize="16" FontWeight="SemiBold" />
+                                <TextBlock Text="Фиксированные и подключённые съёмные накопители, кроме системного тома."
+                                           Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,8" />
+                                <TextBlock Text="Другие готовые диски не обнаружены"
+                                           Visibility="{Binding HasNoAdditionalDrives, Converter={StaticResource BoolToVis}}"
+                                           Style="{StaticResource SecondaryText}" />
+                                <ItemsControl ItemsSource="{Binding AdditionalDrives}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="235" Margin="0,0,10,8" Padding="10"
+                                                    Background="{DynamicResource BgCardHoverBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding FileSystemText}" Style="{StaticResource SecondaryText}"
+                                                               FontSize="11" Margin="0,2,0,7" />
+                                                    <ProgressBar Maximum="100" Value="{Binding UsedPercent}" Height="7" />
+                                                    <TextBlock Margin="0,6,0,0" FontSize="11"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}">
+                                                        <Run Text="{Binding FreeText}" />
+                                                        <Run Text=" свободно из " />
+                                                        <Run Text="{Binding TotalText}" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.15*"/>
@@ -594,23 +631,11 @@
                                 <Path Data="M 18,122 A 107,107 0 0 1 232,122"
                                       Stroke="{DynamicResource BorderBrush}" StrokeThickness="13"
                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
-                                <Path Data="M 18,122 A 107,107 0 0 1 70,30"
-                                      Stroke="{DynamicResource SuccessBrush}" StrokeThickness="13"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.95" />
-                                <Path Data="M 70,30 A 107,107 0 0 1 180,30"
-                                      Stroke="{DynamicResource WarnBrush}" StrokeThickness="13"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.95" />
-                                <Path Data="M 180,30 A 107,107 0 0 1 232,122"
-                                      Stroke="{DynamicResource DangerBrush}" StrokeThickness="13"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.95" />
-                                <Path Data="M 125,122 L 125,53" Stroke="{DynamicResource TextPrimaryBrush}"
-                                      StrokeThickness="3" StrokeStartLineCap="Round">
-                                    <Path.RenderTransform>
-                                        <RotateTransform Angle="{Binding GaugeNeedleAngle}" CenterX="125" CenterY="122" />
-                                    </Path.RenderTransform>
-                                </Path>
-                                <Ellipse Canvas.Left="118" Canvas.Top="115" Width="14" Height="14"
-                                         Fill="{DynamicResource AccentBrush}" Stroke="{DynamicResource BgCardBrush}" StrokeThickness="2" />
+                                <Path Data="M 18,122 A 107,107 0 0 1 232,122"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="13"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      StrokeDashArray="26,26" StrokeDashOffset="26"
+                                      local:Motion.ArcProgress="{Binding GaugeProgressValue}" />
                                 <TextBlock Canvas.Left="0" Canvas.Top="130" Text="ЛЁГКАЯ" FontSize="9"
                                            Foreground="{DynamicResource TextSecondaryBrush}" />
                                 <TextBlock Canvas.Left="103" Canvas.Top="130" Text="СРЕДНЯЯ" FontSize="9"

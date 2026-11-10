@@ -109,7 +109,15 @@ public sealed class MainViewModel : ObservableObject
     public SystemSnapshot? DashboardSnapshot
     {
         get => _dashboardSnapshot;
-        private set => SetField(ref _dashboardSnapshot, value);
+        private set
+        {
+            if (SetField(ref _dashboardSnapshot, value))
+            {
+                OnPropertyChanged(nameof(AdditionalDrives));
+                OnPropertyChanged(nameof(HasAdditionalDrives));
+                OnPropertyChanged(nameof(HasNoAdditionalDrives));
+            }
+        }
     }
 
     public IReadOnlyList<DiagnosticFinding> DiagnosticFindings
@@ -117,6 +125,12 @@ public sealed class MainViewModel : ObservableObject
         get => _diagnosticFindings;
         private set => SetField(ref _diagnosticFindings, value);
     }
+
+    public IReadOnlyList<DriveSnapshot> AdditionalDrives => DashboardSnapshot?.AdditionalDrives ?? Array.Empty<DriveSnapshot>();
+
+    public bool HasAdditionalDrives => AdditionalDrives.Count > 0;
+
+    public bool HasNoAdditionalDrives => !HasAdditionalDrives;
 
     public string DashboardStatus
     {
@@ -187,11 +201,11 @@ public sealed class MainViewModel : ObservableObject
     public OptimizationPreset SelectedOptimizationPreset =>
         OptimizationPresetService.Find(_selectedOptimizationPresetId) ?? OptimizationPresetService.All[0];
 
-    public double GaugeNeedleAngle => _selectedOptimizationPresetId switch
+    public double GaugeProgressValue => _selectedOptimizationPresetId switch
     {
-        "medium" => 0,
-        "aggressive" => 60,
-        _ => -60,
+        "medium" => 67,
+        "aggressive" => 100,
+        _ => 34,
     };
 
     public string PresetSelectionSummary =>
@@ -620,7 +634,7 @@ public sealed class MainViewModel : ObservableObject
 
         _selectedOptimizationPresetId = preset.Id;
         OnPropertyChanged(nameof(SelectedOptimizationPreset));
-        OnPropertyChanged(nameof(GaugeNeedleAngle));
+        OnPropertyChanged(nameof(GaugeProgressValue));
         OnPropertyChanged(nameof(PresetSelectionSummary));
 
         var included = preset.TweakIds.ToHashSet(StringComparer.OrdinalIgnoreCase);

@@ -18,6 +18,7 @@ public sealed record SystemSnapshot(
     bool NetworkAvailable)
 {
     /// <summary>PerformanceCounter может быть недоступен (например, отключены системные счётчики).</summary>
+    public IReadOnlyList<DriveSnapshot> AdditionalDrives { get; init; } = Array.Empty<DriveSnapshot>();
     public bool CpuAvailable { get; init; } = true;
     public string CpuSummary => CpuAvailable ? $"{CpuPercent:0}%" : "—";
     public string CpuLoadSubtitle => CpuAvailable ? $"{LogicalProcessors} логических · загрузка" : "Показатель недоступен";
@@ -46,6 +47,29 @@ public sealed record SystemSnapshot(
             value /= 1024;
             unit++;
         }
+        return $"{value:0.#} {units[unit]}";
+    }
+}
+
+public sealed record DriveSnapshot(
+    string Name,
+    string Label,
+    string FileSystem,
+    long TotalBytes,
+    long FreeBytes)
+{
+    public string DisplayName => string.IsNullOrWhiteSpace(Label) ? Name : $"{Name} · {Label}";
+    public string FreeText => FormatBytes((ulong)Math.Max(0, FreeBytes));
+    public string TotalText => FormatBytes((ulong)Math.Max(0, TotalBytes));
+    public string FileSystemText => string.IsNullOrWhiteSpace(FileSystem) ? "Файловая система не определена" : FileSystem;
+    public double UsedPercent => TotalBytes <= 0 ? 0 : Math.Clamp((TotalBytes - FreeBytes) * 100d / TotalBytes, 0, 100);
+
+    private static string FormatBytes(ulong bytes)
+    {
+        string[] units = ["Б", "КБ", "МБ", "ГБ", "ТБ"];
+        double value = bytes;
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1) { value /= 1024; unit++; }
         return $"{value:0.#} {units[unit]}";
     }
 }
@@ -113,7 +137,66 @@ public static class SystemMonitorService
             NetworkInterface.GetIsNetworkAvailable())
         {
             CpuAvailable = cpuAvailable,
+            AdditionalDrives = CollectAdditionalDrives(systemRoot),
         };
+    }
+
+    /// <summary>Возвращает готовые фиксированные и съёмные диски, кроме системного.</summary>
+    public static IReadOnlyList<DriveSnapshot> CollectAdditionalDrives(string systemRoot)
+    {
+        var systemDriveRoot = Path.GetPathRoot(systemRoot);
+        var result = new List<DriveSnapshot>();
+
+        DriveInfo[] drives;
+        try { drives = DriveInfo.GetDrives(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            return result;
+        }
+
+        foreach (var drive in drives)
+        {
+            if (string.Equals(Path.GetPathRoot(drive.Name), systemDriveRoot, StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (drive.DriveType is not (DriveType.Fixed or DriveType.Removable))
+                continue;
+
+            try
+            {
+                if (!drive.IsReady) continue;
+                var total = drive.TotalSize;
+                if (total <= 0) continue;
+
+                string label;
+                string fileSystem;
+                try { label = drive.VolumeLabel; }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException) { label = string.Empty; }
+                try { fileSystem = drive.DriveFormat; }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException) { fileSystem = string.Empty; }
+
+                result.Add(CreateDriveSnapshot(drive.Name, label, fileSystem, total, drive.AvailableFreeSpace));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or Win32Exception or ArgumentException)
+            {
+                // Один недоступный том не должен скрывать остальные диски.
+            }
+        }
+
+        return result.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    /// <summary>Нормализует показатели тома; вынесено отдельно для детерминированных тестов.</summary>
+    public static DriveSnapshot CreateDriveSnapshot(string name, string? label, string? fileSystem, long totalBytes, long freeBytes)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Имя диска обязательно.", nameof(name));
+        if (totalBytes <= 0) throw new ArgumentOutOfRangeException(nameof(totalBytes));
+
+        return new DriveSnapshot(
+            name.Trim(),
+            label?.Trim() ?? string.Empty,
+            fileSystem?.Trim() ?? string.Empty,
+            totalBytes,
+            Math.Clamp(freeBytes, 0, totalBytes));
     }
 
     private static void EnsureCpuCounter()

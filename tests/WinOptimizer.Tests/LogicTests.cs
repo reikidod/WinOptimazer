@@ -938,3 +938,53 @@ public class OptimizationPresetTests
             Assert.DoesNotContain(preset.TweakIds, id => forbidden.Contains(id, StringComparer.OrdinalIgnoreCase));
     }
 }
+
+
+public class AdditionalDriveSnapshotTests
+{
+    [Fact]
+    public void CreateDriveSnapshot_FormatsDriveAndUsage()
+    {
+        const long total = 100L * 1024 * 1024 * 1024;
+        const long free = 25L * 1024 * 1024 * 1024;
+
+        var drive = SystemMonitorService.CreateDriveSnapshot(@"D:\\", "Games", "NTFS", total, free);
+
+        Assert.Equal(@"D:\\", drive.Name);
+        Assert.Equal(@"D:\\ · Games", drive.DisplayName);
+        Assert.Equal("NTFS", drive.FileSystemText);
+        Assert.Equal(25d, drive.UsedPercent, 2);
+        Assert.Contains("25", drive.FreeText);
+        Assert.Contains("100", drive.TotalText);
+    }
+
+    [Theory]
+    [InlineData(-10, 0)]
+    [InlineData(200, 100)]
+    public void CreateDriveSnapshot_ClampsFreeSpace(long free, long expected)
+    {
+        var drive = SystemMonitorService.CreateDriveSnapshot("E:\\", null, null, 100, free);
+        Assert.Equal(expected, drive.FreeBytes);
+        Assert.InRange(drive.UsedPercent, 0, 100);
+    }
+
+    [Fact]
+    public void CreateDriveSnapshot_RejectsInvalidTotal()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            SystemMonitorService.CreateDriveSnapshot("F:\\", null, null, 0, 0));
+    }
+}
+
+public class ArcGaugeMotionTests
+{
+    [Theory]
+    [InlineData(-10, 26)]
+    [InlineData(0, 26)]
+    [InlineData(34, 17.16)]
+    [InlineData(67, 8.58)]
+    [InlineData(100, 0)]
+    [InlineData(120, 0)]
+    public void ArcDashOffset_MapsProgressToRemainingTrack(double progress, double expected) =>
+        Assert.Equal(expected, WinOptimizer.Views.Motion.ArcDashOffset(progress), 2);
+}

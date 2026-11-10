@@ -270,6 +270,47 @@ public static class Motion
         return null;
     }
 
+    // ---------- Плавное заполнение дугового индикатора ----------
+
+    public static readonly DependencyProperty ArcProgressProperty = DependencyProperty.RegisterAttached(
+        "ArcProgress", typeof(double), typeof(Motion), new PropertyMetadata(0d, OnArcProgressChanged));
+
+    public static double GetArcProgress(DependencyObject d) => (double)d.GetValue(ArcProgressProperty);
+    public static void SetArcProgress(DependencyObject d, double value) => d.SetValue(ArcProgressProperty, value);
+
+    /// <summary>Шкала использует один штрих длиной примерно в длину дуги и такой же промежуток.</summary>
+    internal static double ArcDashOffset(double progress) => 26d * (1d - Math.Clamp(progress, 0d, 100d) / 100d);
+
+    private static void OnArcProgressChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not System.Windows.Shapes.Shape shape) return;
+
+        var progress = Math.Clamp((double)e.NewValue, 0d, 100d);
+        var target = ArcDashOffset(progress);
+        var current = shape.StrokeDashOffset;
+
+        if (!Enabled)
+        {
+            shape.BeginAnimation(System.Windows.Shapes.Shape.StrokeDashOffsetProperty, null);
+            shape.SetCurrentValue(System.Windows.Shapes.Shape.StrokeDashOffsetProperty, target);
+            return;
+        }
+
+        var animation = new DoubleAnimation(current, target, TimeSpan.FromMilliseconds(850))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            FillBehavior = FillBehavior.HoldEnd,
+        };
+        animation.Completed += (_, _) =>
+        {
+            // Старое завершение не должно сбрасывать анимацию, если пользователь уже выбрал другой уровень.
+            if (Math.Abs(GetArcProgress(shape) - progress) > 0.001) return;
+            shape.BeginAnimation(System.Windows.Shapes.Shape.StrokeDashOffsetProperty, null);
+            shape.SetCurrentValue(System.Windows.Shapes.Shape.StrokeDashOffsetProperty, target);
+        };
+        shape.BeginAnimation(System.Windows.Shapes.Shape.StrokeDashOffsetProperty, animation);
+    }
+
     // ---------- Плавная прокрутка колесом ----------
 
     public static readonly DependencyProperty SmoothScrollProperty = DependencyProperty.RegisterAttached(
