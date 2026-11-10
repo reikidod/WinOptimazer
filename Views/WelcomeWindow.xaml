@@ -43,13 +43,16 @@
 
             <!-- Дуга: S-образная кривая от нижнего левого угла к верхнему правому. Рисуется при появлении,
                  затем по ней бежит блик, а вся группа плавно «плавает». -->
-            <Grid x:Name="ArcLayer" IsHitTestVisible="False" Opacity="0">
-                <Grid.RenderTransform>
+            <!-- Canvas, а не Grid: Grid обрезает содержимое по своей области, и эта обрезка ездила бы вместе с анимацией
+                 «плавания» дуги (снизу и слева появлялась тёмная полоса). Canvas не обрезает; по скруглённому краю
+                 окна обрезает неподвижный Grid.Clip выше. -->
+            <Canvas x:Name="ArcLayer" IsHitTestVisible="False" Opacity="0">
+                <Canvas.RenderTransform>
                     <TransformGroup>
                         <TranslateTransform x:Name="ArcShift" Y="40" />
                         <TranslateTransform x:Name="ArcFloat" />
                     </TransformGroup>
-                </Grid.RenderTransform>
+                </Canvas.RenderTransform>
 
                 <!-- Лёгкая заливка под кривой. Намеренно шире окна: вся дуга «плавает» (до 9 px вверх и 12 px вправо)
                      и со вплотную обрезанной заливкой у нижнего и левого края появлялась тёмная полоса. -->
@@ -95,7 +98,7 @@
                         </LinearGradientBrush>
                     </Path.OpacityMask>
                 </Path>
-            </Grid>
+            </Canvas>
 
             <!-- Мягкое свечение за текстом -->
             <Ellipse Width="420" Height="190" Opacity="0.14" IsHitTestVisible="False"
