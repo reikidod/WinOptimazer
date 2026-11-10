@@ -452,6 +452,7 @@ public sealed class MainViewModel : ObservableObject
                 Tweaks.Where(t => t.IsSelected).Select(t => t.Tweak.Info.Id));
             OptimizationProfileService.Save(dialog.FileName, profile);
             StatusText = $"Профиль сохранён: {profile.Name}.";
+            RecordOperation("Профили", $"Экспорт профиля «{profile.Name}»", $"Сохранено твиков: {profile.SelectedTweakIds.Count}");
             _dialogs.Info("Профиль сохранён",
                 $"Сохранено выбранных твиков: {profile.SelectedTweakIds.Count}. Профиль не применяет изменения автоматически.",
                 DialogKind.Success);
@@ -485,6 +486,7 @@ public sealed class MainViewModel : ObservableObject
             var known = Tweaks.Select(t => t.Tweak.Info.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var unknown = selected.Count(id => !known.Contains(id));
             StatusText = $"Профиль «{profile.Name}» загружен. Изменений к применению: {PendingCount}.";
+            RecordOperation("Профили", $"Импорт профиля «{profile.Name}»", $"Выбрано твиков: {selected.Count - unknown}; неизвестных: {unknown}");
             _dialogs.Info("Профиль загружен",
                 $"Выбрано твиков: {selected.Count - unknown}. Неизвестных идентификаторов: {unknown}. Изменения ещё не применены — проверьте список и нажмите «Применить».",
                 DialogKind.Success);

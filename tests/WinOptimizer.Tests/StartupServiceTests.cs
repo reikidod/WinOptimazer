@@ -68,6 +68,40 @@ public sealed class StartupServiceTests
     }
 
     [Fact]
+    public void StartupItemViewModel_RecordsSuccessfulToggleInOperationHistory()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "wo-startup-history-" + Guid.NewGuid().ToString("N"));
+        var historyPath = Path.Combine(directory, "history.jsonl");
+        try
+        {
+            var entry = new StartupEntry(StartupScope.CurrentUser, "Updater", "updater.exe", true, "Updater");
+            var service = new FakeToggleStartupService();
+            var item = new WinOptimizer.ViewModels.StartupItemViewModel(
+                entry, service, new OperationHistoryService(historyPath));
+
+            item.ToggleCommand.Execute(null);
+
+            Assert.False(item.IsEnabled);
+            var record = Assert.Single(new OperationHistoryService(historyPath).GetRecent());
+            Assert.Equal("Автозагрузка", record.Category);
+            Assert.Equal("Автозагрузка «Updater»", record.Operation);
+            Assert.Equal("Отключена", record.Result);
+        }
+        finally
+        {
+            try { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    private sealed class FakeToggleStartupService : IStartupService
+    {
+        public IReadOnlyList<StartupEntry> GetEntries() => [];
+        public void SetEnabled(StartupEntry entry, bool enabled) { }
+    }
+
+    [Fact]
     public void SetEnabled_RejectsEntryThatIsNoLongerRegistered()
     {
         var store = new FakeStartupStore();

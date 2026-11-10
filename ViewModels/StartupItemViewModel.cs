@@ -9,13 +9,15 @@ namespace WinOptimizer.ViewModels;
 public sealed class StartupItemViewModel : ObservableObject
 {
     private readonly IStartupService _service;
+    private readonly OperationHistoryService _history;
     private StartupEntry _entry;
     private string? _errorText;
 
-    public StartupItemViewModel(StartupEntry entry, IStartupService service)
+    public StartupItemViewModel(StartupEntry entry, IStartupService service, OperationHistoryService? history = null)
     {
         _entry = entry ?? throw new ArgumentNullException(nameof(entry));
         _service = service ?? throw new ArgumentNullException(nameof(service));
+        _history = history ?? new OperationHistoryService();
         ToggleCommand = new RelayCommand(Toggle);
     }
 
@@ -43,6 +45,19 @@ public sealed class StartupItemViewModel : ObservableObject
 
     public bool HasError => !string.IsNullOrEmpty(_errorText);
 
+    private void RecordHistory(string operation, string result)
+    {
+        try
+        {
+            _history.Record("Автозагрузка", operation, result);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            // Ошибка журнала не должна отменять уже выполненное изменение автозагрузки.
+            Logger.Error("Не удалось записать изменение автозагрузки в историю", ex);
+        }
+    }
+
     private void Toggle()
     {
         var target = !_entry.Enabled;
@@ -51,12 +66,15 @@ public sealed class StartupItemViewModel : ObservableObject
             _service.SetEnabled(_entry, target);
             _entry = _entry with { Enabled = target };
             ErrorText = null;
-            Logger.Info($"Автозагрузка «{_entry.Name}»: {(target ? "включена" : "отключена")}");
+            var result = target ? "Включена" : "Отключена";
+            Logger.Info($"Автозагрузка «{_entry.Name}»: {result.ToLowerInvariant()}");
+            RecordHistory($"Автозагрузка «{_entry.Name}»", result);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException)
         {
             Logger.Error($"Не удалось изменить автозагрузку «{_entry.Name}»", ex);
             ErrorText = $"Не удалось изменить: {ex.Message}";
+            RecordHistory($"Автозагрузка «{_entry.Name}»", "Ошибка");
         }
         finally
         {
