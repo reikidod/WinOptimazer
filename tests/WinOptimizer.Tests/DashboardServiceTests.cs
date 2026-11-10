@@ -81,6 +81,7 @@ public sealed class DashboardServiceTests : IDisposable
             "Windows test",
             8,
             35,
+            35,
             16UL * 1024 * 1024 * 1024,
             10UL * 1024 * 1024 * 1024,
             "C:\\\\",
