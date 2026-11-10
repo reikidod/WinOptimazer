@@ -131,7 +131,9 @@
                         </ContentControl>
 
                         <!-- Планировщик задач: безопасный режим только для чтения -->
-                        <ContentControl Style="{StaticResource HoverCard}" Margin="0,0,0,12">
+                        <Expander Style="{StaticResource SectionExpander}" Header="Планировщик задач Windows · только чтение"
+                                  IsExpanded="False" Margin="0,0,0,12"
+                                  AutomationProperties.Name="Сворачиваемый раздел планировщика задач Windows">
                             <StackPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -139,7 +141,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="Планировщик задач Windows" FontSize="16" FontWeight="SemiBold" />
+                                        <TextBlock Text="Просмотр и поиск задач Windows" FontSize="14" FontWeight="SemiBold" />
                                         <TextBlock Style="{StaticResource SecondaryText}" Margin="0,6,0,0" LineHeight="21"
                                                    Text="Просмотр скрытых и вложенных задач, поиск и фильтрация по состоянию и категории. Приложение не включает, не отключает, не удаляет и не редактирует задачи Windows." />
                                     </StackPanel>
@@ -230,7 +232,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </StackPanel>
-                        </ContentControl>
+                        </Expander>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
