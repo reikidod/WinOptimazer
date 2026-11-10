@@ -1,132 +1,161 @@
-<p align="center">
-  <img src="Assets/app.ico" width="72" height="72" alt="WinOptimizer">
-</p>
+<div align="center">
 
-<h1 align="center">WinOptimizer</h1>
+<img src="docs/banner.svg" alt="WinOptimizer — единый центр управления Windows" width="100%">
 
-<p align="center">
-  <strong>Бесплатный оптимизатор Windows 10/11</strong><br>
-  Твики с откатом · debloat · программы · игры · очистка — в одном тёмном окне
-</p>
+<br>
 
-<p align="center">
-  <a href="https://github.com/reikidod/WinOptimazer/releases/latest"><img src="https://img.shields.io/github/v/release/reikidod/WinOptimazer?style=for-the-badge&label=stable&color=4B6CA3" alt="Stable release"></a>
-  <a href="https://github.com/reikidod/WinOptimazer/releases"><img src="https://img.shields.io/github/v/release/reikidod/WinOptimazer?include_prereleases&style=for-the-badge&label=beta&color=6B5B95" alt="Beta release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT"></a>
-  <a href="https://dotnet.microsoft.com/download/dotnet/8.0"><img src="https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8"></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
-</p>
+**Бесплатный инструмент для настройки, обслуживания и оптимизации Windows 10/11.**
 
-<p align="center">
-  <a href="https://github.com/reikidod/WinOptimazer/releases/latest"><strong>⬇ Скачать последнюю версию</strong></a>
-  ·
-  <a href="https://github.com/reikidod/WinOptimazer/releases">Все релизы</a>
-  ·
-  <a href="#что-умеет">Возможности</a>
-  ·
-  <a href="#безопасность">Безопасность</a>
-</p>
+Твики с возможностью отката · установка программ · обслуживание системы · игровые настройки
+
+[![Stable](https://img.shields.io/github/v/release/reikidod/WinOptimazer?style=for-the-badge&label=Stable&color=C0262D)](https://github.com/reikidod/WinOptimazer/releases/latest)
+[![Лицензия MIT](https://img.shields.io/badge/лицензия-MIT-2F3640?style=for-the-badge)](LICENSE)
+[![.NET 8](https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white)
+![WPF](https://img.shields.io/badge/UI-WPF-2F3640?style=flat-square)
+![Язык](https://img.shields.io/badge/язык-C%23-68217A?style=flat-square)
+
+[**⬇ Скачать последнюю стабильную версию**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Все релизы](https://github.com/reikidod/WinOptimazer/releases) · [Возможности](#-возможности) · [Безопасность](#-безопасность) · [Сообщить о проблеме](https://github.com/reikidod/WinOptimazer/issues)
+
+</div>
 
 ---
 
-## Зачем это нужно
+## ✨ Возможности
 
-Один инструмент вместо набора разрозненных утилит: ускорить систему, убрать лишнее, поставить нужное и подготовить ПК к играм — с понятными описаниями и возможностью откатить изменения.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-| | |
-|:---:|:---|
-| ⚡ | **Оптимизация** — твики реестра и служб с оценкой пользы и предупреждениями |
-| 🎮 | **Игры** — Steam / Epic / GOG / Xbox, OptiScaler, режим высокой производительности GPU |
-| 📦 | **Программы** — установка популярного софта, Zapret, TG WS Proxy, VC++ / DirectX |
-| 🛒 | **Microsoft Store** — каталог с иконками через winget |
-| 🗑️ | **Удаление** — программы и UWP с поиском, фильтрами и зачисткой остатков |
-| 🧹 | **Очистка** — временные файлы, кэши, автозагрузка |
-| 💻 | **Мой ПК** — процессор, видеокарта, память, диски |
-| 🎨 | **Темы** — несколько тёмных оформлений, акценты, свой фон |
+### ⚙️ Оптимизация системы
+Каталог твиков реестра и служб с описаниями, оценкой пользы и предупреждениями. Исходные значения сохраняются — применённые изменения можно отменить.
 
-Обновления ставятся из приложения: **«Проверить обновления»** (каналы stable / beta в настройках).
+</td>
+<td width="50%" valign="top">
 
----
+### 🎮 Игровой режим
+Инструменты для подготовки Windows к играм, обнаружение библиотек Steam, Epic, GOG и Xbox, настройки производительности GPU и поддержка OptiScaler.
 
-## Быстрый старт
+</td>
+</tr>
+<tr>
+<td valign="top">
 
-1. Скачайте **`WinOptimizer-Setup.exe`** или **`WinOptimizer-win-x64.zip`** из [последнего релиза](https://github.com/reikidod/WinOptimazer/releases/latest).
-2. Установите или распакуйте (лучше не оставлять в «Загрузках»).
-3. Запустите `WinOptimizer.exe`. SmartScreen может предупредить о неизвестном издателе — исходники открыты, сборка с GitHub Actions.
-4. В разделе **Оптимизация** отметьте твики и примените. Согласитесь на **точку восстановления**, если предложит.
-5. Не понравилось — отмените твик: прежние значения сохранены.
+### 📦 Установка программ
+Установка популярных приложений, необходимых компонентов, VC++ и DirectX, а также дополнительных утилит.
 
-> Совет: твики с предупреждением (защита, обновления Windows) включайте только осознанно.
+</td>
+<td valign="top">
 
-### Требования
+### 🛒 Microsoft Store
+Каталог приложений с иконками и установкой через winget.
 
-- Windows 10 или 11, **64-bit**
-- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (установщик может поставить сам)
-- Права администратора (нужны для HKLM и служб)
+</td>
+</tr>
+<tr>
+<td valign="top">
 
----
+### 🧹 Очистка и обслуживание
+Очистка временных файлов и кэшей, управление автозагрузкой и удаление ненужных приложений.
 
-## Что умеет
+</td>
+<td valign="top">
 
-| Раздел | Описание |
-|--------|----------|
-| **Оптимизация системы** | Каталог твиков с описанием, оценкой пользы и откатом. Перед изменениями — точка восстановления. |
-| **Игры** | Обнаружение игр, OptiScaler, режим производительности GPU, подсказки по настройкам. |
-| **Установка программ** | Популярные программы, Zapret / TG WS Proxy, рекомендуемые runtime’ы с проверкой SHA-256. |
-| **Microsoft Store** | Каталог с иконками, установка через winget (с проверкой и починкой). |
-| **Удаление программ** | Поиск и фильтры; игры лаунчеров удаляются только через лаунчер. |
-| **Очистка и автозагрузка** | Temp, кэши, автозапуск. |
-| **Мой ПК** | Сводка по железу и системе. |
-| **Настройки** | Приветствие, автозапуск, масштаб UI, анимации, канал обновлений, вкладки. |
+### 💻 Информация о ПК
+Сведения о процессоре, видеокарте, оперативной памяти, накопителях и состоянии системы.
 
----
+</td>
+</tr>
+<tr>
+<td valign="top">
 
-## Безопасность
+### 🎨 Персонализация
+Несколько тёмных тем, цветовые акценты и настройка фона приложения.
 
-- Изменения реестра **запоминаются** и откатываются кнопкой.
-- Скачиваемые файлы сверяются по **SHA-256**.
-- Игры Steam / Epic и др. **не удаляются напрямую**.
-- **Нет телеметрии**: данные о ПК никуда не отправляются. Логи: `%ProgramData%\WinOptimizer\log.txt`.
-- Код открыт, релизы собирает **GitHub Actions**.
+</td>
+<td valign="top">
 
----
+### ↩️ Контроль изменений
+Возможность отменять поддерживаемые твики и возвращать сохранённые исходные параметры.
 
-## Каналы обновлений
+</td>
+</tr>
+</table>
 
-| Канал | Ветка | Что получает |
-|--------|-------|----------------|
-| **Stable** | `main` | Проверенные релизы |
-| **Beta** | `beta` | Новые функции раньше, возможны шероховатости |
+## 🚀 Быстрый старт
 
-Переключение — в **Настройках** приложения.
+1. Откройте [страницу последнего стабильного релиза](https://github.com/reikidod/WinOptimazer/releases/latest).
+2. Скачайте установщик `WinOptimizer-Setup.exe` или архив `WinOptimizer-win-x64.zip`, если он доступен в релизе.
+3. Установите приложение или распакуйте архив в удобную папку.
+4. Запустите `WinOptimizer.exe`. Для системных настроек приложению потребуются права администратора.
+5. Перед применением твиков внимательно прочитайте их описание и предупреждения.
 
----
+> [!TIP]
+> Перед масштабными изменениями системы создайте точку восстановления Windows. Не применяйте твики, назначение которых вам непонятно.
 
-## Известные ограничения
+### Системные требования
 
-- Только Windows (не Linux / macOS).
-- OptiScaler **нельзя** в онлайн-играх с античитом (VAC, EAC, BattlEye) — риск бана.
-- Подбор игровых настроек по железу ещё развивается.
+| Компонент | Требование |
+|---|---|
+| Операционная система | Windows 10 или Windows 11, 64-bit |
+| Среда выполнения | [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) |
+| Права доступа | Администратор для операций с HKLM и системными службами |
 
----
+## 🔒 Безопасность
 
-## Лицензия
+- Поддерживаемые изменения реестра сохраняют исходные значения для последующего отката.
+- Скачиваемые установщики и библиотеки проверяются по SHA-256 там, где это предусмотрено механизмом загрузки.
+- Игры из Steam, Epic и других лаунчеров не удаляются напрямую.
+- Приложение не отправляет сведения о компьютере на сторонние серверы.
+- Исходный код открыт; сборки публикуются через GitHub Releases и GitHub Actions.
 
-[MIT](LICENSE) — можно использовать, менять и распространять со ссылкой на лицензию.
+Логи приложения: `%ProgramData%\WinOptimizer\log.txt`.
+
+О найденных уязвимостях сообщайте в соответствии с [SECURITY.md](SECURITY.md).
+
+## 🔄 Каналы обновлений
+
+| Канал | Ветка | Назначение |
+|---|---|---|
+| **Stable** | `main` | Основная версия для повседневного использования |
+| **Beta** | `beta` | Предварительные функции и изменения для тестирования |
+
+Бета-версия может содержать незавершённые функции и ошибки. Для обычного использования выбирайте стабильный релиз.
+
+## ⚠️ Известные ограничения
+
+- Приложение предназначено только для Windows.
+- OptiScaler не следует использовать в онлайн-играх с античитом (VAC, EAC, BattlEye): это может привести к блокировке аккаунта.
+- Некоторые игровые настройки и рекомендации продолжают развиваться.
+- Результат системных твиков зависит от конфигурации Windows и установленного программного обеспечения.
+
+## 🤝 Обратная связь
+
+Нашли ошибку или хотите предложить улучшение?
+
+- [Сообщить об ошибке](https://github.com/reikidod/WinOptimazer/issues/new/choose)
+- [Посмотреть открытые задачи](https://github.com/reikidod/WinOptimazer/issues)
+- [Посмотреть историю изменений и релизы](https://github.com/reikidod/WinOptimazer/releases)
+
+## 📄 Лицензия
+
+Проект распространяется под лицензией [MIT](LICENSE).
 
 ---
 
 <details>
-<summary><b>🛠 Сборка, тесты, подпись и установщик</b> (для разработчиков)</summary>
+<summary><b>🛠 Сборка, тестирование и разработка</b></summary>
 
 ### Сборка
 
+Требуется [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+
 ```powershell
+dotnet restore
 dotnet build -c Release
 dotnet run
 ```
-
-Иконка: `Assets/app.ico` · лицензия копируется в выходную папку.
 
 ### Тесты
 
@@ -134,49 +163,27 @@ dotnet run
 dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release
 ```
 
-### Установщик (Inno Setup)
+### Установщик
 
-Нужны [.NET 8 SDK](https://dotnet.microsoft.com/download) и [Inno Setup 6](https://jrsoftware.org/isdl.php).
+Для создания установщика потребуется [Inno Setup 6](https://jrsoftware.org/isdl.php).
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-Installer.ps1
 ```
 
-Результат: `dist\WinOptimizer-Setup.exe`
+### Структура проекта
 
-### Подпись Authenticode
-
-| Тип | SmartScreen | Кому подходит |
-|-----|-------------|----------------|
-| Самоподпись | Предупреждает, пока не доверите сертификат | Своя машина / тесты |
-| OV/EV Code Signing | Репутация накапливается | Раздача другим |
-
-```powershell
-.\scripts\New-CodeSigningCert.ps1
-.\scripts\Sign-Release.ps1
-```
-
-Коммерческий сертификат:
-
-```powershell
-dotnet publish -c Release -r win-x64 -o publish
-.\scripts\Sign-WithCommercialCert.ps1 -PfxPath "C:\path\to\real.pfx" -Password "secret"
-```
-
-Проверка: `signtool verify /pa /v publish\WinOptimizer.exe`
-
-### Windows Defender / SmartScreen
-
-MIT **не отключает** SmartScreen. Смотрят на подпись, репутацию и поведение. Ложные срабатывания: [Microsoft Security Intelligence](https://www.microsoft.com/en-us/wdsi/filesubmission).
-
-`requireAdministrator` нужен для твиков HKLM и служб — из‑за этого SmartScreen строже к «неизвестным» сборкам.
-
-### CI
-
-Push в `main` или `beta` → GitHub Actions: тесты → publish → smoke-test → GitHub Release (`WinOptimizer-win-x64.zip` + `WinOptimizer-Setup.exe`).
+- `Views/` — XAML-представления приложения.
+- `ViewModels/` — логика представления и команды.
+- `Services/` — системные сервисы.
+- `Tweaks/` — каталог системных настроек.
+- `Themes/` — ресурсы оформления.
+- `Assets/` — иконки и ресурсы.
 
 </details>
 
-<p align="center">
-  <sub>Сделано с заботой о производительности Windows · <a href="https://github.com/reikidod/WinOptimazer">reikidod/WinOptimazer</a></sub>
-</p>
+<div align="center">
+
+<sub>WinOptimizer · Открытый проект для удобного управления Windows</sub>
+
+</div>
