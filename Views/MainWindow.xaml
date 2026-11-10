@@ -22,6 +22,17 @@
             <Setter Property="CornerRadius" Value="14" />
             <Setter Property="Padding" Value="16,14" />
             <Setter Property="Margin" Value="0,0,12,10" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.28" Color="Black" />
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
 
@@ -363,7 +374,7 @@
                                                Style="{StaticResource SecondaryText}" Margin="0,4,0,0"/>
                                 </StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding DashboardStatus}"
-                                           Foreground="{DynamicResource AccentBrush}" Margin="16,0,0,0"
+                                           Foreground="{DynamicResource TextDimBrush}" Margin="16,0,0,0"
                                            FontSize="11" TextWrapping="Wrap" MaxWidth="230"
                                            VerticalAlignment="Center" TextAlignment="Right"/>
                             </Grid>
@@ -395,8 +406,21 @@
                                                 <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                                                         Padding="0,7,0,8">
                                                     <StackPanel>
-                                                        <TextBlock Text="{Binding LevelLabel}" Foreground="{DynamicResource AccentBrush}"
-                                                                   FontSize="10" FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding LevelLabel}" FontSize="10" FontWeight="Bold">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource NeutralBrush}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Level}" Value="Critical">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
                                                         <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="0,2,0,0"
                                                                    TextWrapping="Wrap"/>
                                                         <TextBlock Text="{Binding Message}" Style="{StaticResource SecondaryText}"
