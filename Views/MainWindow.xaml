@@ -253,7 +253,26 @@
                             FontSize="11" Padding="4,2" Margin="0,0,0,4"
                             Foreground="{DynamicResource AccentBrush}"
                             Command="{Binding CheckUpdateCommand}"
-                            ToolTip="Скачать новую версию с GitHub, если есть" />
+                            ToolTip="ЛКМ — проверить обновления; ПКМ — дополнительные действия">
+                        <Button.ContextMenu>
+                            <ContextMenu Background="{DynamicResource BgCardBrush}"
+                                         Foreground="{DynamicResource TextPrimaryBrush}"
+                                         BorderBrush="{DynamicResource BorderBrush}"
+                                         BorderThickness="1"
+                                         Padding="4">
+                                <MenuItem Header="Проверить наличие обновлений"
+                                          Command="{Binding PlacementTarget.DataContext.CheckUpdateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                <MenuItem Header="Скачать и установить обновление"
+                                          Command="{Binding PlacementTarget.DataContext.ApplyUpdateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          IsEnabled="{Binding PlacementTarget.DataContext.UpdateAvailable, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          ToolTip="Доступно после успешной проверки обновлений" />
+                                <Separator />
+                                <MenuItem Header="Открыть страницу релизов GitHub"
+                                          Command="{Binding PlacementTarget.DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          CommandParameter="https://github.com/reikidod/WinOptimazer/releases" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
                     <TextBlock Text="{Binding UpdateStatus}" HorizontalAlignment="Center"
                                FontSize="10" TextWrapping="Wrap" TextAlignment="Center"
                                Margin="4,0,4,0" MaxWidth="160"
