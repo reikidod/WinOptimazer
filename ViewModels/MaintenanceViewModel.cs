@@ -114,7 +114,7 @@ public sealed class MaintenanceViewModel : ObservableObject
 
     public bool HasNoScheduledTasks => ScheduledTasks.Count == 0 && !HasTaskSchedulerError;
 
-    public string ScheduledTasksSummary => $"Показано задач: {FilteredScheduledTasks.Count} из {ScheduledTasks.Count}";
+    public string ScheduledTasksSummary => $"Показано задач: {FilteredScheduledTasks.Cast<object>().Count()} из {ScheduledTasks.Count}";
 
     public string TaskSearchText
     {
