@@ -125,7 +125,7 @@
                             </StackPanel>
                         </ContentControl>
 
-                        <!-- Планировщик задач: только чтение, без команд изменения состояния -->
+                        <!-- Планировщик задач: обратимое управление пользовательскими задачами с подтверждением -->
                         <ContentControl Style="{StaticResource HoverCard}" Margin="0,0,0,12">
                             <StackPanel>
                                 <Grid>

@@ -307,15 +307,24 @@ public sealed class MaintenanceViewModel : ObservableObject
                 Logger.Error("Не удалось записать изменение задачи в историю операций", historyError);
             }
 
-            var refreshed = await Task.Run(_taskScheduler.GetTasks);
-            ScheduledTasks.Clear();
-            foreach (var item in refreshed)
-                ScheduledTasks.Add(item);
+            try
+            {
+                var refreshed = await Task.Run(_taskScheduler.GetTasks);
+                ScheduledTasks.Clear();
+                foreach (var item in refreshed)
+                    ScheduledTasks.Add(item);
 
-            TaskSchedulerError = null;
-            FilteredScheduledTasks.Refresh();
-            OnPropertyChanged(nameof(ScheduledTasksSummary));
-            OnPropertyChanged(nameof(HasNoScheduledTasks));
+                TaskSchedulerError = null;
+                FilteredScheduledTasks.Refresh();
+                OnPropertyChanged(nameof(ScheduledTasksSummary));
+                OnPropertyChanged(nameof(HasNoScheduledTasks));
+            }
+            catch (Exception refreshError) when (IsExpectedFailure(refreshError))
+            {
+                Logger.Error("Состояние задачи изменено, но не удалось обновить список планировщика", refreshError);
+                TaskSchedulerError = $"Состояние задачи изменено, но список не удалось обновить: {refreshError.Message}";
+                _dialogs.Info("Задача изменена", "Состояние задачи изменено. Нажмите «Обновить», чтобы перечитать список.");
+            }
         }
         catch (Exception ex) when (IsExpectedFailure(ex))
         {
