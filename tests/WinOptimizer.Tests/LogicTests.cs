@@ -760,6 +760,16 @@ public class TemperatureReaderTests
         Assert.Equal(41d, rows[1].Celsius);
     }
 
+    [Fact]
+    public void NvidiaInfoLines_PrefixesModelWithGpuLabel()
+    {
+        var lines = TemperatureReader.NvidiaInfoLines("NVIDIA GeForce RTX 4060, 55");
+
+        var line = Assert.Single(lines);
+        Assert.Equal("GPU · NVIDIA GeForce RTX 4060", line.Label);
+        Assert.Equal("55 °C", line.Value);
+    }
+
     [Theory]
     [InlineData(@"\_TZ.TZ00", "TZ00")]
     [InlineData("THRM", "THRM")]

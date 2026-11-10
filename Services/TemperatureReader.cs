@@ -150,10 +150,13 @@ internal static class TemperatureReader
         }
 
         var run = ProcessRunner.Run(exe, "--query-gpu=name,temperature.gpu --format=csv,noheader,nounits", timeoutMs: 5_000);
-        return run.ExitCode == 0
-            ? ParseNvidiaSmi(run.StandardOutput).Select(g => new InfoLine(g.Name, Format(g.Celsius))).ToList()
-            : [];
+        return run.ExitCode == 0 ? NvidiaInfoLines(run.StandardOutput) : [];
     }
+
+    internal static List<InfoLine> NvidiaInfoLines(string output) =>
+        ParseNvidiaSmi(output)
+            .Select(g => new InfoLine("GPU · " + g.Name, Format(g.Celsius)))
+            .ToList();
 
     private static string? FindNvidiaSmi()
     {
