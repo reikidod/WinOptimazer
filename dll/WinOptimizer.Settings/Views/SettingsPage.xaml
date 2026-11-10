@@ -524,8 +524,8 @@
                                                     </StackPanel>
                         </Expander>
 
-                        <Expander Header="О программе" IsExpanded="False" Style="{StaticResource SectionExpander}"
-                                  Margin="0,0,16,10" AutomationProperties.Name="Раздел настроек: О программе">
+                        <Expander Header="О программе" IsExpanded="False" Style="{StaticResource SettingsSectionExpander}"
+                                  AutomationProperties.Name="Раздел настроек: О программе">
                             <StackPanel Margin="0,4,0,0">
                         <Border Style="{StaticResource SettingsCard}" Margin="0,0,16,10">
                             <StackPanel>
