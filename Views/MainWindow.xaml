@@ -224,7 +224,7 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bg" Property="Background" Value="#22FFFFFF" />
+                                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -248,7 +248,7 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bg" Property="Background" Value="#22FFFFFF" />
+                                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -953,7 +953,7 @@
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Border x:Name="Dot" CornerRadius="18" Background="{DynamicResource AccentBrush}">
-                                                <TextBlock Text="↑" FontSize="18" FontWeight="Bold" Foreground="#101216"
+                                                <TextBlock Text="↑" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource BgWindowBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <ControlTemplate.Triggers>

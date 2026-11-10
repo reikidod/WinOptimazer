@@ -91,7 +91,7 @@
                                                         <Setter Property="Background" Value="Transparent" />
                                                         <Style.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="#22FFFFFF" />
+                                                                <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                                                             </Trigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -290,7 +290,7 @@
                                                     <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                                                 </Trigger>
                                                 <Trigger Property="IsChecked" Value="True">
-                                                    <Setter TargetName="Chip" Property="Background" Value="#243044" />
+                                                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                                                     <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                                                 </Trigger>
@@ -346,7 +346,7 @@
                                                 </Trigger>
                                                 <Trigger Property="IsChecked" Value="True">
                                                     <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                                                    <Setter TargetName="Card" Property="Background" Value="#243044" />
+                                                    <Setter TargetName="Card" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -389,7 +389,7 @@
                                         </Border>
 
                                         <Border Grid.Column="1" Width="44" Height="44" CornerRadius="12"
-                                                Background="#22FFFFFF" BorderBrush="#33FFFFFF" BorderThickness="1"
+                                                Background="{DynamicResource BgCardHoverBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                                 Margin="0,0,14,0" VerticalAlignment="Center" ClipToBounds="True">
                                             <Grid>
                                                 <TextBlock Text="▦" FontSize="16" HorizontalAlignment="Center"

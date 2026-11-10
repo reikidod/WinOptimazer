@@ -40,7 +40,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Border x:Name="IconBadge" Width="52" Height="52" CornerRadius="16" BorderThickness="1"
-                            Background="#28FFFFFF" BorderBrush="#33FFFFFF"
+                            Background="{DynamicResource BgCardHoverBrush}" BorderBrush="{DynamicResource BorderBrush}"
                             VerticalAlignment="Center" Margin="0,0,16,0">
                         <TextBlock x:Name="IconText" Text="💾" FontSize="24"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -58,7 +58,7 @@
             <ScrollViewer Style="{StaticResource OverlayScroll}" Grid.Row="1"
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                           MaxHeight="260" Margin="20,14,20,0" Padding="0,0,4,0">
-                <Border Background="#14FFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1"
+                <Border Background="{DynamicResource BgCardHoverBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="12" Padding="16,14">
                     <TextBlock x:Name="MessageText"
                                Foreground="{DynamicResource TextSecondaryBrush}"
@@ -67,7 +67,7 @@
             </ScrollViewer>
 
             <!-- Кнопки: слева «Не применять», справа действия -->
-            <Border Grid.Row="2" Margin="0,14,0,0" Padding="16,14" Background="#10FFFFFF"
+            <Border Grid.Row="2" Margin="0,14,0,0" Padding="16,14" Background="{DynamicResource BgSidebarBrush}"
                     CornerRadius="0,0,18,18" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>

@@ -14,7 +14,7 @@
                                 Background="{DynamicResource TrackOffBrush}" />
                         <!-- Включённое состояние — отдельный слой с плавным появлением: кисти берутся из текущей темы -->
                         <Border x:Name="OnTrack" CornerRadius="13" Opacity="0" Background="{DynamicResource AccentStrongBrush}" />
-                        <Ellipse x:Name="Thumb" Width="18" Height="18" HorizontalAlignment="Left" Margin="4,0,0,0" Fill="#D5D8DE">
+                        <Ellipse x:Name="Thumb" Width="18" Height="18" HorizontalAlignment="Left" Margin="4,0,0,0" Fill="{DynamicResource TextPrimaryBrush}">
                             <Ellipse.Effect>
                                 <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270" Opacity="0.5" Color="Black" />
                             </Ellipse.Effect>
@@ -115,7 +115,7 @@
                 <ControlTemplate TargetType="Thumb">
                     <Grid Background="Transparent">
                         <Border x:Name="Pill" Width="4" CornerRadius="2" HorizontalAlignment="Center" Margin="0,2"
-                                Background="#66C8D0DC" />
+                                Background="{DynamicResource TextSecondaryBrush}" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -133,7 +133,7 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
-                            <Setter TargetName="Pill" Property="Background" Value="#AAC8D0DC" />
+                            <Setter TargetName="Pill" Property="Background" Value="{DynamicResource TextPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="Pill" Property="Background" Value="{DynamicResource AccentBrush}" />

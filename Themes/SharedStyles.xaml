@@ -33,7 +33,7 @@
         <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Padding" Value="8,2" />
         <Setter Property="Margin" Value="0,0,8,0" />
-        <Setter Property="Background" Value="#33FFFFFF" />
+        <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
 
