@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || (github.ref_name == 'beta' && contains(github.event.head_commit.modified, 'CHANGELOG.md'))
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || (github.ref_name == 'beta' && startsWith(github.event.head_commit.message, 'release:'))
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
