@@ -277,6 +277,17 @@ public sealed class UpdateService : IUpdateService
                 return (false, beta ? "Бета-релизы пока не опубликованы." : "Стабильные релизы пока не опубликованы.", null);
 
             var tag = release.GetProperty("tag_name").GetString() ?? "последняя версия";
+            var latestVersion = NormalizeVersion(tag);
+            var latestIsBeta = (release.TryGetProperty("prerelease", out var prerelease)
+                                && prerelease.ValueKind == JsonValueKind.True)
+                               || tag.EndsWith("-beta", StringComparison.OrdinalIgnoreCase);
+            var latestChannel = latestIsBeta ? AppSettings.BetaChannel : AppSettings.StableChannel;
+
+            // Кнопка ручной загрузки тоже не должна повторно скачивать уже установленный релиз.
+            // Исключение — реальный переход с beta на stable, даже если номер совпадает.
+            if (!IsUpdate(CurrentVersion, InstalledChannel, latestVersion, latestChannel, beta))
+                return (false, $"У вас уже установлена актуальная версия {DisplayVersion}.", null);
+
             var assets = new List<(string Name, string Url)>();
             if (release.TryGetProperty("assets", out var assetArray))
             {
