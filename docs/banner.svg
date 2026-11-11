@@ -1,58 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="WinOptimizer — центр управления Windows">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-label="WinOptimizer — единый центр управления Windows 10 и 11">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#1B1C1F"/>
-      <stop offset="1" stop-color="#2A2C31"/>
+      <stop offset="1" stop-color="#25282E"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.82" cy="0.1" r="0.7">
-      <stop offset="0" stop-color="#FF5A5F" stop-opacity="0.32"/>
+    <radialGradient id="redGlow" cx="0.9" cy="0.12" r="0.62">
+      <stop offset="0" stop-color="#FF5A5F" stop-opacity="0.24"/>
       <stop offset="1" stop-color="#FF5A5F" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FF5A5F"/>
+    <radialGradient id="blueGlow" cx="0.08" cy="1" r="0.62">
+      <stop offset="0" stop-color="#4B6CA3" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#4B6CA3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.52" stop-color="#C9D2E2"/>
+      <stop offset="1" stop-color="#8794AA"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF6B70"/>
       <stop offset="1" stop-color="#C0262D"/>
     </linearGradient>
-    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-      <path d="M32 0H0V32" fill="none" stroke="#FFFFFF" stroke-opacity="0.04"/>
+    <pattern id="grid" width="56" height="56" patternUnits="userSpaceOnUse">
+      <path d="M56 0H0V56" fill="none" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
     </pattern>
   </defs>
+  <rect width="1280" height="360" rx="26" fill="url(#bg)"/>
+  <rect width="1280" height="360" rx="26" fill="url(#grid)"/>
+  <rect width="1280" height="360" rx="26" fill="url(#redGlow)"/>
+  <rect width="1280" height="360" rx="26" fill="url(#blueGlow)"/>
+  <rect x="1" y="1" width="1278" height="358" rx="25" fill="none" stroke="#FFFFFF" stroke-opacity="0.10"/>
 
-  <rect width="1280" height="320" rx="24" fill="url(#bg)"/>
-  <rect width="1280" height="320" rx="24" fill="url(#grid)"/>
-  <rect width="1280" height="320" rx="24" fill="url(#glow)"/>
-  <rect x="0.5" y="0.5" width="1279" height="319" rx="23.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.10"/>
-
-  <!-- Знак: скруглённый квадрат с «ползунками» настроек -->
-  <g transform="translate(84 92)">
-    <rect width="136" height="136" rx="34" fill="url(#accent)"/>
-    <g stroke="#FFFFFF" stroke-width="8" stroke-linecap="round">
-      <path d="M34 48H102" stroke-opacity="0.55"/>
-      <path d="M34 68H102" stroke-opacity="0.55"/>
-      <path d="M34 88H102" stroke-opacity="0.55"/>
-    </g>
-    <g fill="#FFFFFF">
-      <circle cx="80" cy="48" r="11"/>
-      <circle cx="54" cy="68" r="11"/>
-      <circle cx="86" cy="88" r="11"/>
-    </g>
+  <g transform="translate(86 94)">
+    <rect width="150" height="150" rx="36" fill="#1B1C1F" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2"/>
+    <path d="M19 38h24l18 72 22-72h20l22 72 22-72h24l-33 100h-23l-22-66-22 66H48z" fill="url(#silver)"/>
+    <path d="M105 38h24l-39 100H66z" fill="url(#red)"/>
   </g>
 
-  <g font-family="'Segoe UI Variable Display','Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif">
-    <text x="260" y="146" font-size="64" font-weight="700" fill="#F2F3F5" letter-spacing="-1">WinOptimizer</text>
-    <text x="262" y="188" font-size="24" fill="#C2CCDA">Единый центр управления Windows 10/11</text>
+  <g font-family="Inter, Segoe UI, system-ui, sans-serif">
+    <text x="286" y="145" font-size="64" font-weight="800" letter-spacing="-2" fill="#F2F3F5">WinOptimizer</text>
+    <text x="290" y="190" font-size="25" font-weight="500" fill="#C2C6CE">Единый центр управления Windows 10/11</text>
+    <text x="290" y="228" font-size="17" fill="#A9AEB9">Оптимизация · обслуживание · диагностика · контроль изменений</text>
 
     <g font-size="15" font-weight="600">
-      <g transform="translate(262 216)">
-        <rect width="190" height="36" rx="18" fill="#FFFFFF" fill-opacity="0.07" stroke="#FFFFFF" stroke-opacity="0.14"/>
-        <text x="95" y="24" text-anchor="middle" fill="#F2F3F5">Откат любых твиков</text>
+      <g transform="translate(290 260)">
+        <rect width="176" height="42" rx="13" fill="#2A2C31" stroke="#8AAAD8" stroke-opacity="0.38"/>
+        <circle cx="20" cy="21" r="5" fill="#8AAAD8"/>
+        <text x="36" y="27" fill="#F2F3F5">Откат твиков</text>
       </g>
-      <g transform="translate(466 216)">
-        <rect width="222" height="36" rx="18" fill="#FFFFFF" fill-opacity="0.07" stroke="#FFFFFF" stroke-opacity="0.14"/>
-        <text x="111" y="24" text-anchor="middle" fill="#F2F3F5">Точки восстановления</text>
+      <g transform="translate(480 260)">
+        <rect width="214" height="42" rx="13" fill="#2A2C31" stroke="#FFFFFF" stroke-opacity="0.12"/>
+        <circle cx="20" cy="21" r="5" fill="#FF5A5F"/>
+        <text x="36" y="27" fill="#F2F3F5">Контроль изменений</text>
       </g>
-      <g transform="translate(702 216)">
-        <rect width="168" height="36" rx="18" fill="#FFFFFF" fill-opacity="0.07" stroke="#FFFFFF" stroke-opacity="0.14"/>
-        <text x="84" y="24" text-anchor="middle" fill="#F2F3F5">Открытый код</text>
+      <g transform="translate(708 260)">
+        <rect width="164" height="42" rx="13" fill="#2A2C31" stroke="#FFFFFF" stroke-opacity="0.12"/>
+        <circle cx="20" cy="21" r="5" fill="#8AAAD8"/>
+        <text x="36" y="27" fill="#F2F3F5">Открытый код</text>
       </g>
     </g>
   </g>
