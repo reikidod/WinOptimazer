@@ -125,11 +125,50 @@ public static class ThemeManager
             Set(app, "WarnBrush", p.Warn);
             Set(app, "DangerBrush", p.Danger);
             Set(app, "NeutralBrush", p.Neutral);
+            SetThemeAtmosphere(app, accentHex, accentStrong, p.IsLight);
         }
         catch (Exception ex)
         {
             Logger.Error("Не удалось применить тему", ex);
         }
+    }
+
+    private static void SetThemeAtmosphere(Application app, string accent, string accentStrong, bool isLight)
+    {
+        var primary = ParseColor(accent);
+        var secondary = ParseColor(accentStrong);
+        var gridColor = isLight ? Color.FromArgb(14, 20, 28, 40) : Color.FromArgb(13, 255, 255, 255);
+        var grid = new DrawingBrush
+        {
+            TileMode = TileMode.Tile,
+            Viewport = new Rect(0, 0, 56, 56),
+            ViewportUnits = BrushMappingMode.Absolute,
+            Viewbox = new Rect(0, 0, 56, 56),
+            ViewboxUnits = BrushMappingMode.Absolute,
+            Drawing = new GeometryDrawing(new SolidColorBrush(gridColor), null,
+                Geometry.Parse("M0,0 H56 V1 H0 Z M0,0 V56 H1 V0 Z"))
+        };
+        grid.Freeze();
+        app.Resources["SiteGridBrush"] = grid;
+        app.Resources["SiteRedGlowBrush"] = CreateGlow(primary);
+        app.Resources["SiteBlueGlowBrush"] = CreateGlow(secondary);
+        app.Resources["SiteAccentButtonBrush"] = CreateGradient(secondary, primary);
+    }
+
+    private static RadialGradientBrush CreateGlow(Color color)
+    {
+        var brush = new RadialGradientBrush();
+        brush.GradientStops.Add(new GradientStop(Color.FromArgb(42, color.R, color.G, color.B), 0));
+        brush.GradientStops.Add(new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 1));
+        brush.Freeze();
+        return brush;
+    }
+
+    private static LinearGradientBrush CreateGradient(Color start, Color end)
+    {
+        var brush = new LinearGradientBrush(start, end, new Point(0, 0), new Point(1, 1));
+        brush.Freeze();
+        return brush;
     }
 
     private static void Set(Application app, string key, string hex, byte alpha = 255)
