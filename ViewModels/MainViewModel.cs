@@ -22,6 +22,8 @@ public sealed class MainViewModel : ObservableObject
     private readonly PageNavigationHistory<AppPage> _navigationHistory = new();
     private readonly DispatcherTimer _dashboardTimer;
     private readonly SemaphoreSlim _dashboardRefreshGate = new(1, 1);
+    private const int PerformanceHistoryCapacity = 60;
+    private readonly PerformanceHistoryService _performanceHistory = new(PerformanceHistoryCapacity);
     private bool _dashboardRefreshing;
     private bool _isHistoryNavigation;
     private readonly DiagnosticsService _diagnostics = new();
@@ -107,6 +109,12 @@ public sealed class MainViewModel : ObservableObject
 
     public ObservableCollection<OperationHistoryEntry> RecentOperations { get; } = new();
 
+    public ObservableCollection<PerformanceHistoryPoint> PerformanceHistory { get; } = new();
+
+    public string PerformanceHistorySummary => PerformanceHistory.Count == 0
+        ? "История появится после первых замеров"
+        : $"Последние {PerformanceHistory.Count} замеров · обновлено {PerformanceHistory[^1].CapturedAt:HH:mm:ss}";
+
     public SystemSnapshot? DashboardSnapshot
     {
         get => _dashboardSnapshot;
@@ -117,6 +125,15 @@ public sealed class MainViewModel : ObservableObject
                 OnPropertyChanged(nameof(AdditionalDrives));
                 OnPropertyChanged(nameof(HasAdditionalDrives));
                 OnPropertyChanged(nameof(HasNoAdditionalDrives));
+
+                if (value is not null)
+                {
+                    var point = _performanceHistory.Add(value);
+                    PerformanceHistory.Add(point);
+                    if (PerformanceHistory.Count > PerformanceHistoryCapacity)
+                        PerformanceHistory.RemoveAt(0);
+                    OnPropertyChanged(nameof(PerformanceHistorySummary));
+                }
             }
         }
     }
@@ -458,7 +475,7 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Фоновое обновление показателей без смены текста статуса «Обновляю…» (чтобы он не мигал).</summary>
     private async Task RefreshDashboardQuietAsync()
     {
-        if (!IsDashboardPage || _dashboardRefreshing || IsBusy) return;
+        if ((!IsDashboardPage && !IsSystemPage) || _dashboardRefreshing || IsBusy) return;
 
         _dashboardRefreshing = true;
         try
