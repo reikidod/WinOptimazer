@@ -284,6 +284,7 @@ public sealed class AppInstallService : IAppInstallService
         return app.Id switch
         {
             "chrome" => display.StartsWith("Google Chrome ", StringComparison.OrdinalIgnoreCase),
+            "7zip" => display.StartsWith("7-Zip ", StringComparison.OrdinalIgnoreCase),
             "telegram" => display.StartsWith("Telegram Desktop ", StringComparison.OrdinalIgnoreCase),
             "vlc" => display.StartsWith("VLC media player ", StringComparison.OrdinalIgnoreCase),
             _ => false
@@ -325,7 +326,8 @@ public sealed class AppInstallService : IAppInstallService
                     using var sub = uninstall.OpenSubKey(name);
                     var display = sub?.GetValue("DisplayName") as string;
                     if (!string.IsNullOrWhiteSpace(display) &&
-                        string.Equals(display.Trim(), needle.Trim(), StringComparison.OrdinalIgnoreCase))
+                        (string.Equals(display.Trim(), needle.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                         display.StartsWith(needle.Trim() + " ", StringComparison.OrdinalIgnoreCase)))
                         return true;
                 }
             }
