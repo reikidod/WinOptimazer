@@ -30,6 +30,21 @@ public sealed class UiStructureTests
         (string?)element.Attribute(name);
 
     [Fact]
+    public void LatestVersionButton_DownloadsInstallerExeDirectly()
+    {
+        var document = LoadView("Views/MainWindow.xaml");
+
+        Assert.Contains(Elements(document, "Button"), element =>
+            Attribute(element, "Content") == "Скачать последнюю версию" &&
+            Attribute(element, "Command") == "{Binding DownloadLatestVersionCommand}");
+
+        Assert.Contains(Elements(document, "MenuItem"), element =>
+            Attribute(element, "Header") == "Скачать последнюю версию (.exe)" &&
+            Attribute(element, "Command") ==
+                "{Binding PlacementTarget.DataContext.DownloadLatestVersionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}");
+    }
+
+    [Fact]
     public void Dashboard_ContainsCollapsibleDrivesDiagnosticsAndEventJournal()
     {
         var document = LoadView("Views/MainWindow.xaml");
