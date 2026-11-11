@@ -146,7 +146,7 @@ public sealed class UpdateService : IUpdateService
                     continue;
 
                 var version = NormalizeVersion(tag);
-                if (!Regex.IsMatch(version, @"^\\d+(\\.\\d+){1,3}$"))
+                if (!Regex.IsMatch(version, @"^\d+(\.\d+){1,3}$"))
                     continue;
 
                 if (best is null || CompareVersions(bestVersion!, version) < 0)
