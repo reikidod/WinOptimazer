@@ -109,22 +109,24 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void DebloatPage_UsesGroupedHeaderActionsAndResponsiveFilterPanel()
+    public void DebloatPage_UsesCompactHeaderAndInsetApplicationCards()
     {
         var document = LoadView("Views/MainWindowPages.xaml");
 
         Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "Удаление приложений");
+        Assert.DoesNotContain(Elements(document, "TextBlock"), element =>
             Attribute(element, "Text") == "Управление установленными программами и приложениями Windows");
+        Assert.DoesNotContain(Elements(document, "Expander"), element =>
+            Attribute(element, "Header") == "Безопасность и возможности удаления");
 
-        Assert.Contains(Elements(document, "Expander"), element =>
-            Attribute(element, "Header") == "Безопасность и возможности удаления" &&
-            Attribute(element, "IsExpanded") == "False");
-
+        Assert.Contains(Elements(document, "ItemsControl"), element =>
+            Attribute(element, "ItemsSource") == "{Binding Debloat.View}" &&
+            Attribute(element, "Margin") == "12,0,24,8");
         Assert.Contains(Elements(document, "TextBox"), element =>
             element.Attributes().Any(attribute =>
                 attribute.Name.LocalName == "AutomationProperties.Name" &&
                 attribute.Value == "Поиск приложений"));
-
         Assert.Contains(Elements(document, "RadioButton"), element =>
             Attribute(element, "GroupName") == "DebloatFilter" &&
             Attribute(element, "CommandParameter") == "3");
