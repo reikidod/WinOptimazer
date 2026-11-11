@@ -117,7 +117,9 @@ public sealed class UiStructureTests
             Attribute(element, "Text") == "{Binding SelectedOptimizationPreset.Title}");
 
         Assert.Contains(Elements(document, "Path"), element =>
-            Attribute(element, "local:Motion.ArcProgress") == "{Binding GaugeProgressValue}");
+            element.Attributes().Any(attribute =>
+                attribute.Name.LocalName == "ArcProgress" &&
+                attribute.Value == "{Binding GaugeProgressValue}"));
     }
 
     [Fact]
