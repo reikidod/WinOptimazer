@@ -139,12 +139,15 @@ public sealed class AppInstallService : IAppInstallService
     public async Task<(bool Ok, string Message)> DownloadAndInstallAsync(
         AppCatalogItem app, IProgress<string>? progress = null, CancellationToken ct = default)
     {
-        var target = Path.Combine(AppPaths.DownloadsDirectory, app.FileName);
+        var downloadDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "WinOptimizer", "Downloads");
+        var target = Path.Combine(downloadDirectory, app.FileName);
         var temporary = target + ".download";
         try
         {
             if (IsInstalled(app)) return (true, $"{app.Name} уже установлен.");
-            Directory.CreateDirectory(AppPaths.DownloadsDirectory);
+            Directory.CreateDirectory(downloadDirectory);
             progress?.Report($"Скачиваю {app.Name}…");
             await DownloadFileAsync(app.DownloadUrl, temporary, ct).ConfigureAwait(false);
             await using (var stream = new FileStream(temporary, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -155,7 +158,7 @@ public sealed class AppInstallService : IAppInstallService
             }
             File.Move(temporary, target, overwrite: true);
             progress?.Report($"Запускаю установщик {app.Name}…");
-            var psi = new ProcessStartInfo { FileName = target, Arguments = app.Arguments, UseShellExecute = true, WorkingDirectory = AppPaths.DownloadsDirectory };
+            var psi = new ProcessStartInfo { FileName = target, Arguments = app.Arguments, UseShellExecute = true, WorkingDirectory = downloadDirectory };
             using var process = Process.Start(psi) ?? throw new InvalidOperationException("Windows не смогла запустить установщик.");
             await process.WaitForExitAsync(ct).ConfigureAwait(false);
             for (var attempt = 0; attempt < 12; attempt++)
@@ -196,7 +199,10 @@ public sealed class AppInstallService : IAppInstallService
             arguments = Environment.ExpandEnvironmentVariables(arguments);
             if (executable.EndsWith("msiexec.exe", StringComparison.OrdinalIgnoreCase) ||
                 executable.Equals("msiexec", StringComparison.OrdinalIgnoreCase))
+            {
+                executable = Path.Combine(Environment.SystemDirectory, "msiexec.exe");
                 arguments = System.Text.RegularExpressions.Regex.Replace(arguments, @"(?i)(^|\s)/i(?=\s|\{)", "$1/x");
+            }
             if (!File.Exists(executable) && !executable.Equals("msiexec", StringComparison.OrdinalIgnoreCase))
                 return (false, $"Файл деинсталлятора не найден: {executable}");
             progress?.Report($"Удаляю {app.Name}…");
@@ -238,7 +244,8 @@ public sealed class AppInstallService : IAppInstallService
         var roots = new[] {
             (RegistryHive.LocalMachine, RegistryView.Registry64),
             (RegistryHive.LocalMachine, RegistryView.Registry32),
-            (RegistryHive.CurrentUser, RegistryView.Default)
+            (RegistryHive.CurrentUser, RegistryView.Registry64),
+            (RegistryHive.CurrentUser, RegistryView.Registry32)
         };
         foreach (var (hive, view) in roots)
         {
@@ -304,7 +311,8 @@ public sealed class AppInstallService : IAppInstallService
         {
             (RegistryHive.LocalMachine, RegistryView.Registry64),
             (RegistryHive.LocalMachine, RegistryView.Registry32),
-            (RegistryHive.CurrentUser, RegistryView.Default)
+            (RegistryHive.CurrentUser, RegistryView.Registry64),
+            (RegistryHive.CurrentUser, RegistryView.Registry32)
         })
         {
             try
