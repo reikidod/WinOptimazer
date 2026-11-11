@@ -99,4 +99,29 @@ public sealed class UiStructureTests
         Assert.Contains(Elements(document, "ContentPresenter"), element =>
             Attribute(element, "ContentSource") == "Content");
     }
+    [Fact]
+    public void Settings_UseCollapsedSectionsAndKeepAboutVisible()
+    {
+        var document = LoadView("dll/WinOptimizer.Settings/Views/SettingsPage.xaml");
+        var expanders = Elements(document, "Expander").ToList();
+
+        foreach (var header in new[] { "Запуск и обновления", "Безопасность", "Навигация и разделы",
+                                       "Тема и цвета", "Фон", "Анимации и масштаб", "Данные и диагностика" })
+        {
+            Assert.Contains(expanders, element =>
+                Attribute(element, "Header") == header &&
+                Attribute(element, "IsExpanded") == "False");
+        }
+
+        Assert.Contains(Elements(document, "CheckBox"), element =>
+            Attribute(element, "IsChecked") == "{Binding Settings.ShowApplicationsGroup, Mode=TwoWay}");
+
+        Assert.Contains(Elements(document, "CheckBox"), element =>
+            Attribute(element, "IsChecked") == "{Binding Settings.ShowAppsTab, Mode=TwoWay}");
+
+        var aboutTitle = Elements(document, "TextBlock")
+            .Single(element => Attribute(element, "Text") == "О программе");
+        Assert.DoesNotContain(aboutTitle.Ancestors(), ancestor => ancestor.Name.LocalName == "Expander");
+    }
+
 }
