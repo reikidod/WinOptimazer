@@ -578,7 +578,7 @@
                                                 <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                                                 <TextBlock Text="{Binding Status}" FontSize="12" Margin="0,4,0,0" Foreground="{DynamicResource AccentBrush}" />
                                             </StackPanel>
-                                            <Button Grid.Column="1" Content="Скачать и установить" VerticalAlignment="Center" Margin="16,0,0,0"
+                                            <Button Grid.Column="1" Content="{Binding ActionText}" VerticalAlignment="Center" Margin="16,0,0,0"
                                                     Command="{Binding DataContext.Apps.InstallAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}" />
                                         </Grid>
