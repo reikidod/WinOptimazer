@@ -304,7 +304,7 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Equal(2_000d, second.ReceivedBytesPerSecond);
         Assert.Equal(3_000d, second.SentBytesPerSecond);
         Assert.Equal("2 КБ/с", second.DownloadText);
-        Assert.Equal("3 КБ/с", second.UploadText);
+        Assert.Equal("2.9 КБ/с", second.UploadText);
     }
 
     [Fact]
