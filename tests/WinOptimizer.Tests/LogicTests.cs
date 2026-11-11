@@ -500,7 +500,7 @@ public class UpdateChannelTests
     [InlineData("0.4.50", "stable", "0.4.50", "stable", false, false)]
     [InlineData("0.4.60", "beta", "0.4.58", "stable", false, true)]   // возврат с беты на стабильную
     [InlineData("0.4.60", "beta", "0.4.58", "stable", true, false)]   // остаёмся на бете
-    [InlineData("0.4.60", "beta", "0.4.60", "stable", false, false)]
+    [InlineData("0.4.60", "beta", "0.4.60", "stable", false, true)] // переход на стабильный канал при совпадающей версии
     public void IsUpdate_Rules(string cur, string curCh, string latest, string latestCh, bool beta, bool expected) =>
         Assert.Equal(expected, UpdateService.IsUpdate(cur, curCh, latest, latestCh, beta));
 
