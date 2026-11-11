@@ -1,13 +1,13 @@
 name: Release
 
 # Стабильные релизы собираются при push в main.
-# Beta-релизы запускаются вручную через workflow_dispatch с выбранной веткой beta:
-# это предотвращает публикацию/постановку релиза в очередь на каждый промежуточный push.
+# Beta-релиз запускается при изменении CHANGELOG.md в beta или вручную через workflow_dispatch.
+# Промежуточные push в beta не запускают сборку релиза.
 # Встроенное обновление скачивает опубликованный WinOptimizer-win-x64.zip.
 # Номер версии: верхняя версия из CHANGELOG.md; номер запуска — резервный вариант.
 on:
   push:
-    branches: [main]
+    branches: [main, beta]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'main' || (github.ref_name == 'beta' && contains(join(github.event.commits.*.modified, ','), 'CHANGELOG.md'))
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
