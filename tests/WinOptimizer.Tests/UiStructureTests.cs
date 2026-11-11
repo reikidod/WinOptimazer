@@ -119,18 +119,19 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void LatestVersionButton_DownloadsInstallerExeDirectly()
+    public void VersionAction_UsesInPlaceUpdateInsteadOfDownloadingSetup()
     {
         var document = LoadView("Views/MainWindow.xaml");
 
         Assert.Contains(Elements(document, "Button"), element =>
-            Attribute(element, "Content") == "Скачать последнюю версию" &&
-            Attribute(element, "Command") == "{Binding DownloadLatestVersionCommand}");
+            Attribute(element, "Content") == "Проверить обновления" &&
+            Attribute(element, "Command") == "{Binding CheckUpdateCommand}");
 
-        Assert.Contains(Elements(document, "MenuItem"), element =>
-            Attribute(element, "Header") == "Скачать последнюю версию (.exe)" &&
-            Attribute(element, "Command") ==
-                "{Binding PlacementTarget.DataContext.DownloadLatestVersionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}");
+        Assert.DoesNotContain(Elements(document, "Button"), element =>
+            Attribute(element, "Command") == "{Binding DownloadLatestVersionCommand}");
+        Assert.DoesNotContain(Elements(document, "MenuItem"), element =>
+            (Attribute(element, "Header") ?? "").Contains("Setup", StringComparison.OrdinalIgnoreCase) ||
+            (Attribute(element, "Header") ?? "").Contains("(.exe)", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
