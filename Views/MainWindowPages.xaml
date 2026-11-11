@@ -279,12 +279,6 @@
                                     Command="{Binding Debloat.SelectRecommendedCommand}" />
                             <Button Content="Удалить выбранные" Style="{StaticResource AccentButton}"
                                     Margin="0,0,0,8" Command="{Binding Debloat.RemoveSelectedCommand}" />
-                            <WrapPanel.Resources>
-                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                    <Setter Property="MinHeight" Value="36" />
-                                    <Setter Property="Padding" Value="13,7" />
-                                </Style>
-                            </WrapPanel.Resources>
                         </WrapPanel>
                     </Grid>
                 </Border>
