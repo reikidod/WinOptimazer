@@ -257,6 +257,8 @@ public sealed class MainViewModel : ObservableObject
         _ => 34,
     };
 
+    public string GaugeProgressLabel => $"{(int)GaugeProgressValue}%";
+
     public string PresetSelectionSummary =>
         $"В наборе {SelectedOptimizationPreset.TweakIds.Count} твиков. Уже применённые изменения вне набора сохраняются без изменений.";
 
@@ -715,6 +717,7 @@ public sealed class MainViewModel : ObservableObject
         _selectedOptimizationPresetId = preset.Id;
         OnPropertyChanged(nameof(SelectedOptimizationPreset));
         OnPropertyChanged(nameof(GaugeProgressValue));
+        OnPropertyChanged(nameof(GaugeProgressLabel));
         OnPropertyChanged(nameof(PresetSelectionSummary));
 
         var included = preset.TweakIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
