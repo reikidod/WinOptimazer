@@ -62,15 +62,15 @@ public sealed class UiStructureTests
         var logoBorder = Assert.Single(Elements(document, "Border"), element =>
             Attribute(element, "Width") == "42" &&
             Attribute(element, "Height") == "42" &&
-            element.Descendants().Any(child => child.Name.LocalName == "Viewbox")));
+            element.Descendants().Any(child => child.Name.LocalName == "Viewbox"));
 
         var viewbox = Assert.Single(logoBorder.Descendants(), element =>
-            element.Name.LocalName == "Viewbox"));
+            element.Name.LocalName == "Viewbox");
         Assert.Equal("30", Attribute(viewbox, "Width"));
         Assert.Equal("30", Attribute(viewbox, "Height"));
 
         var canvas = Assert.Single(viewbox.Descendants(), element =>
-            element.Name.LocalName == "Canvas"));
+            element.Name.LocalName == "Canvas");
         Assert.Equal("24", Attribute(canvas, "Width"));
         Assert.Equal("24", Attribute(canvas, "Height"));
         Assert.Equal(2, canvas.Elements().Count(element => element.Name.LocalName == "Path"));
@@ -87,7 +87,7 @@ public sealed class UiStructureTests
         var document = XDocument.Parse(banner);
         var mark = Assert.Single(document.Descendants(), element =>
             element.Name.LocalName == "g" &&
-            (string?)element.Attribute("transform") == "translate(86 94)"));
+            (string?)element.Attribute("transform") == "translate(86 94)");
         var paths = mark.Elements().Where(element => element.Name.LocalName == "path").ToList();
         Assert.Equal(2, paths.Count);
 
@@ -161,9 +161,9 @@ public sealed class UiStructureTests
         var document = LoadView("Views/MainWindow.xaml");
         var expanders = Elements(document, "Expander").ToList();
         var tweakPanel = Assert.Single(expanders, element =>
-            Attribute(element, "Header") == "Список сложных твиков"));
+            Attribute(element, "Header") == "Список сложных твиков");
         var categoryFilters = Assert.Single(expanders, element =>
-            Attribute(element, "Header") == "Фильтры категорий"));
+            Attribute(element, "Header") == "Фильтры категорий");
 
         Assert.Equal("False", Attribute(tweakPanel, "IsExpanded"));
         Assert.Contains(categoryFilters.Ancestors(), ancestor =>
@@ -236,7 +236,7 @@ public sealed class UiStructureTests
             Attribute(element, "Grid.Row") == "1" &&
             Attribute(element, "HorizontalAlignment") == "Stretch" &&
             element.Elements().Any(child => child.Name.LocalName == "Button" &&
-                Attribute(child, "Command") == "{Binding Debloat.RemoveSelectedCommand}")));
+                Attribute(child, "Command") == "{Binding Debloat.RemoveSelectedCommand}"));
         Assert.Contains(headerActions.Elements(), element =>
             element.Name.LocalName == "Button" && Attribute(element, "Margin") == "0,0,0,8");
     }
