@@ -27,7 +27,7 @@ public sealed class UiStructureTests
         document.Descendants().Where(element => element.Name.LocalName == name);
 
     private static string? Attribute(XElement element, string name) =>
-        (string?)element.Attribute(name);
+        element.Attributes().FirstOrDefault(attribute => attribute.Name.LocalName == name)?.Value;
 
     [Fact]
     public void MainShell_UsesOfficialWebsiteVisualLanguage()
