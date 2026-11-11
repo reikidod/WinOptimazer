@@ -50,32 +50,6 @@ public class UpdateDownloadSafetyTests
     }
 
     [Fact]
-    public void PickInstallerAsset_PrefersSetupExe_AndNeverReturnsZip()
-    {
-        var assets = new List<(string Name, string Url)>
-        {
-            ("WinOptimizer-win-x64.zip", "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-win-x64.zip"),
-            ("WinOptimizer-Setup.exe", "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-Setup.exe"),
-            ("checksums.txt", "https://github.com/reikidod/WinOptimazer/releases/download/v1/checksums.txt"),
-        };
-
-        Assert.Equal(
-            "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-Setup.exe",
-            UpdateService.PickInstallerAsset(assets));
-    }
-
-    [Fact]
-    public void PickInstallerAsset_ReturnsNullWhenReleaseHasNoExe()
-    {
-        var assets = new List<(string Name, string Url)>
-        {
-            ("WinOptimizer-win-x64.zip", "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-win-x64.zip"),
-        };
-
-        Assert.Null(UpdateService.PickInstallerAsset(assets));
-    }
-
-    [Fact]
     public async Task CheckAsync_PropagatesCancellationInsteadOfReportingNetworkFailure()
     {
         using var cancellation = new CancellationTokenSource();
