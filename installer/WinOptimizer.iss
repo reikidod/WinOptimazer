@@ -38,8 +38,14 @@ ChangesAssociations=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
 SolidCompression=yes
-WizardStyle=modern
-WizardSizePercent=110
+; Современный мастер следует системной светлой/тёмной теме Windows 11.
+; Палитра согласована с сайтом и приложением: графитовый фон, холодный синий акцент и фирменный красный.
+WizardStyle=modern dynamic
+WizardSizePercent=120
+WizardImageBackColor=#202225
+WizardImageBackColorDynamicDark=#202225
+WizardSmallImageBackColor=#202225
+WizardSmallImageBackColorDynamicDark=#202225
 WizardImageFile=wizard-large.bmp,wizard-large@2x.bmp
 WizardSmallImageFile=wizard-small.bmp,wizard-small@2x.bmp
 PrivilegesRequired=admin
@@ -63,7 +69,15 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
 russian.InstallingRuntime=Устанавливаю компонент .NET 8 Desktop Runtime (нужен для работы программы)…
+russian.WelcomeLabel1=Добро пожаловать в WinOptimizer
+russian.WelcomeLabel2=Мастер установки WinOptimizer поможет установить или обновить приложение.\n\nВаши настройки и резервные копии твиков сохраняются.
+russian.FinishedHeadingLabel=WinOptimizer готов к работе
+russian.FinishedLabel=Установка завершена. Запустите WinOptimizer, чтобы продолжить настройку Windows.
 english.InstallingRuntime=Installing .NET 8 Desktop Runtime (required by the app)...
+english.WelcomeLabel1=Welcome to WinOptimizer
+english.WelcomeLabel2=The WinOptimizer Setup Wizard will install or update the application.\n\nYour settings and tweak backups will be preserved.
+english.FinishedHeadingLabel=WinOptimizer is ready
+english.FinishedLabel=Setup has finished installing WinOptimizer. Launch the app to continue tuning Windows.
 russian.KeepData=Оставить настройки и резервные копии твиков (папка %1)?%n%nЕсли позже переустановите программу, настройки сохранятся.
 english.KeepData=Keep settings and tweak backups (folder %1)?%n%nThey will be reused if you reinstall later.
 
