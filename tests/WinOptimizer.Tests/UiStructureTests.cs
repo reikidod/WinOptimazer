@@ -130,6 +130,14 @@ public sealed class UiStructureTests
         Assert.Contains(Elements(document, "RadioButton"), element =>
             Attribute(element, "GroupName") == "DebloatFilter" &&
             Attribute(element, "CommandParameter") == "3");
+
+        var headerActions = Assert.Single(Elements(document, "WrapPanel").Where(element =>
+            Attribute(element, "Grid.Row") == "1" &&
+            Attribute(element, "HorizontalAlignment") == "Stretch" &&
+            element.Elements().Any(child => child.Name.LocalName == "Button" &&
+                Attribute(child, "Command") == "{Binding Debloat.RemoveSelectedCommand}")));
+        Assert.Contains(headerActions.Elements(), element =>
+            element.Name.LocalName == "Button" && Attribute(element, "Margin") == "0,0,0,8");
     }
 
     [Fact]
