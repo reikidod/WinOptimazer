@@ -59,17 +59,17 @@ public sealed class UiStructureTests
     public void BrandMark_StaysInsideItsSquareContainer()
     {
         var document = LoadView("Views/MainWindow.xaml");
-        var logoBorder = Assert.Single(Elements(document, "Border").Where(element =>
+        var logoBorder = Assert.Single(Elements(document, "Border"), element =>
             Attribute(element, "Width") == "42" &&
             Attribute(element, "Height") == "42" &&
             element.Descendants().Any(child => child.Name.LocalName == "Viewbox")));
 
-        var viewbox = Assert.Single(logoBorder.Descendants().Where(element =>
+        var viewbox = Assert.Single(logoBorder.Descendants(), element =>
             element.Name.LocalName == "Viewbox"));
         Assert.Equal("30", Attribute(viewbox, "Width"));
         Assert.Equal("30", Attribute(viewbox, "Height"));
 
-        var canvas = Assert.Single(viewbox.Descendants().Where(element =>
+        var canvas = Assert.Single(viewbox.Descendants(), element =>
             element.Name.LocalName == "Canvas"));
         Assert.Equal("24", Attribute(canvas, "Width"));
         Assert.Equal("24", Attribute(canvas, "Height"));
@@ -85,7 +85,7 @@ public sealed class UiStructureTests
     {
         var banner = File.ReadAllText(Path.Combine(RepositoryRoot(), "docs/banner.svg"));
         var document = XDocument.Parse(banner);
-        var mark = Assert.Single(document.Descendants().Where(element =>
+        var mark = Assert.Single(document.Descendants(), element =>
             element.Name.LocalName == "g" &&
             (string?)element.Attribute("transform") == "translate(86 94)"));
         var paths = mark.Elements().Where(element => element.Name.LocalName == "path").ToList();
@@ -160,7 +160,7 @@ public sealed class UiStructureTests
     {
         var document = LoadView("Views/MainWindow.xaml");
         var expanders = Elements(document, "Expander").ToList();
-        var tweakPanel = Assert.Single(expanders.Where(element =>
+        var tweakPanel = Assert.Single(expanders, element =>
             Attribute(element, "Header") == "Список сложных твиков"));
         var categoryFilters = Assert.Single(expanders.Where(element =>
             Attribute(element, "Header") == "Фильтры категорий"));
@@ -232,7 +232,7 @@ public sealed class UiStructureTests
             Attribute(element, "GroupName") == "DebloatFilter" &&
             Attribute(element, "CommandParameter") == "3");
 
-        var headerActions = Assert.Single(Elements(document, "WrapPanel").Where(element =>
+        var headerActions = Assert.Single(Elements(document, "WrapPanel"), element =>
             Attribute(element, "Grid.Row") == "1" &&
             Attribute(element, "HorizontalAlignment") == "Stretch" &&
             element.Elements().Any(child => child.Name.LocalName == "Button" &&
@@ -273,8 +273,8 @@ public sealed class UiStructureTests
     public void AboutSection_RemainsVisibleOutsideCollapsibleSections()
     {
         var document = LoadView("dll/WinOptimizer.Settings/Views/SettingsPage.xaml");
-        var aboutTitle = Elements(document, "TextBlock")
-            .Single(element => Attribute(element, "Text") == "О программе");
+        var aboutTitle = Assert.Single(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "О программе");
 
         Assert.DoesNotContain(aboutTitle.Ancestors(), ancestor => ancestor.Name.LocalName == "Expander");
         Assert.Contains(Elements(document, "ContentPresenter"), element =>
