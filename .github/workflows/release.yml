@@ -1,7 +1,7 @@
 name: Release
 
 # Стабильные релизы собираются при push в main.
-# Beta-релизы запускаются вручную через workflow_dispatch с выбранной веткой beta:
+# Beta-релизы запускаются вручную через workflow_dispatch с выбранной веткой beta-2:
 # это предотвращает публикацию/постановку релиза в очередь на каждый промежуточный push.
 # Встроенное обновление скачивает опубликованный WinOptimizer-win-x64.zip.
 # Номер версии: верхняя версия из CHANGELOG.md; номер запуска — резервный вариант.
@@ -41,8 +41,8 @@ jobs:
           } else {
             "$($p[0]).$($p[1]).${{ github.run_number }}"
           }
-          # main — стабильный канал, beta — бета-канал (релиз помечается prerelease и тегом -beta)
-          $channel = if ($env:GITHUB_REF_NAME -eq 'beta') { 'beta' } else { 'stable' }
+          # main — стабильный канал, beta-2 — бета-канал (релиз помечается prerelease и тегом -beta)
+          $channel = if ($env:GITHUB_REF_NAME -eq 'beta-2') { 'beta' } else { 'stable' }
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "CHANNEL=$channel" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Версия релиза: $v, канал: $channel"
@@ -188,7 +188,6 @@ jobs:
             $releaseArgs = @('--latest')
           }
 
-          # Beta push-ы могут повторно запускать workflow для уже опубликованной версии.
           # Не перезаписываем опубликованный релиз и не считаем повторный запуск ошибкой.
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
