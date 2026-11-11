@@ -918,6 +918,54 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
+                        <!-- Локальная история Performance Center: последние 60 замеров CPU и RAM -->
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,6,0,10" Padding="14,12">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="История производительности" FontSize="14" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding PerformanceHistorySummary}" Style="{StaticResource SecondaryText}"
+                                                   FontSize="10.5" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource AccentBrush}" Margin="0,0,4,0" />
+                                        <TextBlock Text="CPU" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,10,0" />
+                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource BrandGradientBrush}" Margin="0,0,4,0" />
+                                        <TextBlock Text="RAM" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                </Grid>
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                                              CanContentScroll="True">
+                                    <ItemsControl ItemsSource="{Binding PerformanceHistory}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Width="9" Height="52" Margin="1,0" ToolTip="{Binding TimeLabel}">
+                                                    <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom"
+                                                                HorizontalAlignment="Center">
+                                                        <Border Width="3" Height="{Binding CpuBarHeight}"
+                                                                Background="{DynamicResource AccentBrush}" CornerRadius="1"
+                                                                Margin="0,0,1,0" />
+                                                        <Border Width="3" Height="{Binding MemoryBarHeight}"
+                                                                Background="{DynamicResource BrandGradientBrush}" CornerRadius="1" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                <TextBlock Text="Данные хранятся только в памяти до закрытия приложения."
+                                           Style="{StaticResource SecondaryText}" FontSize="10" Margin="0,7,0,0" />
+                            </StackPanel>
+                        </Border>
+
                         <!-- Процессы: разделы свёрнуты; список обновляется, только пока раздел раскрыт -->
                         <Expander Style="{StaticResource SectionExpander}" Margin="0,6,0,0"
                                   Header="{Binding Processes.ActiveHeader}"
