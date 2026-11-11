@@ -118,7 +118,7 @@ public sealed class UiStructureTests
 
         Assert.Contains(Elements(document, "Path"), element =>
             element.Attributes().Any(attribute =>
-                attribute.Name.LocalName == "ArcProgress" &&
+                attribute.Name.LocalName.EndsWith("ArcProgress", StringComparison.Ordinal) &&
                 attribute.Value == "{Binding GaugeProgressValue}"));
     }
 
