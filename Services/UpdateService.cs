@@ -267,12 +267,16 @@ public sealed class UpdateService : IUpdateService
             if (!IsTrustedDownloadUrl(downloadUrl))
                 return (false, "GitHub вернул недоверенную ссылку на установщик.", null);
 
-            Directory.CreateDirectory(AppPaths.DownloadsDirectory);
+            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var downloadsDirectory = string.IsNullOrWhiteSpace(userProfile)
+                ? AppPaths.DownloadsDirectory
+                : Path.Combine(userProfile, "Downloads");
+            Directory.CreateDirectory(downloadsDirectory);
             var fileName = Path.GetFileName(new Uri(downloadUrl).AbsolutePath);
             if (string.IsNullOrWhiteSpace(fileName) || !fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                 return (false, "Не удалось определить имя EXE-файла.", null);
 
-            var destination = Path.Combine(AppPaths.DownloadsDirectory, fileName);
+            var destination = Path.Combine(downloadsDirectory, fileName);
             temporaryDownload = destination + "." + Guid.NewGuid().ToString("N") + ".download";
             progress?.Report($"Скачиваю установщик {tag}…");
             await using (var output = new FileStream(
