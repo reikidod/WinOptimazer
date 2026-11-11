@@ -25,7 +25,7 @@
 
 <br>
 
-[**Скачать Stable**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Бета-версии](https://github.com/reikidod/WinOptimazer/releases) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#возможности) · [Безопасность](#безопасность) · [Обратная связь](https://github.com/reikidod/WinOptimazer/issues/new/choose)
+[**Скачать Stable**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Бета-версии](https://github.com/reikidod/WinOptimazer/releases) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#возможности) · [Beta 0.6](docs/BETA.md) · [Безопасность](#безопасность) · [Обратная связь](https://github.com/reikidod/WinOptimazer/issues/new/choose)
 
 </div>
 
@@ -100,7 +100,7 @@
 
 Предварительные функции и изменения для тестирования. Возможны ошибки.
 
-[**Открыть бета-релизы →**](https://github.com/reikidod/WinOptimazer/releases)
+[**Открыть бета-релизы →**](https://github.com/reikidod/WinOptimazer/releases) · [Что нового в Beta 0.6](docs/BETA.md)
 
 </td>
 </tr>
