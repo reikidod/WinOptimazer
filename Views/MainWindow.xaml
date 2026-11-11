@@ -266,14 +266,17 @@
                                FontSize="11" Margin="0,8,0,2"
                                Foreground="{DynamicResource TextDimBrush}"
                                ToolTip="{Binding UpdateStatus}" />
-                    <Button Content="Проверить обновления" HorizontalAlignment="Center"
+                    <Button Content="Скачать последнюю версию"
+                            HorizontalAlignment="Center"
                             Background="Transparent" BorderThickness="0" Cursor="Hand"
                             FontSize="11" Padding="4,2" Margin="0,0,0,4"
                             Foreground="{DynamicResource AccentBrush}"
-                            Command="{Binding CheckUpdateCommand}"
-                            ToolTip="ЛКМ — проверить обновления; ПКМ — дополнительные действия">
+                            Command="{Binding DownloadLatestVersionCommand}"
+                            ToolTip="Скачать EXE последнего релиза выбранного канала в папку загрузок">
                         <Button.ContextMenu>
                             <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                <MenuItem Style="{StaticResource DarkMenuItem}" Header="Скачать последнюю версию (.exe)"
+                                          Command="{Binding PlacementTarget.DataContext.DownloadLatestVersionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                                 <MenuItem Style="{StaticResource DarkMenuItem}" Header="Проверить наличие обновлений"
                                           Command="{Binding PlacementTarget.DataContext.CheckUpdateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                                 <MenuItem Style="{StaticResource DarkMenuItem}" Header="Скачать и установить обновление"
