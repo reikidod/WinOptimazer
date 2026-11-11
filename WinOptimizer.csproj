@@ -62,6 +62,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\\app-icon-256.png" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
