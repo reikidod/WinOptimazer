@@ -656,26 +656,30 @@
                                   HorizontalAlignment="Left" AutomationProperties.Name="Индикатор уровня оптимизации">
                                 <Canvas Width="250" Height="158">
                                     <Path Data="M 18,122 A 107,107 0 0 1 232,122"
-                                          Stroke="{DynamicResource BorderBrush}" StrokeThickness="15"
+                                          Stroke="{DynamicResource TrackOffBrush}" StrokeThickness="14"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
                                     <Path Data="M 18,122 A 107,107 0 0 1 232,122"
-                                          Stroke="{DynamicResource AccentBrush}" StrokeThickness="15"
+                                          Stroke="{DynamicResource BrandGradientBrush}" StrokeThickness="14"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                                           StrokeDashArray="26,26" StrokeDashOffset="26"
-                                          local:Motion.ArcProgress="{Binding GaugeProgressValue}" />
+                                          local:Motion.ArcProgress="{Binding GaugeProgressValue}">
+                                        <Path.Effect>
+                                            <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.18" Color="#8AAAD8" />
+                                        </Path.Effect>
+                                    </Path>
                                     <TextBlock Canvas.Left="0" Canvas.Top="136" Text="ЛЁГКАЯ" FontSize="9"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                               FontWeight="SemiBold" Foreground="{DynamicResource TextDimBrush}" />
                                     <TextBlock Canvas.Left="101" Canvas.Top="136" Text="СРЕДНЯЯ" FontSize="9"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                               FontWeight="SemiBold" Foreground="{DynamicResource TextDimBrush}" />
                                     <TextBlock Canvas.Left="202" Canvas.Top="136" Text="АГРЕСС." FontSize="9"
-                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                               FontWeight="SemiBold" Foreground="{DynamicResource TextDimBrush}" />
                                 </Canvas>
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                                            Margin="0,12,0,24" IsHitTestVisible="False">
-                                    <TextBlock Text="{Binding GaugeProgressLabel}" FontSize="27" FontWeight="Bold"
-                                               Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" />
+                                            Margin="0,10,0,24" IsHitTestVisible="False">
+                                    <TextBlock Text="{Binding GaugeProgressLabel}" FontSize="30" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
                                     <TextBlock Text="{Binding SelectedOptimizationPreset.Title}" FontSize="11"
-                                               FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"
                                                HorizontalAlignment="Center" />
                                 </StackPanel>
                             </Grid>
