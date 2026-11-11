@@ -77,23 +77,29 @@ public sealed class AppInstallService : IAppInstallService
 
     public bool IsInstalled(AppCatalogItem app)
     {
-        // 1) Прямой путь
+        // 1) Проверяем фактический исполняемый файл. Для Discord Update.exe
+        // может оставаться после удаления, поэтому проверяем только Discord.exe.
         if (!string.IsNullOrEmpty(app.DetectPath))
         {
-            if (File.Exists(app.DetectPath))
+            if (app.Id != "discord" && File.Exists(app.DetectPath))
                 return true;
 
-            // Discord кладёт версии в подпапки app-x.y.z
             if (app.Id == "discord")
             {
                 var discordRoot = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Discord");
-                if (Directory.Exists(discordRoot) &&
-                    Directory.EnumerateFiles(discordRoot, "Discord.exe", SearchOption.AllDirectories).Any())
-                    return true;
+                try
+                {
+                    if (Directory.Exists(discordRoot) &&
+                        Directory.EnumerateFiles(discordRoot, "Discord.exe", SearchOption.AllDirectories).Any())
+                        return true;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    Logger.Error("Не удалось проверить каталог Discord", ex);
+                }
             }
 
-            // Chrome иногда в LocalAppData
             if (app.Id == "chrome")
             {
                 var alt = Path.Combine(
@@ -102,7 +108,6 @@ public sealed class AppInstallService : IAppInstallService
                 if (File.Exists(alt)) return true;
             }
 
-            // Steam x64 path
             if (app.Id == "steam")
             {
                 var alt = Path.Combine(
@@ -112,28 +117,10 @@ public sealed class AppInstallService : IAppInstallService
             }
         }
 
-        // 2) Uninstall registry (32/64)
-        if (FindUninstallDisplayName(app.Name) || FindUninstallDisplayName(app.Id))
-            return true;
-
-        // Специфичные имена в uninstall
-        if (app.Id == "chrome" && (FindUninstallDisplayName("Google Chrome") || FindUninstallDisplayName("Chrome")))
-            return true;
-        if (app.Id == "7zip" && FindUninstallDisplayName("7-Zip"))
-            return true;
-
-        // 3) Процесс запущен — скорее всего установлено
-        if (!string.IsNullOrEmpty(app.DetectProcess))
-        {
-            try
-            {
-                if (Process.GetProcessesByName(app.DetectProcess).Length > 0)
-                    return true;
-            }
-            catch { /* ignore */ }
-        }
-
-        return false;
+        // 2) Приложение считается установленным только при наличии записи удаления.
+        // Один лишь запущенный процесс не должен переключать кнопку на «Удалить»:
+        // процесс может ещё жить после удаления или принадлежать другой копии приложения.
+        return FindUninstallEntry(app) is not null;
     }
 
     public async Task<(bool Ok, string Message)> DownloadAndInstallAsync(
@@ -287,6 +274,8 @@ public sealed class AppInstallService : IAppInstallService
             "7zip" => display.StartsWith("7-Zip ", StringComparison.OrdinalIgnoreCase),
             "telegram" => display.StartsWith("Telegram Desktop ", StringComparison.OrdinalIgnoreCase),
             "vlc" => display.StartsWith("VLC media player ", StringComparison.OrdinalIgnoreCase),
+            "discord" => display.StartsWith("Discord ", StringComparison.OrdinalIgnoreCase),
+            "steam" => display.StartsWith("Steam ", StringComparison.OrdinalIgnoreCase),
             _ => false
         };
     }
@@ -303,41 +292,6 @@ public sealed class AppInstallService : IAppInstallService
         if (exeEnd >= 0) return (command[..(exeEnd + 4)].Trim(), command[(exeEnd + 4)..].Trim());
         var firstSpace = command.IndexOf(' ');
         return firstSpace < 0 ? (command, "") : (command[..firstSpace], command[(firstSpace + 1)..]);
-    }
-
-    private static bool FindUninstallDisplayName(string needle)
-    {
-        if (string.IsNullOrWhiteSpace(needle)) return false;
-        var allowVersionSuffix = needle is "Google Chrome" or "7-Zip" or "Telegram Desktop" or "VLC media player";
-        foreach (var (hive, view) in new[]
-        {
-            (RegistryHive.LocalMachine, RegistryView.Registry64),
-            (RegistryHive.LocalMachine, RegistryView.Registry32),
-            (RegistryHive.CurrentUser, RegistryView.Registry64),
-            (RegistryHive.CurrentUser, RegistryView.Registry32)
-        })
-        {
-            try
-            {
-                using var key = RegistryKey.OpenBaseKey(hive, view);
-                using var uninstall = key.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-                if (uninstall is null) continue;
-                foreach (var name in uninstall.GetSubKeyNames())
-                {
-                    using var sub = uninstall.OpenSubKey(name);
-                    var display = sub?.GetValue("DisplayName") as string;
-                    if (!string.IsNullOrWhiteSpace(display) &&
-                        (string.Equals(display.Trim(), needle.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                         (allowVersionSuffix && display.StartsWith(needle.Trim() + " ", StringComparison.OrdinalIgnoreCase))))
-                        return true;
-                }
-            }
-            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
-            {
-                Logger.Error($"Не удалось проверить установленное приложение {needle}", ex);
-            }
-        }
-        return false;
     }
 
     private static async Task DownloadFileAsync(string url, string path, CancellationToken ct)
