@@ -21,6 +21,7 @@ public interface IAppInstallService
     IReadOnlyList<AppCatalogItem> Catalog { get; }
     bool IsInstalled(AppCatalogItem app);
     Task<(bool Ok, string Message)> DownloadAndInstallAsync(AppCatalogItem app, IProgress<string>? progress = null, CancellationToken ct = default);
+    Task<(bool Ok, string Message)> UninstallAsync(AppCatalogItem app, IProgress<string>? progress = null, CancellationToken ct = default);
 }
 
 public sealed class AppInstallService : IAppInstallService
@@ -138,61 +139,166 @@ public sealed class AppInstallService : IAppInstallService
     public async Task<(bool Ok, string Message)> DownloadAndInstallAsync(
         AppCatalogItem app, IProgress<string>? progress = null, CancellationToken ct = default)
     {
+        var target = Path.Combine(AppPaths.DownloadsDirectory, app.FileName);
+        var temporary = target + ".download";
         try
         {
-            if (IsInstalled(app))
-            {
-                progress?.Report($"{app.Name} уже установлен — пропуск.");
-                Logger.Info($"Skip install, already present: {app.Name}");
-                return (true, $"{app.Name} уже установлен. Повторная установка не нужна.");
-            }
-
+            if (IsInstalled(app)) return (true, $"{app.Name} уже установлен.");
             Directory.CreateDirectory(AppPaths.DownloadsDirectory);
-            var target = Path.Combine(AppPaths.DownloadsDirectory, app.FileName);
-
             progress?.Report($"Скачиваю {app.Name}…");
-            await DownloadFileAsync(app.DownloadUrl, target, ct).ConfigureAwait(false);
-
-            progress?.Report($"Устанавливаю {app.Name}…");
-            var psi = new ProcessStartInfo
+            await DownloadFileAsync(app.DownloadUrl, temporary, ct).ConfigureAwait(false);
+            await using (var stream = new FileStream(temporary, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                FileName = target,
-                Arguments = app.Arguments,
-                UseShellExecute = true,
-                Verb = "runas",
-            };
-
-            try
-            {
-                using var p = Process.Start(psi);
-                if (p != null)
-                    await p.WaitForExitAsync(ct).ConfigureAwait(false);
+                var signature = new byte[2];
+                if (await stream.ReadAsync(signature, ct).ConfigureAwait(false) != 2 || signature[0] != (byte)'M' || signature[1] != (byte)'Z')
+                    throw new InvalidDataException("Скачанный файл не является Windows EXE.");
             }
-            catch (System.ComponentModel.Win32Exception)
+            File.Move(temporary, target, overwrite: true);
+            progress?.Report($"Запускаю установщик {app.Name}…");
+            var psi = new ProcessStartInfo { FileName = target, Arguments = app.Arguments, UseShellExecute = true, WorkingDirectory = AppPaths.DownloadsDirectory };
+            using var process = Process.Start(psi) ?? throw new InvalidOperationException("Windows не смогла запустить установщик.");
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
+            for (var attempt = 0; attempt < 12; attempt++)
             {
-                psi.Verb = "";
-                using var p = Process.Start(psi);
-                if (p != null)
-                    await p.WaitForExitAsync(ct).ConfigureAwait(false);
+                ct.ThrowIfCancellationRequested();
+                if (IsInstalled(app)) return (true, $"{app.Name}: установка подтверждена Windows.");
+                await Task.Delay(TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);
             }
-
-            // После установки ещё раз проверяем
-            if (IsInstalled(app))
-            {
-                Logger.Info($"Установлен: {app.Name}");
-                return (true, $"{app.Name}: установлен.");
-            }
-
-            Logger.Info($"Установщик завершён: {app.Name}");
-            return (true, $"{app.Name}: установщик завершён. Если ярлыка нет — обновите список.");
+            Logger.Warning($"Установка {app.Name} не подтверждена. Код завершения: {process.ExitCode}.");
+            return (false, process.ExitCode == 0
+                ? $"{app.Name}: установщик завершился, но Windows не обнаружила приложение. Проверьте мастер установки."
+                : $"{app.Name}: установщик завершился с кодом {process.ExitCode}.");
         }
+        catch (OperationCanceledException) { return (false, $"Установка {app.Name} отменена."); }
         catch (Exception ex)
         {
             Logger.Error($"Install failed: {app.Name}", ex);
-            return (false, ex.Message);
+            return (false, $"{app.Name}: {ex.Message}");
+        }
+        finally
+        {
+            try { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Logger.Error("Не удалось удалить временный установщик", ex); }
         }
     }
 
+    public async Task<(bool Ok, string Message)> UninstallAsync(
+        AppCatalogItem app, IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        try
+        {
+            var entry = FindUninstallEntry(app);
+            if (entry is null) return (false, $"Для {app.Name} не найдена команда удаления в реестре Windows.");
+            var command = !string.IsNullOrWhiteSpace(entry.QuietUninstallString) ? entry.QuietUninstallString : entry.UninstallString;
+            if (string.IsNullOrWhiteSpace(command)) return (false, $"Windows не предоставила команду удаления для {app.Name}.");
+            var (executable, arguments) = SplitCommandLine(command);
+            executable = Environment.ExpandEnvironmentVariables(executable);
+            arguments = Environment.ExpandEnvironmentVariables(arguments);
+            if (!File.Exists(executable) && !executable.Equals("msiexec", StringComparison.OrdinalIgnoreCase))
+                return (false, $"Файл деинсталлятора не найден: {executable}");
+            progress?.Report($"Удаляю {app.Name}…");
+            var psi = new ProcessStartInfo { FileName = executable, Arguments = arguments, UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(executable) ?? Environment.SystemDirectory };
+            using var process = Process.Start(psi) ?? throw new InvalidOperationException("Windows не смогла запустить деинсталлятор.");
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
+            for (var attempt = 0; attempt < 6; attempt++)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (!IsInstalled(app)) return (true, $"{app.Name} удалён.");
+                await Task.Delay(TimeSpan.FromSeconds(2), ct).ConfigureAwait(false);
+            }
+            return (false, $"Деинсталлятор завершился с кодом {process.ExitCode}, но {app.Name} всё ещё обнаруживается. Возможно, требуется перезагрузка.");
+        }
+        catch (OperationCanceledException) { return (false, $"Удаление {app.Name} отменено."); }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        { return (false, "Запрос прав или запуск деинсталлятора отменён пользователем."); }
+        catch (Exception ex)
+        {
+            Logger.Error($"Uninstall failed: {app.Name}", ex);
+            return (false, $"{app.Name}: {ex.Message}");
+        }
+    }
+
+    private sealed record UninstallEntry(string DisplayName, string UninstallString, string? QuietUninstallString);
+
+    private static UninstallEntry? FindUninstallEntry(AppCatalogItem app)
+    {
+        var needles = app.Id switch
+        {
+            "chrome" => new[] { "Google Chrome", "Chrome" },
+            "steam" => new[] { "Steam" },
+            "discord" => new[] { "Discord" },
+            "telegram" => new[] { "Telegram Desktop", "Telegram" },
+            "7zip" => new[] { "7-Zip" },
+            "vlc" => new[] { "VLC media player", "VLC" },
+            _ => new[] { app.Name }
+        };
+        var roots = new[] {
+            (RegistryHive.LocalMachine, RegistryView.Registry64),
+            (RegistryHive.LocalMachine, RegistryView.Registry32),
+            (RegistryHive.CurrentUser, RegistryView.Default)
+        };
+        foreach (var (hive, view) in roots)
+        {
+            try
+            {
+                using var baseKey = RegistryKey.OpenBaseKey(hive, view);
+                using var uninstall = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+                if (uninstall is null) continue;
+                foreach (var subName in uninstall.GetSubKeyNames())
+                {
+                    try
+                    {
+                        using var sub = uninstall.OpenSubKey(subName);
+                        var display = sub?.GetValue("DisplayName") as string;
+                        if (string.IsNullOrWhiteSpace(display) || !needles.Any(n => display.Contains(n, StringComparison.OrdinalIgnoreCase))) continue;
+                        var uninstallString = sub?.GetValue("UninstallString") as string;
+                        var quiet = sub?.GetValue("QuietUninstallString") as string;
+                        if (!string.IsNullOrWhiteSpace(uninstallString) || !string.IsNullOrWhiteSpace(quiet))
+                            return new UninstallEntry(display, uninstallString ?? quiet!, quiet);
+                    }
+                    catch (System.Security.SecurityException) { }
+                    catch (UnauthorizedAccessException) { }
+                }
+            }
+            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+            { Logger.Error($"Не удалось прочитать список удаления {hive}/{view}", ex); }
+        }
+        return null;
+    }
+
+    private static (string Executable, string Arguments) SplitCommandLine(string command)
+    {
+        command = command.Trim();
+        if (command.StartsWith('"'))
+        {
+            var end = command.IndexOf('"', 1);
+            if (end > 1) return (command[1..end], command[(end + 1)..].Trim());
+        }
+        var exeEnd = command.IndexOf(".exe", StringComparison.OrdinalIgnoreCase);
+        if (exeEnd >= 0) return (command[..(exeEnd + 4)].Trim(), command[(exeEnd + 4)..].Trim());
+        var firstSpace = command.IndexOf(' ');
+        return firstSpace < 0 ? (command, "") : (command[..firstSpace], command[(firstSpace + 1)..]);
+    }
+
+    private static bool FindUninstallDisplayName(string needle)
+    {
+        if (string.IsNullOrWhiteSpace(needle)) return false;
+        return new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser }.Any(hive =>
+        {
+            try
+            {
+                using var key = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
+                using var uninstall = key.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+                return uninstall?.GetSubKeyNames().Any(name =>
+                {
+                    using var sub = uninstall.OpenSubKey(name);
+                    var display = sub?.GetValue("DisplayName") as string;
+                    return !string.IsNullOrWhiteSpace(display) && display.Contains(needle, StringComparison.OrdinalIgnoreCase);
+                }) == true;
+            }
+            catch { return false; }
+        });
+    }
     private static bool FindUninstallDisplayName(string needle)
     {
         if (string.IsNullOrWhiteSpace(needle)) return false;
