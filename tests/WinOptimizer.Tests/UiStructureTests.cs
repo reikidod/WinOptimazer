@@ -305,4 +305,37 @@ public sealed class UiStructureTests
         Assert.DoesNotContain(aboutTitle.Ancestors(), ancestor => ancestor.Name.LocalName == "Expander");
     }
 
+
+    [Fact]
+    public void MainWindow_UsesNativeWindowsIcon()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+        var window = Assert.Single(Elements(view, "Window"));
+        Assert.Equal("pack://application:,,,/Assets/app.ico", Attribute(window, "Icon"));
+    }
+
+    [Fact]
+    public void ThemeManager_RebuildsAtmosphereForSelectedTheme()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "dll/WinOptimizer.Settings/ThemeManager.cs"));
+        Assert.Contains("SetThemeAtmosphere(app, accentHex, accentStrong, p.IsLight)", source);
+        Assert.Contains("app.Resources[\"SiteGridBrush\"] = grid", source);
+        Assert.Contains("app.Resources[\"SiteRedGlowBrush\"]", source);
+        Assert.Contains("app.Resources[\"SiteBlueGlowBrush\"]", source);
+    }
+
+    [Fact]
+    public void AppsCatalog_ExposesInstallAndUninstallAction()
+    {
+        var view = LoadView("Views/MainWindowPages.xaml");
+        Assert.Contains(Elements(view, "Button"), element =>
+            Attribute(element, "Content") == "{Binding ActionText}" &&
+            Attribute(element, "Command")?.Contains("InstallAppCommand", StringComparison.Ordinal) == true);
+
+        var service = File.ReadAllText(Path.Combine(RepositoryRoot(), "Services/AppInstallService.cs"));
+        Assert.Contains("Task<(bool Ok, string Message)> UninstallAsync", service);
+        Assert.Contains("FindUninstallEntry(app)", service);
+        Assert.Contains("process.ExitCode", service);
+    }
+
 }
