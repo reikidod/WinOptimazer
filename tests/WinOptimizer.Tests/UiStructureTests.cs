@@ -122,7 +122,8 @@ public sealed class UiStructureTests
 
         Assert.Contains(Elements(document, "TextBox"), element =>
             element.Attributes().Any(attribute =>
-                attribute.Name.LocalName == "Name" && attribute.Value == "Поиск приложений"));
+                attribute.Name.LocalName == "AutomationProperties.Name" &&
+                attribute.Value == "Поиск приложений"));
 
         Assert.Contains(Elements(document, "RadioButton"), element =>
             Attribute(element, "GroupName") == "DebloatFilter" &&
