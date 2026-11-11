@@ -89,6 +89,49 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void DebloatPage_ShowsScanProgressAndRetryState()
+    {
+        var document = LoadView("Views/MainWindowPages.xaml");
+
+        Assert.Contains(Elements(document, "ProgressBar"), element =>
+            Attribute(element, "IsIndeterminate") == "True" &&
+            Attribute(element, "Visibility") == "{Binding Debloat.IsBusy, Converter={StaticResource BoolToVis}}");
+
+        Assert.Contains(Elements(document, "Border"), element =>
+            Attribute(element, "Visibility") == "{Binding Debloat.HasNoItems, Converter={StaticResource BoolToVis}}");
+
+        Assert.Contains(Elements(document, "Button"), element =>
+            Attribute(element, "Command") == "{Binding Debloat.RefreshCommand}" &&
+            Attribute(element, "Content") == "Повторить сканирование");
+    }
+
+    [Fact]
+    public void OptimizationGauge_ShowsSelectedLevelAndNumericProgress()
+    {
+        var document = LoadView("Views/MainWindow.xaml");
+
+        Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "{Binding GaugeProgressLabel}");
+
+        Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "{Binding SelectedOptimizationPreset.Title}");
+
+        Assert.Contains(Elements(document, "Path"), element =>
+            Attribute(element, "local:Motion.ArcProgress") == "{Binding GaugeProgressValue}");
+    }
+
+    [Fact]
+    public void SectionExpander_ReservesSpaceForChevron()
+    {
+        var document = XDocument.Load(Path.Combine(RepositoryRoot(), "Themes/DarkTheme.Extras.xaml"));
+        Assert.Contains(Elements(document, "ColumnDefinition"), element =>
+            Attribute(element, "Width") == "24");
+        Assert.Contains(Elements(document, "Path"), element =>
+            Attribute(element, "Width") == "10" &&
+            Attribute(element, "Height") == "6");
+    }
+
+    [Fact]
     public void AboutSection_RemainsVisibleOutsideCollapsibleSections()
     {
         var document = LoadView("dll/WinOptimizer.Settings/Views/SettingsPage.xaml");
