@@ -239,106 +239,115 @@
 
 
             <!-- Страница «Лишние приложения» -->
-            <Grid Visibility="{Binding IsDebloatPage, Converter={StaticResource BoolToVis}}" local:Motion.PageTransition="True" Margin="32,28,16,12">
+            <Grid Visibility="{Binding IsDebloatPage, Converter={StaticResource BoolToVis}}"
+                  local:Motion.PageTransition="True" Margin="28,24,16,12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Grid Margin="0,0,16,18">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Удаление приложений" Style="{StaticResource PageTitle}" />
-                        <Expander Style="{StaticResource SectionExpander}" Header="О возможностях удаления" IsExpanded="False" Margin="0,4,0,0"
-                                  AutomationProperties.Name="О возможностях удаления приложений">
-                            <TextBlock Text="Все установленные программы и приложения Windows. Удаляйте штатным деинсталлятором и сразу стирайте остатки: папки, ярлыки, записи реестра — как в Geek Uninstaller. Если программа не удаляется, её можно снести принудительно."
-                                   Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
-                        </Expander>
-                        <WrapPanel Margin="0,10,0,0">
-                            <Button Content="Установка" Margin="0,0,8,0"
-                                    Visibility="{Binding Settings.ShowAppsTab, Converter={StaticResource BoolToVis}}"
-                                    Command="{Binding NavigateCommand}" CommandParameter="Apps"/>
-                            <Button Content="Удаление" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
-                                    Command="{Binding NavigateCommand}" CommandParameter="Debloat"/>
-                            <Button Content="Microsoft Store"
-                                    Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
-                                    Command="{Binding NavigateCommand}" CommandParameter="Store"/>
+
+                <!-- Верхняя панель модуля: описание, состояние сканирования и действия -->
+                <Border Grid.Row="0" Style="{StaticResource BorderCard}" Padding="18" Margin="0,0,16,14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Удаление приложений" Style="{StaticResource PageTitle}" />
+                            <TextBlock Text="Управление установленными программами и приложениями Windows"
+                                       Style="{StaticResource SecondaryText}" Margin="0,3,0,0" />
+                            <Expander Style="{StaticResource SectionExpander}" Header="Безопасность и возможности удаления"
+                                      IsExpanded="False" Margin="0,10,12,0"
+                                      AutomationProperties.Name="Справка по безопасному удалению приложений">
+                                <TextBlock Text="Сначала используется штатный деинсталлятор. После удаления можно проверить остаточные папки, ярлыки и записи реестра. Принудительное удаление доступно отдельно, если обычный деинсталлятор не сработал. Перед удалением внимательно проверяйте выбранные приложения."
+                                           Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </Expander>
+                            <TextBlock Text="{Binding Debloat.StatusText}" Style="{StaticResource SecondaryText}"
+                                       Margin="0,10,12,0" Foreground="{DynamicResource AccentBrush}"
+                                       TextWrapping="Wrap" />
+                            <ProgressBar IsIndeterminate="True" Height="3" Margin="0,7,12,0"
+                                         Visibility="{Binding Debloat.IsBusy, Converter={StaticResource BoolToVis}}"
+                                         AutomationProperties.Name="Сканирование установленных приложений" />
+                        </StackPanel>
+                        <WrapPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                   MaxWidth="390">
+                            <Button Content="Обновить" Margin="0,0,8,8"
+                                    Command="{Binding Debloat.RefreshCommand}" />
+                            <Button Content="Рекомендуемые" Margin="0,0,8,8"
+                                    Command="{Binding Debloat.SelectRecommendedCommand}" />
+                            <Button Content="Удалить выбранные" Style="{StaticResource AccentButton}"
+                                    Margin="0,0,0,8" Command="{Binding Debloat.RemoveSelectedCommand}" />
+                            <WrapPanel.Resources>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Setter Property="MinHeight" Value="36" />
+                                    <Setter Property="Padding" Value="13,7" />
+                                </Style>
+                            </WrapPanel.Resources>
                         </WrapPanel>
-                        <TextBlock Text="{Binding Debloat.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,8,0,0"
-                                   Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
-                        <ProgressBar IsIndeterminate="True" Height="3" Margin="0,8,0,0"
-                                     Visibility="{Binding Debloat.IsBusy, Converter={StaticResource BoolToVis}}"
-                                     AutomationProperties.Name="Сканирование установленных приложений" />
+                    </Grid>
+                </Border>
+
+                <!-- Единая панель поиска и категорий: чипы переносятся на следующую строку -->
+                <Border Grid.Row="1" Style="{StaticResource BorderCard}" Padding="12" Margin="0,0,16,14"
+                        Visibility="{Binding Debloat.HasItems, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBox Text="{Binding Debloat.SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Tag="Поиск по названию, издателю или описанию…"
+                                 ToolTip="Поиск по названию, издателю или описанию"
+                                 MinHeight="38" Margin="0,0,0,10"
+                                 AutomationProperties.Name="Поиск приложений" />
+                        <WrapPanel>
+                            <WrapPanel.Resources>
+                                <Style x:Key="FilterChip" TargetType="RadioButton">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                                    <Setter Property="Cursor" Value="Hand" />
+                                    <Setter Property="Margin" Value="0,0,8,0" />
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="RadioButton">
+                                                <Border x:Name="Chip" CornerRadius="9" Padding="13,8"
+                                                        Background="{DynamicResource BgCardBrush}"
+                                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                                                        <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                                                        <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </WrapPanel.Resources>
+                            <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
+                                         Content="{Binding Debloat.AllLabel}"
+                                         IsChecked="{Binding Debloat.IsFilterAll, Mode=OneWay}"
+                                         Command="{Binding Debloat.SetFilterCommand}" CommandParameter="0" />
+                            <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
+                                         Content="{Binding Debloat.GamesLabel}"
+                                         IsChecked="{Binding Debloat.IsFilterGames, Mode=OneWay}"
+                                         Command="{Binding Debloat.SetFilterCommand}" CommandParameter="1" />
+                            <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
+                                         Content="{Binding Debloat.ProgramsLabel}"
+                                         IsChecked="{Binding Debloat.IsFilterPrograms, Mode=OneWay}"
+                                         Command="{Binding Debloat.SetFilterCommand}" CommandParameter="2" />
+                            <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
+                                         Content="{Binding Debloat.WindowsLabel}"
+                                         IsChecked="{Binding Debloat.IsFilterWindows, Mode=OneWay}"
+                                         Command="{Binding Debloat.SetFilterCommand}" CommandParameter="3" />
+                        </WrapPanel>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="Обновить" Margin="0,0,8,0" Command="{Binding Debloat.RefreshCommand}" />
-                        <Button Content="Рекомендуемые" Margin="0,0,8,0" Command="{Binding Debloat.SelectRecommendedCommand}" />
-                        <Button Content="Удалить выбранные" Style="{StaticResource AccentButton}"
-                                Command="{Binding Debloat.RemoveSelectedCommand}" />
-                    </StackPanel>
-                </Grid>
-                <!-- Поиск и фильтр по типу -->
-                <Grid Grid.Row="1" Margin="0,0,20,14"
-                      Visibility="{Binding Debloat.HasItems, Converter={StaticResource BoolToVis}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Text="{Binding Debloat.SearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Tag="Поиск по названию и издателю…"
-                             ToolTip="Поиск по названию и издателю" Margin="0,0,12,0"
-                             AutomationProperties.Name="Поиск приложений" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <StackPanel.Resources>
-                            <Style x:Key="FilterChip" TargetType="RadioButton">
-                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-                                <Setter Property="Cursor" Value="Hand" />
-                                <Setter Property="Margin" Value="0,0,8,0" />
-                                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="RadioButton">
-                                            <Border x:Name="Chip" CornerRadius="8" Padding="12,8"
-                                                    Background="{DynamicResource BgCardBrush}"
-                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
-                                                </Trigger>
-                                                <Trigger Property="IsChecked" Value="True">
-                                                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
-                                                    <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </StackPanel.Resources>
-                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
-                                     Content="{Binding Debloat.AllLabel}"
-                                     IsChecked="{Binding Debloat.IsFilterAll, Mode=OneWay}"
-                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="0" />
-                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
-                                     Content="{Binding Debloat.GamesLabel}"
-                                     IsChecked="{Binding Debloat.IsFilterGames, Mode=OneWay}"
-                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="1" />
-                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}"
-                                     Content="{Binding Debloat.ProgramsLabel}"
-                                     IsChecked="{Binding Debloat.IsFilterPrograms, Mode=OneWay}"
-                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="2" />
-                        <RadioButton GroupName="DebloatFilter" Style="{StaticResource FilterChip}" Margin="0"
-                                     Content="{Binding Debloat.WindowsLabel}"
-                                     IsChecked="{Binding Debloat.IsFilterWindows, Mode=OneWay}"
-                                     Command="{Binding Debloat.SetFilterCommand}" CommandParameter="3" />
-                    </StackPanel>
-                </Grid>
+                </Border>
                 <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="2" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Debloat.View}" Margin="0,0,16,8">
                         <ItemsControl.ItemTemplate>
