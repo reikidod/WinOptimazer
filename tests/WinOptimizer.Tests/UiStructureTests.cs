@@ -56,6 +56,52 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void BrandMark_StaysInsideItsSquareContainer()
+    {
+        var document = LoadView("Views/MainWindow.xaml");
+        var logoBorder = Assert.Single(Elements(document, "Border").Where(element =>
+            Attribute(element, "Width") == "42" &&
+            Attribute(element, "Height") == "42" &&
+            element.Descendants().Any(child => child.Name.LocalName == "Viewbox")));
+
+        var viewbox = Assert.Single(logoBorder.Descendants().Where(element =>
+            element.Name.LocalName == "Viewbox"));
+        Assert.Equal("30", Attribute(viewbox, "Width"));
+        Assert.Equal("30", Attribute(viewbox, "Height"));
+
+        var canvas = Assert.Single(viewbox.Descendants().Where(element =>
+            element.Name.LocalName == "Canvas"));
+        Assert.Equal("24", Attribute(canvas, "Width"));
+        Assert.Equal("24", Attribute(canvas, "Height"));
+        Assert.Equal(2, canvas.Elements().Count(element => element.Name.LocalName == "Path"));
+        Assert.DoesNotContain(canvas.DescendantsAndSelf(), element =>
+            element.Attributes().Any(attribute =>
+                attribute.Name.LocalName == "Margin" &&
+                attribute.Value.Split(',').Any(value => double.TryParse(value, out var number) && number < 0)));
+    }
+
+    [Fact]
+    public void GithubBanner_BrandMarkCoordinatesStayInsideSquare()
+    {
+        var banner = File.ReadAllText(Path.Combine(RepositoryRoot(), "docs/banner.svg"));
+        var document = XDocument.Parse(banner);
+        var mark = Assert.Single(document.Descendants().Where(element =>
+            element.Name.LocalName == "g" &&
+            (string?)element.Attribute("transform") == "translate(86 94)"));
+        var paths = mark.Elements().Where(element => element.Name.LocalName == "path").ToList();
+        Assert.Equal(2, paths.Count);
+
+        foreach (var path in paths)
+        {
+            var coordinates = System.Text.RegularExpressions.Regex.Matches(
+                (string?)path.Attribute("d") ?? string.Empty,
+                @"[-+]?(?:\d+\.?\d*|\.\d+)")
+                .Select(match => double.Parse(match.Value, System.Globalization.CultureInfo.InvariantCulture));
+            Assert.All(coordinates, coordinate => Assert.InRange(coordinate, 0, 150));
+        }
+    }
+
+    [Fact]
     public void SideMouseButtons_AreConnectedToNavigationHistory()
     {
         var codeBehind = File.ReadAllText(Path.Combine(RepositoryRoot(), "Views/MainWindow.xaml.cs"));
