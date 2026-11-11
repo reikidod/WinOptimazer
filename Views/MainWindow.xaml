@@ -223,6 +223,21 @@
                             <TextBlock Text="Настройки" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
+                    <Border Margin="6,14,6,0" Padding="10,8" CornerRadius="10"
+                            Background="{DynamicResource BgCardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            ToolTip="Mouse 4 и Mouse 5 работают как кнопки «Назад» и «Вперёд» в истории разделов.">
+                        <StackPanel>
+                            <TextBlock Text="БЫСТРАЯ НАВИГАЦИЯ" FontSize="9" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextDimBrush}" />
+                            <TextBlock Text="Боковые кнопки мыши" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,2" />
+                            <TextBlock Text="Mouse 4  ←  Назад" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <TextBlock Text="Mouse 5  →  Вперёд" FontSize="10"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <!-- Иконки + версия + обновление -->
