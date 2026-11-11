@@ -57,6 +57,7 @@ public sealed class DashboardServiceTests : IDisposable
 
         Assert.Equal(55d, latest.CpuPercent);
         Assert.Equal(65d, latest.MemoryPercent);
+        Assert.Equal(1d, latest.CpuBarOpacity);
         Assert.Equal(2, history.Samples.Count);
         Assert.Equal(new DateTime(2026, 1, 1, 10, 0, 2), history.Samples[0].CapturedAt);
         Assert.Equal(new DateTime(2026, 1, 1, 10, 0, 4), history.Samples[1].CapturedAt);
@@ -72,7 +73,8 @@ public sealed class DashboardServiceTests : IDisposable
         });
 
         Assert.Null(point.CpuPercent);
-        Assert.Equal(0d, point.CpuBarHeight);
+        Assert.Equal(2d, point.CpuBarHeight);
+        Assert.Equal(0.22d, point.CpuBarOpacity);
         Assert.Equal(100d, point.MemoryPercent);
         Assert.Equal("CPU недоступен", point.CpuValueText);
         Assert.Equal("RAM 100%", point.MemoryValueText);
@@ -93,6 +95,22 @@ public sealed class DashboardServiceTests : IDisposable
         100L * 1024 * 1024 * 1024,
         50L * 1024 * 1024 * 1024,
         true);
+
+    [Fact]
+    public void PerformanceCenter_UsesDedicatedNavigationAndDisplaysSessionHistory()
+    {
+        var document = LoadView("Views/MainWindow.xaml");
+
+        Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "Производительность");
+        Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "Центр производительности");
+        Assert.Contains(Elements(document, "ItemsControl"), element =>
+            Attribute(element, "ItemsSource") == "{Binding PerformanceHistory}");
+        Assert.Contains(Elements(document, "Border"), element =>
+            Attribute(element, "Height") == "{Binding CpuBarHeight}" &&
+            Attribute(element, "Opacity") == "{Binding CpuBarOpacity}");
+    }
 
     [Fact]
     public void DriveSnapshot_FormatsCapacityAndClampsFreeSpace()

@@ -185,7 +185,7 @@
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
                                  IsChecked="{Binding IsSystemPage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowSystemTab, Converter={StaticResource BoolToVis}}"
-                                 AutomationProperties.Name="Страница «Характеристики ПК»">
+                                 AutomationProperties.Name="Страница «Производительность»">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
@@ -193,7 +193,7 @@
                                           Data="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Мой ПК" VerticalAlignment="Center"/>
+                            <TextBlock Text="Производительность" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
@@ -860,8 +860,8 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Характеристики ПК" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Система, температуры, процессор, видеокарта, память, накопители, процессы" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                        <TextBlock Text="Центр производительности" Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Ресурсы Windows, температуры, накопители и активность процессов" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="Сохранить TXT" Margin="0,0,8,0" Click="OnSaveReport"
@@ -946,12 +946,12 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Width="9" Height="52" Margin="1,0" ToolTip="{Binding TimeLabel}">
+                                                <Grid Width="9" Height="52" Margin="1,0" ToolTip="{Binding TooltipText}">
                                                     <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom"
                                                                 HorizontalAlignment="Center">
                                                         <Border Width="3" Height="{Binding CpuBarHeight}"
-                                                                Background="{DynamicResource AccentBrush}" CornerRadius="1"
+                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding CpuBarOpacity}" CornerRadius="1"
                                                                 Margin="0,0,1,0" />
                                                         <Border Width="3" Height="{Binding MemoryBarHeight}"
                                                                 Background="{DynamicResource BrandGradientBrush}" CornerRadius="1" />

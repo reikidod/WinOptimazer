@@ -5,11 +5,13 @@ namespace WinOptimizer.Services;
 /// <summary>Один исторический замер ресурсов. Недоступная загрузка CPU остаётся неизвестной, а не превращается в 0%.</summary>
 public sealed record PerformanceHistoryPoint(DateTime CapturedAt, double? CpuPercent, double MemoryPercent)
 {
-    public double CpuBarHeight => CpuPercent is double value ? Math.Clamp(value, 0d, 100d) * 0.48d : 0d;
+    public double CpuBarHeight => CpuPercent is double value ? Math.Clamp(value, 0d, 100d) * 0.48d : 2d;
+    public double CpuBarOpacity => CpuPercent.HasValue ? 1d : 0.22d;
     public double MemoryBarHeight => Math.Clamp(MemoryPercent, 0d, 100d) * 0.48d;
     public string TimeLabel => CapturedAt.ToString("HH:mm:ss");
     public string CpuValueText => CpuPercent is double value ? $"CPU {value:0}%" : "CPU недоступен";
     public string MemoryValueText => $"RAM {MemoryPercent:0}%";
+    public string TooltipText => $"{TimeLabel} · {CpuValueText} · {MemoryValueText}";
 }
 
 /// <summary>
