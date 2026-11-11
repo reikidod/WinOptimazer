@@ -395,4 +395,21 @@ public sealed class UiStructureTests
         Assert.Contains("app.Id != \"discord\" && File.Exists(app.DetectPath)", service);
     }
 
+
+    [Fact]
+    public void PerformanceCenter_UsesDedicatedNavigationAndDisplaysSessionHistory()
+    {
+        var document = LoadView("Views/MainWindow.xaml");
+
+        Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "Производительность");
+        Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "Центр производительности");
+        Assert.Contains(Elements(document, "ItemsControl"), element =>
+            Attribute(element, "ItemsSource") == "{Binding PerformanceHistory}");
+        Assert.Contains(Elements(document, "Border"), element =>
+            Attribute(element, "Height") == "{Binding CpuBarHeight}" &&
+            Attribute(element, "Opacity") == "{Binding CpuBarOpacity}");
+    }
+
 }
