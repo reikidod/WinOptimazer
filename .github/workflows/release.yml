@@ -179,9 +179,21 @@ jobs:
           }
           if ($env:CHANNEL -eq 'beta') {
             $tag = "v$env:VERSION-beta"
-            gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title "$tag (бета)" --notes-file notes.md --prerelease
+            $title = "$tag (бета)"
+            $releaseArgs = @('--prerelease')
           } else {
             $tag = "v$env:VERSION"
-            gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title $tag --notes-file notes.md --latest
+            $title = $tag
+            $releaseArgs = @('--latest')
           }
-          if ($LASTEXITCODE -ne 0) { throw 'Не удалось создать релиз' }
+
+          # Beta push-ы могут повторно запускать workflow для уже опубликованной версии.
+          # Не перезаписываем опубликованный релиз и не считаем повторный запуск ошибкой.
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Релиз $tag уже существует. Сборка и проверки выполнены; повторная публикация пропущена."
+            exit 0
+          }
+
+          gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title $title --notes-file notes.md @releaseArgs
+          if ($LASTEXITCODE -ne 0) { throw "Не удалось создать релиз $tag" }
