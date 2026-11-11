@@ -290,4 +290,43 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Contains(findings, x => x.Level == DiagnosticLevel.Warning && x.Title.Contains("памяти", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(findings, x => x.Title.Contains("Сеть", StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public void NetworkTrafficRateTracker_UsesCounterDeltaAndElapsedTime()
+    {
+        var tracker = new NetworkTrafficRateTracker();
+        var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+        var first = tracker.Update(1_000, 2_000, start);
+        var second = tracker.Update(5_000, 8_000, start.AddSeconds(2));
+
+        Assert.False(first.IsAvailable);
+        Assert.Equal(2_000d, second.ReceivedBytesPerSecond);
+        Assert.Equal(3_000d, second.SentBytesPerSecond);
+        Assert.Equal("2 КБ/с", second.DownloadText);
+        Assert.Equal("3 КБ/с", second.UploadText);
+    }
+
+    [Fact]
+    public void NetworkTrafficRateTracker_ResetsBaselineWhenCountersRegressOrTimeIsInvalid()
+    {
+        var tracker = new NetworkTrafficRateTracker();
+        var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+        tracker.Update(10_000, 10_000, start);
+        Assert.False(tracker.Update(100, 100, start.AddSeconds(2)).IsAvailable);
+        var recovered = tracker.Update(2_100, 3_100, start.AddSeconds(3));
+
+        Assert.Equal(2_000d, recovered.ReceivedBytesPerSecond);
+        Assert.Equal(3_000d, recovered.SentBytesPerSecond);
+        Assert.False(tracker.Update(3_100, 4_100, start.AddSeconds(3)).IsAvailable);
+    }
+
+    [Fact]
+    public void NetworkTrafficRateTracker_RejectsNegativeCounters()
+    {
+        var tracker = new NetworkTrafficRateTracker();
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            tracker.Update(-1, 0, DateTime.UtcNow));
+    }
 }
