@@ -128,7 +128,7 @@
 - Планировщик задач Windows отображается в режиме чтения.
 - История операций хранится локально; приложение не отправляет сведения о компьютере на сторонние серверы.
 
-Логи приложения: `%ProgramData%\\WinOptimizer\\log.txt`. История операций: `%LOCALAPPDATA%\\WinOptimizer\\history.jsonl`.
+Логи приложения: `%ProgramData%\WinOptimizer\log.txt`. История операций: `%LOCALAPPDATA%\WinOptimizer\history.jsonl`.
 
 ## Технологии
 
