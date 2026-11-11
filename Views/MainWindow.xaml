@@ -678,7 +678,7 @@
                 </Expander>
 
                 <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <Expander Style="{StaticResource SectionExpander}" Header="Список сложных твиков" IsExpanded="True"
+                    <Expander Style="{StaticResource SectionExpander}" Header="Список сложных твиков" IsExpanded="False"
                               AutomationProperties.Name="Список сложных твиков и ручных настроек">
                     <ItemsControl ItemsSource="{Binding FilteredTweaks}" Margin="0,0,16,8">
                         <ItemsControl.ItemTemplate>
