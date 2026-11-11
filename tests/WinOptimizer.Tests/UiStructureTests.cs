@@ -30,6 +30,32 @@ public sealed class UiStructureTests
         (string?)element.Attribute(name);
 
     [Fact]
+    public void MainShell_UsesOfficialWebsiteVisualLanguage()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+        var theme = LoadView("Themes/DarkTheme.xaml");
+
+        Assert.Contains(Elements(view, "Rectangle"), element =>
+            Attribute(element, "Fill") == "{DynamicResource SiteGridBrush}");
+        Assert.Equal(2, Elements(view, "Ellipse").Count(element =>
+            (string?)element.Attribute("Fill") is "{DynamicResource SiteRedGlowBrush}" or
+                "{DynamicResource SiteBlueGlowBrush}"));
+
+        Assert.Contains(Elements(theme, "DrawingBrush"), element =>
+            Attribute(element, "Key") == "SiteGridBrush");
+        Assert.Contains(Elements(theme, "RadialGradientBrush"), element =>
+            Attribute(element, "Key") == "SiteRedGlowBrush");
+        Assert.Contains(Elements(theme, "RadialGradientBrush"), element =>
+            Attribute(element, "Key") == "SiteBlueGlowBrush");
+        Assert.Contains(Elements(theme, "Style"), element =>
+            Attribute(element, "Key") == "AccentButton" &&
+            element.Descendants().Any(child =>
+                child.Name.LocalName == "Setter" &&
+                Attribute(child, "Property") == "Background" &&
+                Attribute(child, "Value") == "{DynamicResource SiteAccentButtonBrush}"));
+    }
+
+    [Fact]
     public void LatestVersionButton_DownloadsInstallerExeDirectly()
     {
         var document = LoadView("Views/MainWindow.xaml");
