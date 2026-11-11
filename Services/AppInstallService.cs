@@ -308,6 +308,7 @@ public sealed class AppInstallService : IAppInstallService
     private static bool FindUninstallDisplayName(string needle)
     {
         if (string.IsNullOrWhiteSpace(needle)) return false;
+        var allowVersionSuffix = needle is "Google Chrome" or "7-Zip" or "Telegram Desktop" or "VLC media player";
         foreach (var (hive, view) in new[]
         {
             (RegistryHive.LocalMachine, RegistryView.Registry64),
@@ -327,7 +328,7 @@ public sealed class AppInstallService : IAppInstallService
                     var display = sub?.GetValue("DisplayName") as string;
                     if (!string.IsNullOrWhiteSpace(display) &&
                         (string.Equals(display.Trim(), needle.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                         display.StartsWith(needle.Trim() + " ", StringComparison.OrdinalIgnoreCase)))
+                         (allowVersionSuffix && display.StartsWith(needle.Trim() + " ", StringComparison.OrdinalIgnoreCase))))
                         return true;
                 }
             }
