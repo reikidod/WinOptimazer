@@ -66,7 +66,7 @@ public sealed class UiStructureTests
 
         Assert.Contains(expanders, element =>
             Attribute(element, "Header") == "Список сложных твиков" &&
-            Attribute(element, "IsExpanded") == "True");
+            Attribute(element, "IsExpanded") == "False");
     }
 
     [Fact]
