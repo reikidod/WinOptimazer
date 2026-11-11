@@ -260,6 +260,14 @@ public sealed class UiStructureTests
             element.Attributes().Any(attribute =>
                 attribute.Name.LocalName.EndsWith("ArcProgress", StringComparison.Ordinal) &&
                 attribute.Value == "{Binding GaugeProgressValue}"));
+
+        var gaugePaths = Elements(document, "Path")
+            .Where(element => Attribute(element, "StrokeThickness") == "14")
+            .ToArray();
+        Assert.Contains(gaugePaths, element =>
+            Attribute(element, "Stroke") == "{DynamicResource TrackOffBrush}");
+        Assert.Contains(gaugePaths, element =>
+            Attribute(element, "Stroke") == "{DynamicResource BrandGradientBrush}");
     }
 
     [Fact]
