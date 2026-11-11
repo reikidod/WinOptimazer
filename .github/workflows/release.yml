@@ -3,7 +3,7 @@ name: Release
 # Каждый пуш в main автоматически собирает приложение и публикует релиз с файлом
 # WinOptimizer-win-x64.zip. Встроенное обновление приложения («Проверить обновления»
 # и проверка при запуске) скачивает именно его — собирать проект вручную не нужно.
-# Номер версии: major.minor из <Version> в WinOptimizer.csproj + номер запуска сборки.
+# Номер версии: верхняя версия из CHANGELOG.md; номер запуска — резервный вариант.
 on:
   push:
     branches: [main, beta]
@@ -32,7 +32,14 @@ jobs:
           [xml]$proj = Get-Content WinOptimizer.csproj
           $base = $proj.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ } | Select-Object -First 1
           $p = $base.Split('.')
-          $v = "$($p[0]).$($p[1]).${{ github.run_number }}"
+          # Версия берётся из верхнего раздела CHANGELOG, а номер запуска — только резервный вариант.
+          $changelog = Get-Content CHANGELOG.md -Raw
+          $versionMatch = [regex]::Match($changelog, '(?m)^##\s+(\d+\.\d+\.\d+)\b')
+          $v = if ($versionMatch.Success) {
+            $versionMatch.Groups[1].Value
+          } else {
+            "$($p[0]).$($p[1]).${{ github.run_number }}"
+          }
           # main — стабильный канал, beta — бета-канал (релиз помечается prerelease и тегом -beta)
           $channel = if ($env:GITHUB_REF_NAME -eq 'beta') { 'beta' } else { 'stable' }
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
