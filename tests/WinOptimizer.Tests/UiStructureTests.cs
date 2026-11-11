@@ -33,6 +33,13 @@ public sealed class UiStructureTests
         element.Attributes().FirstOrDefault(attribute => attribute.Name.LocalName == name)?.Value;
 
     [Fact]
+    public void MainWindowXaml_DoesNotContainEscapedNewlineTextNodes()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "Views/MainWindow.xaml"));
+        Assert.DoesNotContain("\\n", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MainShell_UsesOfficialWebsiteVisualLanguage()
     {
         var view = LoadView("Views/MainWindow.xaml");
