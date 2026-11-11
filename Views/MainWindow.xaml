@@ -5,7 +5,7 @@
         Title="WinOptimizer"
         Width="1240" Height="820" MinWidth="960" MinHeight="640"
         WindowStartupLocation="CenterScreen"
-        Icon="pack://application:,,,/Assets/app-icon-256.png"
+        Icon="pack://application:,,,/Assets/app.ico"
         Background="{DynamicResource BgWindowBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
         FontFamily="Segoe UI Variable Text, Segoe UI"
