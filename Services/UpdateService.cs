@@ -69,7 +69,7 @@ public sealed class UpdateService : IUpdateService
     /// <summary>Приложение поставлено установщиком (рядом лежит unins000.exe), а не распаковано из архива.</summary>
     internal static bool InstalledByInstaller => File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
 
-    /// <summary>Установленной версии отдаём установщик (он ещё и проверит .NET), портативной — zip, чтобы обновить её на месте.</summary>
+    /// <summary>Автообновление всегда использует ZIP и заменяет файлы текущей установки без запуска нового Setup.</summary>
     internal static string? PickAsset(IReadOnlyList<(string Name, string Url)> assets, bool installerInstall)
     {
         string? Find(Func<string, bool> match) => assets.FirstOrDefault(a => match(a.Name)).Url;
@@ -78,6 +78,15 @@ public sealed class UpdateService : IUpdateService
         var zip = Find(n => n.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
         var anyExe = Find(n => n.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
         return installerInstall ? setup ?? zip ?? anyExe : zip ?? setup ?? anyExe;
+    }
+
+    /// <summary>Архив для встроенного обновления: только ZIP, без перехода на новый Setup.exe.</summary>
+    internal static string? PickUpdateArchiveAsset(IReadOnlyList<(string Name, string Url)> assets)
+    {
+        var zip = assets.FirstOrDefault(a =>
+            a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
+            && a.Name.Contains("WinOptimizer", StringComparison.OrdinalIgnoreCase));
+        return string.IsNullOrWhiteSpace(zip.Url) ? null : zip.Url;
     }
 
     /// <summary>Выбирает именно EXE-установщик для ручной загрузки, независимо от типа текущей установки.</summary>
@@ -214,7 +223,7 @@ public sealed class UpdateService : IUpdateService
                     var dl = a.GetProperty("browser_download_url").GetString();
                     if (dl is not null) list.Add((name, dl));
                 }
-                download = PickAsset(list, InstalledByInstaller);
+                download = PickUpdateArchiveAsset(list);
             }
 
             if (string.IsNullOrEmpty(latest))
@@ -239,7 +248,7 @@ public sealed class UpdateService : IUpdateService
             if (update)
             {
                 return new UpdateCheckResult(true, current, latest, notes, null,
-                    $"Доступна версия {latest}, но файл установщика в релизе не найден.");
+                    $"Доступна версия {latest}, но ZIP-архив для встроенного обновления в релизе не найден.");
             }
 
             return new UpdateCheckResult(false, current, latest, notes, download,
