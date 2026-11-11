@@ -59,4 +59,56 @@ public class UpdateDownloadSafetyTests
             () => new UpdateService().CheckAsync(cancellation.Token));
     }
 
+    [Fact]
+    public void PickRelease_BetaSelectsHighestVersionNotFirstApiResult()
+    {
+        using var document = System.Text.Json.JsonDocument.Parse("""
+            [
+              { "tag_name": "v0.6.189-beta", "prerelease": true, "draft": false },
+              { "tag_name": "v0.6.193-beta", "prerelease": true, "draft": false },
+              { "tag_name": "v0.6.192-beta", "prerelease": true, "draft": false }
+            ]
+            """);
+
+        var release = UpdateService.PickRelease(document.RootElement, beta: true);
+
+        Assert.Equal("v0.6.193-beta", release?.GetProperty("tag_name").GetString());
+    }
+
+    [Fact]
+    public void PickRelease_StableChannelIgnoresNewerBetaAndSelectsHighestStable()
+    {
+        using var document = System.Text.Json.JsonDocument.Parse("""
+            [
+              { "tag_name": "v0.6.193-beta", "prerelease": true, "draft": false },
+              { "tag_name": "v0.4.190", "prerelease": false, "draft": false },
+              { "tag_name": "v0.4.208", "prerelease": false, "draft": false }
+            ]
+            """);
+
+        var release = UpdateService.PickRelease(document.RootElement, beta: false);
+
+        Assert.Equal("v0.4.208", release?.GetProperty("tag_name").GetString());
+    }
+
+    [Fact]
+    public void IsUpdate_DoesNotOfferTheSameInstalledVersionAgain()
+    {
+        Assert.False(UpdateService.IsUpdate(
+            "0.6.193", AppSettings.BetaChannel, "0.6.193", AppSettings.BetaChannel, betaSelected: true));
+    }
+
+    [Fact]
+    public void IsUpdate_AllowsSwitchFromBetaToStableAtSameVersionNumber()
+    {
+        Assert.True(UpdateService.IsUpdate(
+            "0.6.193", AppSettings.BetaChannel, "0.6.193", AppSettings.StableChannel, betaSelected: false));
+    }
+
+    [Fact]
+    public void CurrentVersionCanBeReadFromTheDisplayedBetaVersionLabel()
+    {
+        Assert.Equal("0.6.193", UpdateService.NormalizeVersion("0.6.193-beta"));
+    }
+
 }
