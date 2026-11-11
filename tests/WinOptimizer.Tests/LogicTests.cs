@@ -582,10 +582,14 @@ public class InstallerAndPersistenceTests
         ("WinOptimizer-win-x64.zip", "zip-url"), ("WinOptimizer-Setup.exe", "setup-url"),
     };
 
-    [Fact] public void InstalledCopy_GetsInstaller() => Assert.Equal("setup-url", UpdateService.PickAsset(Assets, true));
-    [Fact] public void PortableCopy_GetsZip() => Assert.Equal("zip-url", UpdateService.PickAsset(Assets, false));
-    [Fact] public void OnlyZip_UsedEvenForInstalledCopy() => Assert.Equal("zip-url", UpdateService.PickAsset(new[] { Assets[0] }, true));
-    [Fact] public void NoAssets_ReturnsNull() => Assert.Null(UpdateService.PickAsset(Array.Empty<(string, string)>(), true));
+    [Fact] public void InPlaceUpdate_PrefersZipWhenSetupIsAlsoAvailable() =>
+        Assert.Equal("zip-url", UpdateService.PickUpdateArchiveAsset(Assets));
+
+    [Fact] public void InPlaceUpdate_DoesNotFallbackToSetupExe() =>
+        Assert.Null(UpdateService.PickUpdateArchiveAsset(new[] { Assets[1] }));
+
+    [Fact] public void InPlaceUpdate_ReturnsNullWhenNoAssetsExist() =>
+        Assert.Null(UpdateService.PickUpdateArchiveAsset(Array.Empty<(string, string)>()));
 
     [Fact]
     public void TargetFpsAndTabs_SurviveRestart()
