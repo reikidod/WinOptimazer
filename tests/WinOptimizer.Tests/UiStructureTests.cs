@@ -338,4 +338,49 @@ public sealed class UiStructureTests
         Assert.Contains("process.ExitCode", service);
     }
 
+    [Fact]
+    public void InstallAndRemovalPages_ExposeConsistentNavigation()
+    {
+        var view = LoadView("Views/MainWindowPages.xaml");
+        var installPage = Assert.Single(Elements(view, "Grid"), element =>
+            Attribute(element, "Visibility") == "{Binding IsAppsPage, Converter={StaticResource BoolToVis}}");
+        var removalPage = Assert.Single(Elements(view, "Grid"), element =>
+            Attribute(element, "Visibility") == "{Binding IsDebloatPage, Converter={StaticResource BoolToVis}}");
+
+        Assert.Contains(Elements(installPage, "Button"), element =>
+            Attribute(element, "Content") == "Удаление" &&
+            Attribute(element, "CommandParameter") == "Debloat");
+        Assert.Contains(Elements(removalPage, "Button"), element =>
+            Attribute(element, "Content") == "Установка" &&
+            Attribute(element, "CommandParameter") == "Apps");
+        Assert.Contains(Elements(installPage, "Button"), element =>
+            Attribute(element, "Content") == "Обновить список" &&
+            Attribute(element, "Command") == "{Binding Apps.RefreshCommand}");
+    }
+
+    [Fact]
+    public void ResetSelection_RestoresDefaultQuickPresetGauge()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "ViewModels/MainViewModel.cs"));
+        var start = source.IndexOf("private void ResetSelection()", StringComparison.Ordinal);
+        Assert.True(start >= 0);
+        var end = source.IndexOf("private async Task ApplyAsync()", start, StringComparison.Ordinal);
+        Assert.True(end > start);
+        var method = source[start..end];
+
+        Assert.Contains("_selectedOptimizationPresetId = \"light\";", method);
+        Assert.Contains("OnPropertyChanged(nameof(SelectedOptimizationPreset))", method);
+        Assert.Contains("OnPropertyChanged(nameof(GaugeProgressValue))", method);
+        Assert.Contains("OnPropertyChanged(nameof(GaugeProgressLabel))", method);
+    }
+
+    [Fact]
+    public void AppDetection_DoesNotUseRunningProcessAsInstallationProof()
+    {
+        var service = File.ReadAllText(Path.Combine(RepositoryRoot(), "Services/AppInstallService.cs"));
+        Assert.Contains("return FindUninstallEntry(app) is not null;", service);
+        Assert.DoesNotContain("Process.GetProcessesByName(app.DetectProcess)", service);
+        Assert.Contains("app.Id != \"discord\" && File.Exists(app.DetectPath)", service);
+    }
+
 }
