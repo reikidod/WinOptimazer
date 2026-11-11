@@ -205,18 +205,18 @@
                                       IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border Style="{StaticResource BorderCard}" Margin="0" Padding="16,12,28,12">
-                                        <Grid Margin="0,0,4,0">
+                                    <Border Style="{StaticResource BorderCard}" Margin="0" Padding="16,12,36,12">
+                                        <Grid Margin="0,0,8,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="24" />
+                                                <ColumnDefinition Width="40" />
                                             </Grid.ColumnDefinitions>
                                             <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}"
                                                               TextElement.FontSize="15" TextElement.FontWeight="SemiBold"
                                                               TextElement.Foreground="{DynamicResource TextPrimaryBrush}"
                                                               VerticalAlignment="Center" />
-                                            <Path x:Name="Arrow" Grid.Column="1" Data="M 0,0 L 5,5 L 10,0" Width="10" Height="6"
-                                                  Margin="0,0,4,0" Stroke="{DynamicResource TextDimBrush}"
+                                            <Path x:Name="Arrow" Grid.Column="1" Data="M 0,0 L 6,6 L 12,0" Width="12" Height="7"
+                                                  Margin="0" Stroke="{DynamicResource TextDimBrush}"
                                                   StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
                                                 <Path.RenderTransform>
