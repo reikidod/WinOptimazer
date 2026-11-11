@@ -253,7 +253,7 @@ public sealed class AppInstallService : IAppInstallService
                     {
                         using var sub = uninstall.OpenSubKey(subName);
                         var display = sub?.GetValue("DisplayName") as string;
-                        if (string.IsNullOrWhiteSpace(display) || !needles.Any(n => display.Contains(n, StringComparison.OrdinalIgnoreCase))) continue;
+                        if (string.IsNullOrWhiteSpace(display) || !MatchesCatalogName(app, display, needles)) continue;
                         var uninstallString = sub?.GetValue("UninstallString") as string;
                         var quiet = sub?.GetValue("QuietUninstallString") as string;
                         if (!string.IsNullOrWhiteSpace(uninstallString) || !string.IsNullOrWhiteSpace(quiet))
@@ -267,6 +267,20 @@ public sealed class AppInstallService : IAppInstallService
             { Logger.Error($"Не удалось прочитать список удаления {hive}/{view}", ex); }
         }
         return null;
+    }
+
+    private static bool MatchesCatalogName(AppCatalogItem app, string display, IReadOnlyList<string> names)
+    {
+        if (names.Any(name => string.Equals(display.Trim(), name, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        return app.Id switch
+        {
+            "chrome" => display.StartsWith("Google Chrome ", StringComparison.OrdinalIgnoreCase),
+            "telegram" => display.StartsWith("Telegram Desktop ", StringComparison.OrdinalIgnoreCase),
+            "vlc" => display.StartsWith("VLC media player ", StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
     }
 
     private static (string Executable, string Arguments) SplitCommandLine(string command)
@@ -303,7 +317,7 @@ public sealed class AppInstallService : IAppInstallService
                     using var sub = uninstall.OpenSubKey(name);
                     var display = sub?.GetValue("DisplayName") as string;
                     if (!string.IsNullOrWhiteSpace(display) &&
-                        display.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                        string.Equals(display.Trim(), needle.Trim(), StringComparison.OrdinalIgnoreCase))
                         return true;
                 }
             }
