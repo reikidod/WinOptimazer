@@ -21,6 +21,7 @@ public sealed class AppItemViewModel : ObservableObject
     public AppCatalogItem App { get; }
     public string Name => App.Name;
     public string Description => App.Description;
+    public string ActionText => IsInstalled ? "Удалить" : "Скачать и установить";
 
     public bool IsInstalled
     {
@@ -28,7 +29,10 @@ public sealed class AppItemViewModel : ObservableObject
         set
         {
             if (SetField(ref _isInstalled, value))
+            {
                 Status = value ? "Установлено" : "Не установлено";
+                OnPropertyChanged(nameof(ActionText));
+            }
         }
     }
 
@@ -99,7 +103,7 @@ public sealed class AppsViewModel : ObservableObject
         foreach (var app in _apps.Catalog)
             Apps.Add(new AppItemViewModel(app, _apps.IsInstalled(app)));
 
-        InstallAppCommand = new AsyncRelayCommand<AppItemViewModel>(InstallAppAsync, _ => !IsBusy, ReportError);
+        InstallAppCommand = new AsyncRelayCommand<AppItemViewModel>(ManageAppAsync, _ => !IsBusy, ReportError);
         RefreshCommand = new RelayCommand(Refresh, () => !IsBusy);
         ZapretInstallCommand = new AsyncRelayCommand(ZapretInstallAsync, () => !IsBusy && !ZapretInstalled, ReportError);
         ZapretLocateCommand = new AsyncRelayCommand(ZapretLocateAsync, () => !IsBusy, ReportError);
@@ -234,39 +238,32 @@ public sealed class AppsViewModel : ObservableObject
         }
     }
 
-    private async Task InstallAppAsync(AppItemViewModel? item)
+    private async Task ManageAppAsync(AppItemViewModel? item)
     {
         if (item is null) return;
-
-        // Уже стоит — не качаем и не запускаем установщик
-        if (_apps.IsInstalled(item.App) || item.IsInstalled)
+        item.IsInstalled = _apps.IsInstalled(item.App);
+        if (item.IsInstalled)
         {
-            item.IsInstalled = true;
-            StatusText = $"{item.Name} уже установлен";
-            _dialogs.Info("Уже установлено",
-                $"{item.Name} уже есть на этом компьютере. Повторная установка не нужна.",
-                DialogKind.Success);
-            return;
+            var choice = _dialogs.Ask(
+                $"Удалить {item.Name}?",
+                "Будет запущен деинсталлятор, зарегистрированный в Windows. WinOptimizer не удаляет папки и пользовательские данные вручную.",
+                primary: "Удалить", secondary: "Отмена", kind: DialogKind.Danger);
+            if (choice != DialogChoice.Primary) return;
         }
 
         IsBusy = true;
         try
         {
             var progress = new Progress<string>(m => StatusText = m);
-            var (ok, msg) = await _apps.DownloadAndInstallAsync(item.App, progress);
-            StatusText = msg;
+            var result = item.IsInstalled
+                ? await _apps.UninstallAsync(item.App, progress)
+                : await _apps.DownloadAndInstallAsync(item.App, progress);
+            StatusText = result.Message;
             item.IsInstalled = _apps.IsInstalled(item.App);
-            if (!ok)
-                _dialogs.Info("Установка", msg, DialogKind.Warning);
-            else if (item.IsInstalled || msg.Contains("уже установлен", StringComparison.OrdinalIgnoreCase))
-                _dialogs.Info("Готово", msg, DialogKind.Success);
-            else
-                _dialogs.Info("Установка", msg);
+            _dialogs.Info("Операция с приложением", result.Message,
+                result.Ok ? DialogKind.Success : DialogKind.Warning);
         }
-        finally
-        {
-            IsBusy = false;
-        }
+        finally { IsBusy = false; }
     }
 
     private async Task ZapretInstallAsync()
