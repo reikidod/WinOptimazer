@@ -267,8 +267,11 @@
                                     Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
                                     Command="{Binding NavigateCommand}" CommandParameter="Store"/>
                         </WrapPanel>
-                        <TextBlock Text="{Binding Debloat.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0"
-                                   Foreground="{DynamicResource AccentBrush}" />
+                        <TextBlock Text="{Binding Debloat.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,8,0,0"
+                                   Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
+                        <ProgressBar IsIndeterminate="True" Height="3" Margin="0,8,0,0"
+                                     Visibility="{Binding Debloat.IsBusy, Converter={StaticResource BoolToVis}}"
+                                     AutomationProperties.Name="Сканирование установленных приложений" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="Обновить" Margin="0,0,8,0" Command="{Binding Debloat.RefreshCommand}" />
@@ -278,7 +281,8 @@
                     </StackPanel>
                 </Grid>
                 <!-- Поиск и фильтр по типу -->
-                <Grid Grid.Row="1" Margin="0,0,16,14">
+                <Grid Grid.Row="1" Margin="0,0,20,14"
+                      Visibility="{Binding Debloat.HasItems, Converter={StaticResource BoolToVis}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -435,6 +439,21 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                <Border Grid.Row="2" Margin="12" Padding="28" CornerRadius="14"
+                        Background="{DynamicResource BgCardBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        MaxWidth="520"
+                        Visibility="{Binding Debloat.HasNoItems, Converter={StaticResource BoolToVis}}">
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="Приложения не отображаются" FontSize="17" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="Если сканирование завершилось без результатов или с ошибкой, проверьте статус выше и повторите поиск."
+                                   Style="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center"
+                                   Margin="0,8,0,14" />
+                        <Button Content="Повторить сканирование" Style="{StaticResource AccentButton}"
+                                Command="{Binding Debloat.RefreshCommand}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <!-- Страница «Приложения» -->
