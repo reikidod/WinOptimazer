@@ -4,118 +4,161 @@
 
 <br>
 
-**Безопасная оптимизация Windows с откатом, обслуживание, приложения и игровые настройки — в одном окне.**
+# WinOptimizer
 
-[![Релиз](https://img.shields.io/github/v/release/reikidod/WinOptimazer?include_prereleases&style=for-the-badge&label=%D0%A0%D0%B5%D0%BB%D0%B8%D0%B7&color=C0262D)](https://github.com/reikidod/WinOptimazer/releases)
-[![Сборка](https://img.shields.io/github/actions/workflow/status/reikidod/WinOptimazer/release.yml?style=for-the-badge&label=CI)](https://github.com/reikidod/WinOptimazer/actions/workflows/release.yml)
-[![Загрузки](https://img.shields.io/github/downloads/reikidod/WinOptimazer/total?style=for-the-badge&label=%D0%97%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B8&color=2F3640)](https://github.com/reikidod/WinOptimazer/releases)
-[![Лицензия: MIT](https://img.shields.io/badge/%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-MIT-2F3640?style=for-the-badge)](LICENSE)
+### Единый центр управления Windows 10/11
 
-![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white)
-![.NET 8](https://img.shields.io/badge/.NET-8-512BD4?style=flat-square&logo=dotnet&logoColor=white)
-![WPF](https://img.shields.io/badge/UI-WPF-2F3640?style=flat-square)
+Настройка, обслуживание и оптимизация системы в одном приложении. Контролируемые изменения, понятные предупреждения и возможность отката — без лишней сложности.
 
-[**Скачать**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#-возможности) · [Как пользоваться](#-как-пользоваться) · [Безопасность](#-безопасность) · [Сообщить о проблеме](https://github.com/reikidod/WinOptimazer/issues/new/choose)
+<br>
+
+[![Stable](https://img.shields.io/github/v/release/reikidod/WinOptimazer?style=for-the-badge&label=STABLE&color=4B6CA3)](https://github.com/reikidod/WinOptimazer/releases/latest)
+[![Beta](https://img.shields.io/github/v/release/reikidod/WinOptimazer?include_prereleases&filter=v0.6.*-beta&style=for-the-badge&label=BETA&color=C0262D)](https://github.com/reikidod/WinOptimazer/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/reikidod/WinOptimazer/ci.yml?branch=beta&style=for-the-badge&label=BUILD%20%26%20TESTS)](https://github.com/reikidod/WinOptimazer/actions/workflows/ci.yml)
+[![Загрузки](https://img.shields.io/github/downloads/reikidod/WinOptimazer/total?style=for-the-badge&label=DOWNLOADS&color=353840)](https://github.com/reikidod/WinOptimazer/releases)
+[![MIT](https://img.shields.io/badge/LICENSE-MIT-8AAAD8?style=for-the-badge)](LICENSE)
+
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-202225?style=flat-square&logo=windows11&logoColor=8AAAD8)
+![.NET 8](https://img.shields.io/badge/.NET-8-202225?style=flat-square&logo=dotnet&logoColor=8AAAD8)
+![WPF](https://img.shields.io/badge/UI-WPF-202225?style=flat-square)
+![C#](https://img.shields.io/badge/C%23-202225?style=flat-square&logo=csharp&logoColor=8AAAD8)
+
+<br>
+
+[**Скачать Stable**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Бета-версии](https://github.com/reikidod/WinOptimazer/releases) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#возможности) · [Безопасность](#безопасность) · [Обратная связь](https://github.com/reikidod/WinOptimazer/issues/new/choose)
 
 </div>
 
-> **Официальный сайт:** [reikidod.github.io/WinOptimazer-site](https://reikidod.github.io/WinOptimazer-site/) — описание возможностей, безопасность и загрузка.
-
 ---
 
-> [!NOTE]
-> Версия **0.6 Beta**: новая главная панель со снимком состояния ПК, диагностика Windows и локальная история операций. Бета-сборки выходят в ветке `beta` и помечены в релизах как prerelease.
+> [!IMPORTANT]
+> **Текущая разработка: 0.6 Beta.** Ветка `beta` — рабочая площадка для новых возможностей и тестирования. Бета-сборки публикуются отдельно от стабильного канала. Для повседневного использования выбирайте Stable.
 
-## ✨ Возможности
+## Возможности
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### 🏠 Главная панель
-Сводка CPU, RAM, системного диска и сети, быстрые переходы, диагностика и последние операции. Показатели автоматически обновляются каждые 2 секунды только пока открыта главная панель.
+### ◈ Главная панель
+Состояние CPU, RAM, системного диска и сети, быстрые действия, диагностика и история последних операций. Данные обновляются, пока открыта главная страница.
 
 </td>
 <td width="50%" valign="top">
 
-### ⚙️ Оптимизация системы
-Каталог твиков реестра и служб с описанием, оценкой пользы и предупреждениями. Каждый твик отменяется. Перед изменениями предлагается точка восстановления. Профили импортируются и экспортируются; загрузка профиля только отмечает твики, не применяя их.
+### ◈ Оптимизация Windows
+Каталог твиков реестра и служб с описаниями, оценкой пользы и предупреждениями. Поддерживаемые изменения можно отменить; перед применением предлагается создать точку восстановления.
 
 </td>
 </tr>
 <tr>
 <td valign="top">
 
-### 🎮 Игры
-Находит игры Steam, Epic, GOG и Xbox, ставит OptiScaler, включает режим высокой производительности GPU.
+### ◈ Игры и производительность
+Поиск игр из Steam, Epic, GOG и Xbox, инструменты OptiScaler и настройки режима высокой производительности GPU.
 
 </td>
 <td valign="top">
 
-### 📦 Приложения
-Установка, удаление и Microsoft Store в одной группе навигации. Установщики и рекомендуемые файлы проверяются по контрольной сумме.
+### ◈ Приложения
+Установка и удаление программ, интеграция с Microsoft Store. Поддерживаемые загрузки проверяются по контрольным суммам.
 
 </td>
 </tr>
 <tr>
 <td valign="top">
 
-### 🧹 Обслуживание
-Временные файлы, восстановление системы, автозагрузка (Run, Startup) и планировщик задач Windows. Планировщик работает строго в режиме чтения: показывает скрытые и вложенные задачи, поддерживает поиск по названию, пути, автору и описанию, фильтры по состоянию и категориям. Приложение не включает, не отключает, не запускает, не останавливает, не удаляет и не редактирует задачи Windows. Элементы автозагрузки отключаются обратимо через StartupApproved.
+### ◈ Обслуживание
+Временные файлы, восстановление системы, автозагрузка и инструменты обслуживания Windows. Планировщик задач доступен в режиме чтения; изменения задач из приложения не выполняются.
 
 </td>
 <td valign="top">
 
-### 🩺 Диагностика и «Мой ПК»
-Только чтение: свободное место, нагрузка RAM, сеть, права запуска, ожидающая перезагрузка и температурные датчики. Видеокарта, процессор, память, накопители и система отображаются в разделе «Мой ПК». Температуры NVIDIA читаются через nvidia-smi, если утилита доступна.
+### ◈ Диагностика и «Мой ПК»
+Информация о процессоре, видеокарте, памяти, накопителях и системе; сведения о свободном месте, сети, правах запуска, ожидающей перезагрузке и доступных датчиках.
 
 </td>
 </tr>
 </table>
 
-🔄 **Обновления** приложение скачивает само из GitHub Releases: кнопка «Проверить обновления» слева внизу. Перед установкой показывается краткий список изменений.
+## Скачать
 
-## 🚀 Как пользоваться
+<table>
+<tr>
+<td width="50%" valign="top">
 
-1. Скачайте `WinOptimizer-Setup.exe` или `WinOptimizer-win-x64.zip` из [последнего релиза](../../releases/latest).
-2. Запустите `WinOptimizer.exe`. SmartScreen может предупредить о неизвестном издателе: сборка не подписана платным сертификатом, исходники открыты.
-3. Откройте **Оптимизация системы**, отметьте нужные твики и нажмите «Применить». Согласитесь на точку восстановления.
-4. Если что-то не понравилось, вернитесь в раздел и отмените твик: исходные значения сохранены.
+### Stable
+
+Для повседневного использования.
+
+[**Открыть последний стабильный релиз →**](https://github.com/reikidod/WinOptimazer/releases/latest)
+
+</td>
+<td width="50%" valign="top">
+
+### Beta 0.6
+
+Предварительные функции и изменения для тестирования. Возможны ошибки.
+
+[**Открыть бета-релизы →**](https://github.com/reikidod/WinOptimazer/releases)
+
+</td>
+</tr>
+</table>
+
+В релизах доступны установщик `WinOptimizer-Setup.exe` и, если приложен к конкретному релизу, архив `WinOptimizer-win-x64.zip`.
+
+## Быстрый старт
+
+1. Выберите Stable или Beta выше и откройте страницу соответствующего релиза.
+2. Скачайте `WinOptimizer-Setup.exe` либо доступный ZIP-архив.
+3. Запустите установщик или распакуйте архив и откройте `WinOptimizer.exe`.
+4. Для операций с системными параметрами предоставьте права администратора, когда приложение их запросит.
+5. Перед применением твиков прочитайте описание и предупреждения.
 
 > [!TIP]
-> Твики с предупреждением (отключение защиты, служб обновления) включайте осознанно и читайте описание.
+> Перед крупными изменениями создайте точку восстановления Windows. Не включайте настройки, назначение которых вам непонятно.
 
-### Требования
+## Безопасность и прозрачность
 
-| | |
+- Поддерживаемые изменения реестра сохраняют исходные значения для отката.
+- Перед применением системных изменений предлагается точка восстановления.
+- Диагностические разделы читают состояние системы; автоматическое исправление без действия пользователя не выполняется.
+- Поддерживаемые загрузки сверяются по SHA-256.
+- Планировщик задач Windows отображается в режиме чтения.
+- История операций хранится локально; приложение не отправляет сведения о компьютере на сторонние серверы.
+
+Логи приложения: `%ProgramData%\\WinOptimizer\\log.txt`. История операций: `%LOCALAPPDATA%\\WinOptimizer\\history.jsonl`.
+
+## Технологии
+
+| Компонент | Использование |
 |---|---|
-| **ОС** | Windows 10 или 11, 64-бит |
-| **Среда** | [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (Windows предложит скачать, если её нет) |
-| **Права** | Администратор: нужны для твиков HKLM и служб, приложение запросит их при запуске |
+| C# | Основной язык |
+| .NET 8 | Платформа приложения |
+| WPF / XAML | Интерфейс Windows |
+| GitHub Actions | Сборка, тесты и публикация релизов |
+| MIT | Лицензия |
 
-## 🔒 Безопасность
+## Разработка
 
-- Изменения реестра запоминают прежние значения и отменяются кнопкой.
-- Диагностика только читает состояние системы, автоисправлений нет.
-- История хранится локально в `%LOCALAPPDATA%\WinOptimizer\history.jsonl`: названия действий и результаты, без содержимого личных файлов.
-- Скачиваемые файлы (утилиты и библиотеки) сверяются по SHA-256.
-- Игры из Steam/Epic и других лаунчеров не удаляются напрямую, чтобы не снести лаунчер.
-- Приложение не отправляет данные о вашем ПК. Логи: `%ProgramData%\WinOptimizer\log.txt`.
+Для сборки требуется Windows и .NET 8 SDK.
 
-Об уязвимостях сообщайте по [SECURITY.md](SECURITY.md).
+```powershell
+dotnet restore
+dotnet build -c Release
+dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release
+```
 
-## ⚠️ Известные ограничения
+Рабочая ветка текущей бета-разработки — `beta`. Стабильный канал поддерживается отдельно в `main`.
 
-- Только Windows; на Linux и macOS не запустится.
-- OptiScaler нельзя использовать в онлайн-играх с античитом (VAC, EAC, BattlEye): возможен бан.
-- Подбор настроек игр по железу пока в разработке.
-- Температуры доступны только если Windows или драйвер публикует соответствующий датчик; чтение NVIDIA требует доступного `nvidia-smi`.
+## Обратная связь
 
-## 🤝 Участие
+- [Сообщить об ошибке](https://github.com/reikidod/WinOptimazer/issues/new/choose)
+- [Предложить улучшение](https://github.com/reikidod/WinOptimazer/issues)
+- [Посетить официальный сайт](https://reikidod.github.io/WinOptimazer-site/)
 
-Нашли баг или есть идея? [Создайте issue](https://github.com/reikidod/WinOptimazer/issues/new/choose). Перед PR прогоните тесты: `dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release`.
-
-**Лицензия:** [MIT](LICENSE)
+**Лицензия:** [MIT](LICENSE).
 
 ---
 
