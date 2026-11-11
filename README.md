@@ -15,9 +15,11 @@
 ![.NET 8](https://img.shields.io/badge/.NET-8-512BD4?style=flat-square&logo=dotnet&logoColor=white)
 ![WPF](https://img.shields.io/badge/UI-WPF-2F3640?style=flat-square)
 
-[**Скачать**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Возможности](#-возможности) · [Как пользоваться](#-как-пользоваться) · [Безопасность](#-безопасность) · [Сообщить о проблеме](https://github.com/reikidod/WinOptimazer/issues/new/choose)
+[**Скачать**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#-возможности) · [Как пользоваться](#-как-пользоваться) · [Безопасность](#-безопасность) · [Сообщить о проблеме](https://github.com/reikidod/WinOptimazer/issues/new/choose)
 
 </div>
+
+> **Официальный сайт:** [reikidod.github.io/WinOptimazer-site](https://reikidod.github.io/WinOptimazer-site/) — описание возможностей, безопасность и загрузка.
 
 ---
 
