@@ -44,6 +44,57 @@ public sealed class DashboardServiceTests : IDisposable
     }
 
     [Fact]
+    public void PerformanceHistory_KeepsOnlyNewestSamplesInChronologicalOrder()
+    {
+        var history = new PerformanceHistoryService(capacity: 2);
+        var first = CreateSnapshot(cpu: 15, memory: 25);
+        var second = CreateSnapshot(cpu: 35, memory: 45);
+        var third = CreateSnapshot(cpu: 55, memory: 65);
+
+        history.Add(first, new DateTime(2026, 1, 1, 10, 0, 0));
+        history.Add(second, new DateTime(2026, 1, 1, 10, 0, 2));
+        var latest = history.Add(third, new DateTime(2026, 1, 1, 10, 0, 4));
+
+        Assert.Equal(55d, latest.CpuPercent);
+        Assert.Equal(65d, latest.MemoryPercent);
+        Assert.Equal(2, history.Samples.Count);
+        Assert.Equal(new DateTime(2026, 1, 1, 10, 0, 2), history.Samples[0].CapturedAt);
+        Assert.Equal(new DateTime(2026, 1, 1, 10, 0, 4), history.Samples[1].CapturedAt);
+    }
+
+    [Fact]
+    public void PerformanceHistory_ClampsValuesAndKeepsUnavailableCpuUnknown()
+    {
+        var history = new PerformanceHistoryService();
+        var point = history.Add(CreateSnapshot(cpu: 140, memory: 120) with
+        {
+            CpuAvailable = false,
+        });
+
+        Assert.Null(point.CpuPercent);
+        Assert.Equal(0d, point.CpuBarHeight);
+        Assert.Equal(100d, point.MemoryPercent);
+        Assert.Equal("CPU недоступен", point.CpuValueText);
+        Assert.Equal("RAM 100%", point.MemoryValueText);
+    }
+
+    [Fact]
+    public void PerformanceHistory_RejectsInvalidCapacity()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PerformanceHistoryService(0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PerformanceHistoryService(10_001));
+    }
+
+    private static SystemSnapshot CreateSnapshot(double cpu, uint memory) => new(
+        "Windows test", 8, cpu, memory,
+        16UL * 1024 * 1024 * 1024,
+        8UL * 1024 * 1024 * 1024,
+        "C:\\",
+        100L * 1024 * 1024 * 1024,
+        50L * 1024 * 1024 * 1024,
+        true);
+
+    [Fact]
     public void DriveSnapshot_FormatsCapacityAndClampsFreeSpace()
     {
         var drive = SystemMonitorService.CreateDriveSnapshot(
