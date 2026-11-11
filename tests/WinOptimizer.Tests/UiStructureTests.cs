@@ -56,6 +56,20 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void SideMouseButtons_AreConnectedToNavigationHistory()
+    {
+        var codeBehind = File.ReadAllText(Path.Combine(RepositoryRoot(), "Views/MainWindow.xaml.cs"));
+
+        Assert.Contains("private const int WmXButtonDown = 0x020B;", codeBehind);
+        Assert.Contains("private const int XButton1 = 0x0001", codeBehind);
+        Assert.Contains("private const int XButton2 = 0x0002", codeBehind);
+        Assert.Contains("XButton1 => _viewModel.NavigateBack()", codeBehind);
+        Assert.Contains("XButton2 => _viewModel.NavigateForward()", codeBehind);
+        Assert.Contains("_windowSource?.AddHook(WindowProc)", codeBehind);
+        Assert.Contains("_windowSource?.RemoveHook(WindowProc)", codeBehind);
+    }
+
+    [Fact]
     public void LatestVersionButton_DownloadsInstallerExeDirectly()
     {
         var document = LoadView("Views/MainWindow.xaml");
