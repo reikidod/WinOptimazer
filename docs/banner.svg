@@ -33,8 +33,8 @@
 
   <g transform="translate(86 94)">
     <rect width="150" height="150" rx="36" fill="#1B1C1F" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2"/>
-    <path d="M19 38h24l18 72 22-72h20l22 72 22-72h24l-33 100h-23l-22-66-22 66H48z" fill="url(#silver)"/>
-    <path d="M105 38h24l-39 100H66z" fill="url(#red)"/>
+    <path d="M20 38H42L56 92L70 38H86L100 92L114 38H136L111 112H92L78 70L64 112H45Z" fill="url(#silver)"/>
+    <path d="M94 38H113L84 112H65Z" fill="url(#red)"/>
   </g>
 
   <g font-family="Inter, Segoe UI, system-ui, sans-serif">
