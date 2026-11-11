@@ -161,6 +161,8 @@ public sealed class MainViewModel : ObservableObject
 
     public ICommand RefreshInfoCommand { get; }
 
+    // Три взаимоисключающих флага для переключателей навигации. Снятие флага ничего не делает:
+    // RadioButton сообщает «false» старой странице, когда пользователь выбирает другую.
     public bool IsTweaksPage
     {
         get => _page == AppPage.Tweaks;
@@ -254,6 +256,7 @@ public sealed class MainViewModel : ObservableObject
     {
         StatusText = "Проверяю текущее состояние…";
 
+        // Независимые проверки идут параллельно: стартовый экран готов быстрее, чем при последовательной загрузке.
         var info = RefreshInfoAsync();
         var maintenance = Maintenance.InitializeAsync();
         var debloat = Debloat.InitializeAsync();
@@ -264,6 +267,7 @@ public sealed class MainViewModel : ObservableObject
         }
         finally
         {
+            // Дожидаемся остальных даже при ошибке, чтобы их исключения не остались неучтёнными.
             await Task.WhenAll(info, maintenance, debloat);
         }
     }
@@ -372,6 +376,7 @@ public sealed class MainViewModel : ObservableObject
 
             StatusText = "Применяю изменения…";
 
+            // Желаемое состояние фиксируем в UI-потоке, дальше работаем в фоне.
             var work = changes.Select(t => (Vm: t, Apply: t.IsSelected)).ToList();
             var results = await Task.Run(() => work.Select(w => (w.Vm, w.Apply, Outcome: RunTweak(w.Vm.Tweak, w.Apply))).ToList());
 
@@ -400,6 +405,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>Предлагает точку восстановления перед системными изменениями. False — пользователь отменил применение.</summary>
     private async Task<bool> EnsureRestorePointAsync(IReadOnlyList<TweakViewModel> changes)
     {
         var system = changes.Where(c => c.RequiresRestorePoint).ToList();
@@ -422,9 +428,9 @@ public sealed class MainViewModel : ObservableObject
         switch (choice)
         {
             case DialogChoice.Cancel:
-                return false;
+                return false; // не применять твики
             case DialogChoice.Secondary:
-                return true;
+                return true;  // применить без точки
         }
 
         StatusText = "Создаю точку восстановления…";
@@ -532,45 +538,76 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             if (apply)
+            {
                 tweak.Apply();
+            }
             else
+            {
                 tweak.Revert();
+            }
+
             return (true, null);
         }
         catch (Exception ex) when (IsExpectedFailure(ex))
         {
-            Logger.Error($"Не удалось {(apply ? "применить" : "откатить")} {tweak.Info.Id}", ex);
+            Logger.Error($"Ошибка при {(apply ? "применении" : "откате")} {tweak.Info.Id}", ex);
             return (false, ex.Message);
         }
     }
 
+    /// <summary>Ожидаемые отказы окружения: права, реестр, внешние утилиты. Остальное — баги и должны падать громко.</summary>
     private static bool IsExpectedFailure(Exception ex) =>
-        ex is UnauthorizedAccessException or SecurityException or IOException or InvalidOperationException
-            or NotSupportedException or ArgumentException;
+        ex is IOException or UnauthorizedAccessException or SecurityException or InvalidOperationException
+            or InvalidDataException or NotSupportedException or TimeoutException or Win32Exception
+            or ArgumentException or FormatException;
 
     private static string NewRestorePointName() =>
         string.Create(CultureInfo.InvariantCulture, $"WinOptimizer {DateTime.Now:yyyy-MM-dd HH:mm}");
 
-    private void ReportUnexpected(Exception ex)
-    {
-        Logger.Error("Неожиданная ошибка в команде", ex);
-        StatusText = "Ошибка: " + ex.Message;
-        _dialogs.Info("Ошибка", ex.Message, DialogKind.Warning);
-    }
 
-    private string? _pendingNotes;
+    public async Task CheckForUpdatesOnStartupAsync()
+    {
+        try
+        {
+            var result = await _updates.CheckAsync();
+            UpdateStatus = result.Message;
+            UpdateAvailable = result.UpdateAvailable && result.DownloadUrl is not null;
+            _pendingDownloadUrl = result.DownloadUrl;
+            if (result.UpdateAvailable && result.DownloadUrl is not null)
+            {
+                var ok = _dialogs.Confirm(
+                    "Обновление WinOptimizer",
+                    $"{result.Message}\n\nСкачать и установить сейчас?\n\nРепозиторий: github.com/{_updates.GitHubRepo}");
+                if (ok)
+                    await ApplyUpdateAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Startup update check", ex);
+            UpdateStatus = "Проверка обновлений не удалась";
+        }
+    }
 
     private async Task CheckUpdateAsync()
     {
         IsBusy = true;
         try
         {
-            UpdateStatus = "Проверяю обновления…";
+            UpdateStatus = "Проверяю GitHub…";
             var result = await _updates.CheckAsync();
             UpdateStatus = result.Message;
-            UpdateAvailable = result.UpdateAvailable;
+            UpdateAvailable = result.UpdateAvailable && result.DownloadUrl is not null;
             _pendingDownloadUrl = result.DownloadUrl;
-            _pendingNotes = result.ReleaseNotes;
+            if (result.UpdateAvailable && result.DownloadUrl is not null)
+            {
+                if (_dialogs.Confirm("Обновление", result.Message + "\n\nУстановить сейчас?"))
+                    await ApplyUpdateAsync();
+            }
+            else
+            {
+                _dialogs.Info("Обновление", result.Message, DialogKind.Success);
+            }
         }
         finally
         {
@@ -584,28 +621,26 @@ public sealed class MainViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            UpdateStatus = "Скачиваю обновление…";
-            var result = await _updates.DownloadAndApplyAsync(_pendingDownloadUrl);
-            UpdateStatus = result.Message;
-            if (result.Success)
-            {
-                var notes = _pendingNotes;
-                var body = string.IsNullOrWhiteSpace(notes)
-                    ? result.Message
-                    : $"{result.Message}\n\nЧто изменилось:\n{notes}";
-                _dialogs.Info("Обновление", body, DialogKind.Success);
-                UpdateAvailable = false;
-                _pendingDownloadUrl = null;
-            }
+            var progress = new Progress<string>(s => UpdateStatus = s);
+            var (ok, msg) = await _updates.DownloadAndInstallAsync(_pendingDownloadUrl, progress);
+            UpdateStatus = msg;
+            if (!ok)
+                _dialogs.Info("Обновление", msg, DialogKind.Warning);
             else
             {
-                _dialogs.Info("Обновление", result.Message, DialogKind.Warning);
+                try { System.Windows.Application.Current?.Shutdown(); } catch { /* ignore */ }
             }
         }
         finally
         {
             IsBusy = false;
         }
+    }
+
+    private void ReportUnexpected(Exception ex)
+    {
+        StatusText = "Произошла непредвиденная ошибка";
+        _dialogs.Info("Непредвиденная ошибка", $"{ex.Message}{Environment.NewLine}{Environment.NewLine}Подробности записаны в {AppPaths.LogFile}");
     }
 }
 
