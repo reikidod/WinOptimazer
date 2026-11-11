@@ -55,18 +55,21 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void AdvancedTweaks_KeepFiltersAndListIndependentlyCollapsible()
+    public void AdvancedTweaks_KeepCategoryFiltersInsideTheTweakPanel()
     {
         var document = LoadView("Views/MainWindow.xaml");
         var expanders = Elements(document, "Expander").ToList();
+        var tweakPanel = Assert.Single(expanders.Where(element =>
+            Attribute(element, "Header") == "Список сложных твиков"));
+        var categoryFilters = Assert.Single(expanders.Where(element =>
+            Attribute(element, "Header") == "Фильтры категорий"));
 
-        Assert.Contains(expanders, element =>
-            Attribute(element, "Header") == "Фильтры сложных твиков" &&
-            Attribute(element, "IsExpanded") == "False");
-
-        Assert.Contains(expanders, element =>
-            Attribute(element, "Header") == "Список сложных твиков" &&
-            Attribute(element, "IsExpanded") == "False");
+        Assert.Equal("False", Attribute(tweakPanel, "IsExpanded"));
+        Assert.Contains(categoryFilters.Ancestors(), ancestor =>
+            ancestor.Name.LocalName == "Expander" &&
+            Attribute(ancestor, "Header") == "Список сложных твиков");
+        Assert.DoesNotContain(expanders, element =>
+            Attribute(element, "Header") == "Фильтры сложных твиков");
     }
 
     [Fact]
@@ -106,6 +109,26 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void DebloatPage_UsesGroupedHeaderActionsAndResponsiveFilterPanel()
+    {
+        var document = LoadView("Views/MainWindowPages.xaml");
+
+        Assert.Contains(Elements(document, "TextBlock"), element =>
+            Attribute(element, "Text") == "Управление установленными программами и приложениями Windows");
+
+        Assert.Contains(Elements(document, "Expander"), element =>
+            Attribute(element, "Header") == "Безопасность и возможности удаления" &&
+            Attribute(element, "IsExpanded") == "False");
+
+        Assert.Contains(Elements(document, "TextBox"), element =>
+            Attribute(element, "AutomationProperties.Name") == "Поиск приложений");
+
+        Assert.Contains(Elements(document, "RadioButton"), element =>
+            Attribute(element, "GroupName") == "DebloatFilter" &&
+            Attribute(element, "CommandParameter") == "3");
+    }
+
+    [Fact]
     public void OptimizationGauge_ShowsSelectedLevelAndNumericProgress()
     {
         var document = LoadView("Views/MainWindow.xaml");
@@ -127,10 +150,10 @@ public sealed class UiStructureTests
     {
         var document = XDocument.Load(Path.Combine(RepositoryRoot(), "Themes/DarkTheme.Extras.xaml"));
         Assert.Contains(Elements(document, "ColumnDefinition"), element =>
-            Attribute(element, "Width") == "24");
+            Attribute(element, "Width") == "40");
         Assert.Contains(Elements(document, "Path"), element =>
-            Attribute(element, "Width") == "10" &&
-            Attribute(element, "Height") == "6");
+            Attribute(element, "Width") == "12" &&
+            Attribute(element, "Height") == "7");
     }
 
     [Fact]
