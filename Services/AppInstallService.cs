@@ -286,22 +286,35 @@ public sealed class AppInstallService : IAppInstallService
     private static bool FindUninstallDisplayName(string needle)
     {
         if (string.IsNullOrWhiteSpace(needle)) return false;
-        return new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser }.Any(hive =>
+        foreach (var (hive, view) in new[]
+        {
+            (RegistryHive.LocalMachine, RegistryView.Registry64),
+            (RegistryHive.LocalMachine, RegistryView.Registry32),
+            (RegistryHive.CurrentUser, RegistryView.Default)
+        })
         {
             try
             {
-                using var key = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
+                using var key = RegistryKey.OpenBaseKey(hive, view);
                 using var uninstall = key.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-                return uninstall?.GetSubKeyNames().Any(name =>
+                if (uninstall is null) continue;
+                foreach (var name in uninstall.GetSubKeyNames())
                 {
                     using var sub = uninstall.OpenSubKey(name);
                     var display = sub?.GetValue("DisplayName") as string;
-                    return !string.IsNullOrWhiteSpace(display) && display.Contains(needle, StringComparison.OrdinalIgnoreCase);
-                }) == true;
+                    if (!string.IsNullOrWhiteSpace(display) &&
+                        display.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
             }
-            catch { return false; }
-        });
+            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+            {
+                Logger.Error($"Не удалось проверить установленное приложение {needle}", ex);
+            }
+        }
+        return false;
     }
+
     private static async Task DownloadFileAsync(string url, string path, CancellationToken ct)
     {
         // Редиректы ведём вручную: стандартный клиент не переходит с https на http,
