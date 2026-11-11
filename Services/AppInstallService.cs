@@ -164,7 +164,7 @@ public sealed class AppInstallService : IAppInstallService
                 if (IsInstalled(app)) return (true, $"{app.Name}: установка подтверждена Windows.");
                 await Task.Delay(TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);
             }
-            Logger.Warning($"Установка {app.Name} не подтверждена. Код завершения: {process.ExitCode}.");
+            Logger.Info($"Установка {app.Name} не подтверждена. Код завершения: {process.ExitCode}.");
             return (false, process.ExitCode == 0
                 ? $"{app.Name}: установщик завершился, но Windows не обнаружила приложение. Проверьте мастер установки."
                 : $"{app.Name}: установщик завершился с кодом {process.ExitCode}.");
@@ -194,6 +194,9 @@ public sealed class AppInstallService : IAppInstallService
             var (executable, arguments) = SplitCommandLine(command);
             executable = Environment.ExpandEnvironmentVariables(executable);
             arguments = Environment.ExpandEnvironmentVariables(arguments);
+            if (executable.EndsWith("msiexec.exe", StringComparison.OrdinalIgnoreCase) ||
+                executable.Equals("msiexec", StringComparison.OrdinalIgnoreCase))
+                arguments = System.Text.RegularExpressions.Regex.Replace(arguments, @"(?i)(^|\s)/i(?=\s|\{)", "$1/x");
             if (!File.Exists(executable) && !executable.Equals("msiexec", StringComparison.OrdinalIgnoreCase))
                 return (false, $"Файл деинсталлятора не найден: {executable}");
             progress?.Report($"Удаляю {app.Name}…");
@@ -299,62 +302,6 @@ public sealed class AppInstallService : IAppInstallService
             catch { return false; }
         });
     }
-    private static bool FindUninstallDisplayName(string needle)
-    {
-        if (string.IsNullOrWhiteSpace(needle)) return false;
-        string[] roots =
-        [
-            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-            @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
-        ];
-
-        foreach (var root in roots)
-        {
-            try
-            {
-                using var key = Registry.LocalMachine.OpenSubKey(root);
-                if (key is null) continue;
-                foreach (var subName in key.GetSubKeyNames())
-                {
-                    try
-                    {
-                        using var sub = key.OpenSubKey(subName);
-                        var display = sub?.GetValue("DisplayName") as string;
-                        if (string.IsNullOrEmpty(display)) continue;
-                        if (display.Contains(needle, StringComparison.OrdinalIgnoreCase))
-                            return true;
-                    }
-                    catch { /* skip */ }
-                }
-            }
-            catch { /* skip */ }
-        }
-
-        // HKCU installers (Discord, Telegram иногда)
-        try
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-            if (key != null)
-            {
-                foreach (var subName in key.GetSubKeyNames())
-                {
-                    try
-                    {
-                        using var sub = key.OpenSubKey(subName);
-                        var display = sub?.GetValue("DisplayName") as string;
-                        if (!string.IsNullOrEmpty(display) &&
-                            display.Contains(needle, StringComparison.OrdinalIgnoreCase))
-                            return true;
-                    }
-                    catch { }
-                }
-            }
-        }
-        catch { }
-
-        return false;
-    }
-
     private static async Task DownloadFileAsync(string url, string path, CancellationToken ct)
     {
         // Редиректы ведём вручную: стандартный клиент не переходит с https на http,
