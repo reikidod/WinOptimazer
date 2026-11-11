@@ -93,7 +93,6 @@ public sealed class MainViewModel : ObservableObject
         Settings.PropertyChanged += (_, _) => EnsurePageVisible();
         EnsurePageVisible();
         ApplyUpdateCommand = new AsyncRelayCommand(ApplyUpdateAsync, () => !IsBusy && _pendingDownloadUrl is not null, ReportUnexpected);
-        DownloadLatestVersionCommand = new AsyncRelayCommand(DownloadLatestVersionAsync, () => !IsBusy, ReportUnexpected);
         RefreshDashboardCommand = new AsyncRelayCommand(RefreshDashboardAsync, () => !IsBusy, ReportUnexpected);
         RunDiagnosticsCommand = new AsyncRelayCommand(RunDiagnosticsAsync, () => !IsBusy, ReportUnexpected);
         NavigateCommand = new RelayCommand<string>(Navigate);
@@ -270,8 +269,6 @@ public sealed class MainViewModel : ObservableObject
     public ICommand CheckUpdateCommand { get; }
 
     public ICommand ApplyUpdateCommand { get; }
-
-    public ICommand DownloadLatestVersionCommand { get; }
 
     public string AppVersion => _updates.CurrentVersion;
 
@@ -1152,41 +1149,6 @@ public sealed class MainViewModel : ObservableObject
             else
             {
                 try { System.Windows.Application.Current?.Shutdown(); } catch { /* ignore */ }
-            }
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private async Task DownloadLatestVersionAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            var progress = new Progress<string>(message => UpdateStatus = message);
-            var (ok, message, filePath) = await _updates.DownloadLatestInstallerAsync(progress);
-            UpdateStatus = message;
-            if (!ok || filePath is null)
-            {
-                _dialogs.Info("Последняя версия", message, DialogKind.Warning);
-                return;
-            }
-
-            // Открываем папку с выделенным EXE; сам установщик не запускаем.
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "explorer.exe",
-                    Arguments = $"/select,\"{filePath}\"",
-                    UseShellExecute = true,
-                });
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Не удалось открыть папку с загруженным установщиком", ex);
             }
         }
         finally
