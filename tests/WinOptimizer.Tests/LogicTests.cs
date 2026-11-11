@@ -205,9 +205,9 @@ public class RecommendedFilesTests
 public class SystemInfoTests
 {
     [Fact]
-    public void Collect_DoesNotThrow()
+    public async Task Collect_DoesNotThrow()
     {
-        var sections = new SystemInfoService().CollectAsync().GetAwaiter().GetResult();
+        var sections = await new SystemInfoService().CollectAsync();
         Assert.NotEmpty(sections);
         // Раздел, который не удалось собрать, содержит строку «Ошибка»: регрессия «Видеокарта» падала на закрытом разделе реестра.
         foreach (var section in sections)

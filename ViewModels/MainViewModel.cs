@@ -30,6 +30,7 @@ public sealed class MainViewModel : ObservableObject
     private SystemSnapshot? _dashboardSnapshot;
     private IReadOnlyList<DiagnosticFinding> _diagnosticFindings = Array.Empty<DiagnosticFinding>();
     private string _dashboardStatus = "Загружаю состояние компьютера…";
+    private DateTime? _lastDiagnosticsAt;
 
     public SettingsViewModel Settings { get; } = new();
 
@@ -123,8 +124,56 @@ public sealed class MainViewModel : ObservableObject
     public IReadOnlyList<DiagnosticFinding> DiagnosticFindings
     {
         get => _diagnosticFindings;
-        private set => SetField(ref _diagnosticFindings, value);
+        private set
+        {
+            if (SetField(ref _diagnosticFindings, value))
+            {
+                OnPropertyChanged(nameof(DiagnosticHeader));
+                OnPropertyChanged(nameof(DiagnosticSummary));
+            }
+        }
     }
+
+    public string DiagnosticHeader
+    {
+        get
+        {
+            if (_lastDiagnosticsAt is null)
+                return "Диагностика · не запускалась";
+
+            var critical = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Critical);
+            var warnings = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Warning);
+            if (critical > 0)
+                return $"Диагностика · крит.: {critical} · предупр.: {warnings}";
+            return warnings > 0
+                ? $"Диагностика · предупреждений: {warnings}"
+                : "Диагностика · всё в порядке";
+        }
+    }
+
+    public string DiagnosticSummary
+    {
+        get
+        {
+            if (_lastDiagnosticsAt is null)
+                return "Запустите проверку, чтобы получить оценку состояния ПК.";
+
+            var critical = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Critical);
+            var warnings = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Warning);
+            var info = DiagnosticFindings.Count(x => x.Level == DiagnosticLevel.Info);
+            return critical == 0 && warnings == 0
+                ? $"Замечаний нет · информационных проверок: {info}"
+                : $"Критических: {critical} · предупреждений: {warnings} · информационных: {info}";
+        }
+    }
+
+    public string DiagnosticLastRunText => _lastDiagnosticsAt is DateTime timestamp
+        ? $"Последняя проверка: {timestamp:dd.MM.yyyy HH:mm:ss}"
+        : "Проверка ещё не выполнялась";
+
+    public string EventJournalSummary => RecentOperations.Count == 0
+        ? "Пока нет записей"
+        : $"Последние {RecentOperations.Count} записей";
 
     public IReadOnlyList<DriveSnapshot> AdditionalDrives => DashboardSnapshot?.AdditionalDrives ?? Array.Empty<DriveSnapshot>();
 
@@ -427,28 +476,58 @@ public sealed class MainViewModel : ObservableObject
 
     private async Task RunDiagnosticsAsync()
     {
-        var snapshot = DashboardSnapshot;
-        if (snapshot is null)
-        {
-            await RefreshDashboardAsync();
-            snapshot = DashboardSnapshot;
-        }
-        if (snapshot is null)
-        {
-            DashboardStatus = "Диагностика недоступна: не удалось получить системные показатели.";
-            return;
-        }
+        if (IsBusy) return;
 
+        IsBusy = true;
         DashboardStatus = "Проверяю состояние Windows…";
-        DiagnosticFindings = await Task.Run(() => _diagnostics.Run(snapshot));
-        RecordOperation("Диагностика", "Проверка состояния Windows", "Завершено");
-        DashboardStatus = $"Диагностика завершена: найдено замечаний — {DiagnosticFindings.Count(x => x.Level != DiagnosticLevel.Info)}.";
+        try
+        {
+            var snapshot = DashboardSnapshot;
+            if (snapshot is null)
+            {
+                await RefreshDashboardAsync();
+                snapshot = DashboardSnapshot;
+            }
+
+            if (snapshot is null)
+            {
+                DashboardStatus = "Диагностика недоступна: не удалось получить системные показатели.";
+                RecordOperation("Диагностика", "Проверка состояния Windows", "Не удалось получить системные показатели");
+                return;
+            }
+
+            var findings = await Task.Run(() => _diagnostics.Run(snapshot));
+            // Publish the timestamp before findings so dependent bindings see a completed run.
+            _lastDiagnosticsAt = DateTime.Now;
+            DiagnosticFindings = findings;
+            OnPropertyChanged(nameof(DiagnosticHeader));
+            OnPropertyChanged(nameof(DiagnosticLastRunText));
+
+            var issueCount = DiagnosticFindings.Count(x => x.Level != DiagnosticLevel.Info);
+            RecordOperation("Диагностика", "Проверка состояния Windows",
+                issueCount == 0 ? "Замечаний не обнаружено" : $"Найдено замечаний: {issueCount}");
+            DashboardStatus = issueCount == 0
+                ? "Диагностика завершена: замечаний не обнаружено."
+                : $"Диагностика завершена: найдено замечаний — {issueCount}.";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось выполнить диагностику Windows", ex);
+            RecordOperation("Диагностика", "Проверка состояния Windows", "Ошибка: " + ex.Message);
+            DashboardStatus = "Не удалось завершить диагностику. Подробности записаны в технический журнал.";
+            throw;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void RefreshRecentOperations()
     {
         RecentOperations.Clear();
         foreach (var entry in _history.GetRecent(8)) RecentOperations.Add(entry);
+        OnPropertyChanged(nameof(EventJournalSummary));
     }
 
     private void RecordOperation(string category, string operation, string result)
@@ -458,6 +537,7 @@ public sealed class MainViewModel : ObservableObject
             var entry = _history.Record(category, operation, result);
             RecentOperations.Insert(0, entry);
             while (RecentOperations.Count > 8) RecentOperations.RemoveAt(RecentOperations.Count - 1);
+            OnPropertyChanged(nameof(EventJournalSummary));
         }
         catch (Exception ex)
         {
@@ -686,8 +766,31 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Если открытую вкладку скрыли в настройках, переходим в «Настройки».</summary>
     private void EnsurePageVisible()
     {
-        if (_page != AppPage.Settings && !AppSettings.Current.IsTabVisible(_page.ToString()))
-            SelectPage(AppPage.Settings, true);
+        if (_page == AppPage.Settings || IsPageVisible(_page))
+            return;
+
+        // Подразделы приложений используют общую точку входа. Если скрыт текущий
+        // подраздел, остаёмся внутри группы, когда в ней ещё есть доступная страница.
+        AppPage? fallback = _page switch
+        {
+            AppPage.Apps => FirstVisiblePage(AppPage.Debloat, AppPage.Store),
+            AppPage.Debloat => FirstVisiblePage(AppPage.Apps, AppPage.Store),
+            AppPage.Store => FirstVisiblePage(AppPage.Apps, AppPage.Debloat),
+            _ => null,
+        };
+
+        SelectPage(fallback ?? AppPage.Settings, true);
+    }
+
+    private static AppPage? FirstVisiblePage(params AppPage[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (IsPageVisible(candidate))
+                return candidate;
+        }
+
+        return null;
     }
 
     private void SelectPage(AppPage page, bool selected)

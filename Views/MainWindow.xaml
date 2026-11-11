@@ -413,29 +413,9 @@
                             </Border>
                         </Grid>
 
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="Система" FontSize="16" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.OsDescription}"
-                                               Style="{StaticResource SecondaryText}" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding DashboardSnapshot.NetworkSummary}"
-                                               Style="{StaticResource SecondaryText}" Margin="0,4,0,0"/>
-                                </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding DashboardStatus}"
-                                           Foreground="{DynamicResource TextDimBrush}" Margin="16,0,0,0"
-                                           FontSize="11" TextWrapping="Wrap" MaxWidth="230"
-                                           VerticalAlignment="Center" TextAlignment="Right"/>
-                            </Grid>
-                        </Border>
-
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,10">
+                        <Expander Style="{StaticResource SectionExpander}" Header="Другие диски" IsExpanded="False"
+                                  Margin="0,0,0,10" AutomationProperties.Name="Дополнительные накопители">
                             <StackPanel>
-                                <TextBlock Text="Другие диски" FontSize="16" FontWeight="SemiBold" />
                                 <TextBlock Text="Фиксированные и подключённые съёмные накопители, кроме системного тома."
                                            Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,8" />
                                 <TextBlock Text="Другие готовые диски не обнаружены"
@@ -464,22 +444,27 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </StackPanel>
-                        </Border>
+                        </Expander>
 
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.15*"/>
                                 <ColumnDefinition Width="0.85*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,8">
+                            <Expander Grid.Column="0" Style="{StaticResource SectionExpander}" Header="{Binding DiagnosticHeader}" IsExpanded="False" Margin="0,0,6,8"
+                                      AutomationProperties.Name="Диагностика Windows">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Диагностика" FontSize="16" FontWeight="SemiBold"
-                                                   VerticalAlignment="Center"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DiagnosticSummary}" FontSize="13" FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding DiagnosticLastRunText}" Style="{StaticResource SecondaryText}"
+                                                       FontSize="10.5" Margin="0,3,0,0"/>
+                                        </StackPanel>
                                         <Button Grid.Column="1" Content="Проверить" Style="{StaticResource AccentButton}"
                                                 Command="{Binding RunDiagnosticsCommand}" Padding="12,6"/>
                                     </Grid>
@@ -519,18 +504,24 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </StackPanel>
-                            </Border>
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="6,0,0,8">
+                            </Expander>
+                            <Expander Grid.Column="1" Style="{StaticResource SectionExpander}" Header="Журнал событий" IsExpanded="False" Margin="6,0,0,8"
+                                      AutomationProperties.Name="Журнал событий и операций">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Последние действия" FontSize="16" FontWeight="SemiBold"
-                                                   VerticalAlignment="Center"/>
-                                        <Button Grid.Column="1" Content="Обновить" Command="{Binding RefreshHistoryCommand}"
-                                                Padding="10,5"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding EventJournalSummary}" FontSize="13" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Последние операции приложения" Style="{StaticResource SecondaryText}" FontSize="10.5" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                        <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <Button Content="Обновить" Command="{Binding RefreshHistoryCommand}" Padding="10,5" Margin="0,0,6,0"/>
+                                            <Button Content="Технический лог" Command="{Binding Settings.OpenLogCommand}" Padding="10,5"
+                                                    ToolTip="Открыть полный файл журнала приложения"/>
+                                        </WrapPanel>
                                     </Grid>
                                     <ItemsControl ItemsSource="{Binding RecentOperations}" Margin="0,8,0,0">
                                         <ItemsControl.ItemTemplate>
@@ -554,7 +545,7 @@
                                     <TextBlock Text="История хранится локально на этом компьютере."
                                                Style="{StaticResource SecondaryText}" FontSize="10" Margin="0,8,0,0"/>
                                 </StackPanel>
-                            </Border>
+                            </Expander>
                         </Grid>
 
                         <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8">
@@ -666,7 +657,7 @@
                     </Grid>
                 </Border>
 
-                <Expander Grid.Row="2" Style="{StaticResource SectionExpander}" Header="Категории сложных твиков · ручная настройка" IsExpanded="False"
+                <Expander Grid.Row="2" Style="{StaticResource SectionExpander}" Header="Фильтры сложных твиков" IsExpanded="False"
                           Margin="0,0,16,10" Padding="10,6"
                           Foreground="{DynamicResource TextSecondaryBrush}"
                           AutomationProperties.Name="Фильтры категорий сложных твиков">
@@ -687,6 +678,8 @@
                 </Expander>
 
                 <ScrollViewer Style="{StaticResource OverlayScroll}" local:Motion.SmoothScroll="True" Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Expander Style="{StaticResource SectionExpander}" Header="Список сложных твиков" IsExpanded="False"
+                              AutomationProperties.Name="Список сложных твиков и ручных настроек">
                     <ItemsControl ItemsSource="{Binding FilteredTweaks}" Margin="0,0,16,8">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -798,6 +791,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    </Expander>
                 </ScrollViewer>
             </Grid>
 
