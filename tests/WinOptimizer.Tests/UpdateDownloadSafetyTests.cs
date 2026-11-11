@@ -1,3 +1,4 @@
+using WinOptimizer.Infrastructure;
 using WinOptimizer.Services;
 using Xunit;
 
