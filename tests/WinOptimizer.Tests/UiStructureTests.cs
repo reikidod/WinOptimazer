@@ -162,7 +162,7 @@ public sealed class UiStructureTests
         var expanders = Elements(document, "Expander").ToList();
         var tweakPanel = Assert.Single(expanders, element =>
             Attribute(element, "Header") == "Список сложных твиков"));
-        var categoryFilters = Assert.Single(expanders.Where(element =>
+        var categoryFilters = Assert.Single(expanders, element =>
             Attribute(element, "Header") == "Фильтры категорий"));
 
         Assert.Equal("False", Attribute(tweakPanel, "IsExpanded"));
