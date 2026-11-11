@@ -269,6 +269,13 @@
                                          AutomationProperties.Name="Сканирование установленных приложений" />
                         </StackPanel>
                         <WrapPanel Grid.Row="1" HorizontalAlignment="Stretch" Margin="0,12,0,0">
+                            <Button Content="Установка" Margin="0,0,8,8"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Apps"/>
+                            <Button Content="Удаление" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Debloat"/>
+                            <Button Content="Microsoft Store" Margin="0,0,8,8"
+                                    Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Store"/>
                             <Button Content="Обновить" Margin="0,0,8,8"
                                     Command="{Binding Debloat.RefreshCommand}" />
                             <Button Content="Рекомендуемые" Margin="0,0,8,8"
@@ -474,6 +481,9 @@
                         <Button Content="Microsoft Store"
                                 Visibility="{Binding Settings.ShowStoreTab, Converter={StaticResource BoolToVis}}"
                                 Command="{Binding NavigateCommand}" CommandParameter="Store"/>
+                        <Button Content="Обновить список" Margin="0,0,8,0"
+                                Command="{Binding Apps.RefreshCommand}"
+                                ToolTip="Повторно проверить установленные приложения и состояние служб"/>
                     </WrapPanel>
                     <TextBlock Text="{Binding Apps.StatusText}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0"
                                Foreground="{DynamicResource AccentBrush}" />
