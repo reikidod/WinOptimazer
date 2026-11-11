@@ -33,6 +33,28 @@
         <GradientStop Color="#4B6CA3" Offset="1" />
     </LinearGradientBrush>
 
+    <!-- Фоновые слои повторяют сетку и мягкие свечения официального сайта. -->
+    <DrawingBrush x:Key="SiteGridBrush" TileMode="Tile"
+                  Viewport="0,0,56,56" ViewportUnits="Absolute"
+                  Viewbox="0,0,56,56" ViewboxUnits="Absolute">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing Brush="#06FFFFFF"
+                             Geometry="M0,0 H56 V1 H0 Z M0,0 V56 H1 V0 Z" />
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <RadialGradientBrush x:Key="SiteRedGlowBrush">
+        <GradientStop Color="#26FF5A5F" Offset="0" />
+        <GradientStop Color="#00FF5A5F" Offset="1" />
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="SiteBlueGlowBrush">
+        <GradientStop Color="#1F4B6CA3" Offset="0" />
+        <GradientStop Color="#004B6CA3" Offset="1" />
+    </RadialGradientBrush>
+    <LinearGradientBrush x:Key="SiteAccentButtonBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#5A7DB5" Offset="0" />
+        <GradientStop Color="#4B6CA3" Offset="1" />
+    </LinearGradientBrush>
+
     <!-- Контраст текста на карточках (#2A2C31): основной ≈ 12:1, вторичный ≈ 6:1, приглушённый ≈ 4.7:1 -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F3F5" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#C2C6CE" />
@@ -136,10 +158,16 @@
     </Style>
 
     <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SiteAccentButtonBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="18" ShadowDepth="2" Direction="270"
+                                  Opacity="0.24" Color="#4B6CA3" />
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- ===== Пункт навигации в боковой панели ===== -->
