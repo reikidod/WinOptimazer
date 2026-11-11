@@ -766,8 +766,31 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Если открытую вкладку скрыли в настройках, переходим в «Настройки».</summary>
     private void EnsurePageVisible()
     {
-        if (_page != AppPage.Settings && !AppSettings.Current.IsTabVisible(_page.ToString()))
-            SelectPage(AppPage.Settings, true);
+        if (_page == AppPage.Settings || IsPageVisible(_page))
+            return;
+
+        // Подразделы приложений используют общую точку входа. Если скрыт текущий
+        // подраздел, остаёмся внутри группы, когда в ней ещё есть доступная страница.
+        AppPage? fallback = _page switch
+        {
+            AppPage.Apps => FirstVisiblePage(AppPage.Debloat, AppPage.Store),
+            AppPage.Debloat => FirstVisiblePage(AppPage.Apps, AppPage.Store),
+            AppPage.Store => FirstVisiblePage(AppPage.Apps, AppPage.Debloat),
+            _ => null,
+        };
+
+        SelectPage(fallback ?? AppPage.Settings, true);
+    }
+
+    private static AppPage? FirstVisiblePage(params AppPage[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (IsPageVisible(candidate))
+                return candidate;
+        }
+
+        return null;
     }
 
     private void SelectPage(AppPage page, bool selected)
