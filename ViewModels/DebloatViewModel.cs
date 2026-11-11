@@ -282,9 +282,15 @@ public sealed class DebloatViewModel : ObservableObject
         private set
         {
             if (SetField(ref _isBusy, value))
+            {
+                OnPropertyChanged(nameof(HasNoItems));
                 CommandManager.InvalidateRequerySuggested();
+            }
         }
     }
+
+    public bool HasNoItems => !IsBusy && Items.Count == 0;
+    public bool HasItems => Items.Count > 0;
 
     public string StatusText
     {
@@ -296,13 +302,16 @@ public sealed class DebloatViewModel : ObservableObject
 
     private async Task RefreshAsync()
     {
+        if (IsBusy) return;
+
         IsBusy = true;
-        StatusText = "Сканирую установленные приложения…";
+        StatusText = "Проверяю приложения Microsoft Store и классические программы…";
         try
         {
             var list = await _service.ListAsync();
-            // Иконки BitmapImage создаём в UI-потоке
-            // Иконки (в том числе из exe) извлекаем в фоне — на сотни программ это заметное время
+
+            StatusText = $"Обрабатываю найденные записи: {list.Count}…";
+            // Иконки BitmapImage создаём в UI-потоке; извлечение и классификация выполняются вне UI.
             var items = await Task.Run(() => list.Select(a => new DebloatItemViewModel(a)).ToList());
 
             Items.Clear();
@@ -310,13 +319,22 @@ public sealed class DebloatViewModel : ObservableObject
                 Items.Add(item);
 
             RaiseCounts();
+            OnPropertyChanged(nameof(HasItems));
+            OnPropertyChanged(nameof(HasNoItems));
             StatusText = Items.Count == 0
-                ? "Установленных приложений не найдено"
-                : $"Найдено приложений и программ: {Items.Count}";
+                ? "Сканирование завершено. Установленные приложения не найдены."
+                : $"Сканирование завершено · найдено приложений и программ: {Items.Count}";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось просканировать установленные приложения", ex);
+            StatusText = "Не удалось завершить сканирование. Проверьте права доступа и нажмите «Обновить».";
+            OnPropertyChanged(nameof(HasNoItems));
         }
         finally
         {
             IsBusy = false;
+            OnPropertyChanged(nameof(HasNoItems));
         }
     }
 
@@ -437,7 +455,8 @@ public sealed class DebloatViewModel : ObservableObject
 
     private void ReportError(Exception ex)
     {
-        StatusText = "Ошибка";
-        _dialogs.Info("Ошибка деблоата", ex.Message);
+        Logger.Error("Ошибка операции в разделе удаления приложений", ex);
+        StatusText = "Операция не выполнена. Подробности записаны в журнал.";
+        _dialogs.Info("Ошибка удаления приложений", ex.Message);
     }
 }
