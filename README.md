@@ -13,7 +13,7 @@
 <br>
 
 [![Stable](https://img.shields.io/github/v/release/reikidod/WinOptimazer?style=for-the-badge&label=STABLE&color=4B6CA3)](https://github.com/reikidod/WinOptimazer/releases/latest)
-[![Beta](https://img.shields.io/github/v/release/reikidod/WinOptimazer?include_prereleases&filter=v0.6.*-beta&style=for-the-badge&label=BETA&color=C0262D)](https://github.com/reikidod/WinOptimazer/releases)
+[![Beta](https://img.shields.io/github/v/release/reikidod/WinOptimazer?include_prereleases&filter=v0.7.*-beta&style=for-the-badge&label=BETA&color=C0262D)](https://github.com/reikidod/WinOptimazer/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/reikidod/WinOptimazer/ci.yml?branch=beta&style=for-the-badge&label=BUILD%20%26%20TESTS)](https://github.com/reikidod/WinOptimazer/actions/workflows/ci.yml)
 [![Загрузки](https://img.shields.io/github/downloads/reikidod/WinOptimazer/total?style=for-the-badge&label=DOWNLOADS&color=353840)](https://github.com/reikidod/WinOptimazer/releases)
 [![MIT](https://img.shields.io/badge/LICENSE-MIT-8AAAD8?style=for-the-badge)](LICENSE)
@@ -25,14 +25,14 @@
 
 <br>
 
-[**Скачать Stable**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Бета-версии](https://github.com/reikidod/WinOptimazer/releases) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#возможности) · [Beta 0.6](docs/BETA.md) · [Безопасность](#безопасность) · [Обратная связь](https://github.com/reikidod/WinOptimazer/issues/new/choose)
+[**Скачать Stable**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Бета-версии](https://github.com/reikidod/WinOptimazer/releases) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#возможности) · [Beta 0.7](docs/BETA.md · [План 0.7](docs/ROADMAP-0.7.md)) · [Безопасность](#безопасность) · [Обратная связь](https://github.com/reikidod/WinOptimazer/issues/new/choose)
 
 </div>
 
 ---
 
 > [!IMPORTANT]
-> **Текущая разработка: 0.6 Beta.** Ветка `beta` — рабочая площадка для новых возможностей и тестирования. Бета-сборки публикуются отдельно от стабильного канала. Для повседневного использования выбирайте Stable.
+> **Текущая разработка: 0.7 Beta — Performance Center.** Ветка `beta` — рабочая площадка для новых возможностей и тестирования. Бета-сборки публикуются отдельно от стабильного канала. Для повседневного использования выбирайте Stable.
 
 ## Возможности
 
@@ -96,11 +96,11 @@
 </td>
 <td width="50%" valign="top">
 
-### Beta 0.6
+### Beta 0.7
 
 Предварительные функции и изменения для тестирования. Возможны ошибки.
 
-[**Открыть бета-релизы →**](https://github.com/reikidod/WinOptimazer/releases) · [Что нового в Beta 0.6](docs/BETA.md)
+[**Открыть бета-релизы →**](https://github.com/reikidod/WinOptimazer/releases) · [Что нового в Beta 0.7](docs/BETA.md · [План 0.7](docs/ROADMAP-0.7.md))
 
 </td>
 </tr>
