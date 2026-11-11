@@ -41,25 +41,26 @@ public sealed class UpdateService : IUpdateService
 
     public string GitHubRepo => $"{DefaultOwner}/{DefaultRepo}";
 
-    public string CurrentVersion
-    {
-        get
-        {
-            var v = Assembly.GetExecutingAssembly().GetName().Version;
-            if (v is null) return "0.0.0";
-            // 0.3.0.0 -> 0.3.0
-            return $"{v.Major}.{v.Minor}.{v.Build}";
-        }
-    }
+    /// <summary>
+    /// Версия из той же метки, которую показывает интерфейс. AssemblyVersion может оставаться
+    /// базовой (0.6.0.0) при отдельных сценариях публикации, поэтому для обновлений используем
+    /// InformationalVersion, куда CI записывает полный номер релиза и канал.
+    /// </summary>
+    public string CurrentVersion => NormalizeVersion(DisplayVersion);
 
-    /// <summary>Версия для показа: с буквенной меткой канала (0.4.12-beta), если она задана при сборке.</summary>
+    /// <summary>Версия для показа: с буквенной меткой канала (например, 0.6.193-beta).</summary>
     public string DisplayVersion
     {
         get
         {
             var info = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            if (string.IsNullOrWhiteSpace(info)) return CurrentVersion;
+            if (string.IsNullOrWhiteSpace(info))
+            {
+                var version = Assembly.GetExecutingAssembly().GetName().Version;
+                return version is null ? "0.0.0" : $"{version.Major}.{version.Minor}.{version.Build}";
+            }
+
             var plus = info.IndexOf('+');
             return plus >= 0 ? info[..plus] : info;
         }
@@ -122,22 +123,44 @@ public sealed class UpdateService : IUpdateService
     internal static JsonElement? PickRelease(JsonElement releases, bool beta)
     {
         if (releases.ValueKind != JsonValueKind.Array) return null;
-        JsonElement? stableFallback = null;
-        foreach (var r in releases.EnumerateArray())
+
+        // GitHub возвращает релизы по дате публикации, а не по номеру версии.
+        // После переиздания/задержанного workflow это может вернуть более старую версию.
+        JsonElement? PickHighest(bool prereleaseOnly)
         {
-            if (r.TryGetProperty("draft", out var d) && d.ValueKind == JsonValueKind.True) continue;
-            var pre = r.TryGetProperty("prerelease", out var p) && p.ValueKind == JsonValueKind.True;
-            if (beta)
+            JsonElement? best = null;
+            string? bestVersion = null;
+
+            foreach (var release in releases.EnumerateArray())
             {
-                if (pre) return r;
-                stableFallback ??= r;
+                if (release.TryGetProperty("draft", out var draft) && draft.ValueKind == JsonValueKind.True)
+                    continue;
+
+                var tag = release.TryGetProperty("tag_name", out var tagElement)
+                    ? tagElement.GetString() ?? string.Empty
+                    : string.Empty;
+                var prerelease = (release.TryGetProperty("prerelease", out var pre)
+                                  && pre.ValueKind == JsonValueKind.True)
+                                 || tag.EndsWith("-beta", StringComparison.OrdinalIgnoreCase);
+                if (prerelease != prereleaseOnly)
+                    continue;
+
+                var version = NormalizeVersion(tag);
+                if (!Regex.IsMatch(version, @"^\\d+(\\.\\d+){1,3}$"))
+                    continue;
+
+                if (best is null || CompareVersions(bestVersion!, version) < 0)
+                {
+                    best = release;
+                    bestVersion = version;
+                }
             }
-            else if (!pre)
-            {
-                return r;
-            }
+
+            return best;
         }
-        return beta ? stableFallback : null;
+
+        // Beta предпочитает prerelease, но если их нет — использует стабильный релиз.
+        return beta ? PickHighest(true) ?? PickHighest(false) : PickHighest(false);
     }
 
     /// <summary>
@@ -148,8 +171,12 @@ public sealed class UpdateService : IUpdateService
     {
         var cmp = CompareVersions(current, latest);
         if (cmp < 0) return true;
-        return cmp != 0 && !betaSelected
-               && installedChannel == AppSettings.BetaChannel && latestChannel == AppSettings.StableChannel;
+
+        // Переход с beta на stable может быть нужен даже при совпадающем номере версии:
+        // канал — часть идентичности релиза, а не только суффикс для отображения.
+        return !betaSelected && cmp >= 0
+               && installedChannel == AppSettings.BetaChannel
+               && latestChannel == AppSettings.StableChannel;
     }
 
     public async Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default)
