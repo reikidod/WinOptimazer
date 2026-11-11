@@ -83,14 +83,14 @@
                                 Background="{DynamicResource BgCardBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                             <Grid>
-                                <TextBlock Text="W" FontSize="30" FontWeight="Black" FontStyle="Italic"
-                                           Foreground="{DynamicResource BrandGradientBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Margin="-3,-1,0,0" />
-                                <Path Data="M30,5 L39,5 L28,34 L20,34 Z"
-                                      Fill="{DynamicResource BrandRedBrush}" Stretch="Fill"
-                                      Width="11" Height="29" HorizontalAlignment="Center"
-                                      VerticalAlignment="Center" Margin="9,0,-2,0" />
+                                <Viewbox Width="30" Height="30" Stretch="Uniform">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M2 6 H5.4 L7.8 17 L10.2 6 H13.8 L16.2 17 L18.6 6 H22 L18 20 H14.8 L12 11.6 L9.2 20 H6 Z"
+                                              Fill="{DynamicResource BrandGradientBrush}" />
+                                        <Path Data="M12.8 6 H16 L11.1 20 H7.9 Z"
+                                              Fill="{DynamicResource BrandRedBrush}" />
+                                    </Canvas>
+                                </Viewbox>
                             </Grid>
                         </Border>
                         <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
