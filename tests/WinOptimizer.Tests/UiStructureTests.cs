@@ -26,6 +26,9 @@ public sealed class UiStructureTests
     private static IEnumerable<XElement> Elements(XDocument document, string name) =>
         document.Descendants().Where(element => element.Name.LocalName == name);
 
+    private static IEnumerable<XElement> Elements(XElement element, string name) =>
+        element.Descendants().Where(child => child.Name.LocalName == name);
+
     private static string? Attribute(XElement element, string name) =>
         element.Attributes().FirstOrDefault(attribute => attribute.Name.LocalName == name)?.Value;
 
