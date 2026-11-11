@@ -22,6 +22,16 @@
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
     <SolidColorBrush x:Key="AccentStrongBrush" Color="{StaticResource AccentStrongColor}" />
     <SolidColorBrush x:Key="TrackOffBrush" Color="{StaticResource TrackOffColor}" />
+    <SolidColorBrush x:Key="BrandRedBrush" Color="#FF5A5F" />
+    <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F2F3F5" Offset="0" />
+        <GradientStop Color="#A9B7CC" Offset="0.72" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="BrandActionBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#C0262D" Offset="0" />
+        <GradientStop Color="#FF5A5F" Offset="0.48" />
+        <GradientStop Color="#4B6CA3" Offset="1" />
+    </LinearGradientBrush>
 
     <!-- Контраст текста на карточках (#2A2C31): основной ≈ 12:1, вторичный ≈ 6:1, приглушённый ≈ 4.7:1 -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F3F5" />
