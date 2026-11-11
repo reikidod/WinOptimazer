@@ -151,8 +151,27 @@ public sealed class SettingsViewModel : ObservableObject
         set { if (_settings.IsTabVisible("Store") != value) { _settings.SetTabVisible("Store", value); Commit(nameof(ShowStoreTab)); } }
     }
 
-    /// <summary>Одна группа навигации «Приложения» видна, если включён хотя бы один её подраздел.</summary>
-    public bool ShowApplicationsGroup => ShowAppsTab || ShowDebloatTab || ShowStoreTab;
+    /// <summary>Управляет всей группой «Приложения»; при включении возвращает все её подразделы.</summary>
+    public bool ShowApplicationsGroup
+    {
+        get => ShowAppsTab || ShowDebloatTab || ShowStoreTab;
+        set
+        {
+            if (ShowApplicationsGroup == value) return;
+
+            // Сначала меняем все значения, затем уведомляем UI: MainViewModel не увидит промежуточное состояние.
+            _settings.SetTabVisible("Apps", value);
+            _settings.SetTabVisible("Debloat", value);
+            _settings.SetTabVisible("Store", value);
+
+            OnPropertyChanged(nameof(ShowAppsTab));
+            OnPropertyChanged(nameof(ShowDebloatTab));
+            OnPropertyChanged(nameof(ShowStoreTab));
+            OnPropertyChanged(nameof(ShowApplicationsGroup));
+
+            SaveSettings();
+        }
+    }
 
     public bool ShowGamesTab
     {
