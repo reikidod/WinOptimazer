@@ -25,6 +25,31 @@ public class UpdateDownloadSafetyTests
         Assert.Equal(expected, UpdateService.IsTrustedDownloadUrl(url));
     }
     [Fact]
+    public void PickUpdateArchiveAsset_PrefersZipEvenWhenInstallerAssetExists()
+    {
+        var assets = new List<(string Name, string Url)>
+        {
+            ("WinOptimizer-Setup.exe", "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-Setup.exe"),
+            ("WinOptimizer-win-x64.zip", "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-win-x64.zip"),
+        };
+
+        Assert.Equal(
+            "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-win-x64.zip",
+            UpdateService.PickUpdateArchiveAsset(assets));
+    }
+
+    [Fact]
+    public void PickUpdateArchiveAsset_DoesNotFallbackToSetupExe()
+    {
+        var assets = new List<(string Name, string Url)>
+        {
+            ("WinOptimizer-Setup.exe", "https://github.com/reikidod/WinOptimazer/releases/download/v1/WinOptimizer-Setup.exe"),
+        };
+
+        Assert.Null(UpdateService.PickUpdateArchiveAsset(assets));
+    }
+
+    [Fact]
     public void PickInstallerAsset_PrefersSetupExe_AndNeverReturnsZip()
     {
         var assets = new List<(string Name, string Url)>
