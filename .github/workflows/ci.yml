@@ -40,8 +40,9 @@ jobs:
         run: |
           dotnet build WinOptimizer.csproj --configuration Release --no-restore -p:ReleaseChannel=beta
           if ($LASTEXITCODE -ne 0) { throw 'Сборка WinOptimizer завершилась с ошибкой' }
-          if (-not (Test-Path 'bin/Release/net8.0-windows/WinOptimizer.exe')) {
-            throw 'После сборки не найден WinOptimizer.exe'
+          $appHost = 'bin/Release/net8.0-windows/win-x64/WinOptimizer.exe'
+          if (-not (Test-Path $appHost)) {
+            throw "После сборки не найден WinOptimizer.exe по ожидаемому пути $appHost"
           }
 
       - name: Run regression tests
@@ -55,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: WinOptimizer-beta-build-${{ github.run_number }}
-          path: bin/Release/net8.0-windows/
+          path: bin/Release/net8.0-windows/win-x64/
           if-no-files-found: error
           retention-days: 7
 
