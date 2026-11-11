@@ -21,7 +21,6 @@ public interface IUpdateService
     string DisplayVersion { get; }
     string GitHubRepo { get; }
     Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default);
-    Task<(bool Ok, string Message, string? FilePath)> DownloadLatestInstallerAsync(IProgress<string>? progress = null, CancellationToken ct = default);
     Task<(bool Ok, string Message)> DownloadAndInstallAsync(string downloadUrl, IProgress<string>? progress = null, CancellationToken ct = default);
 }
 
@@ -87,18 +86,6 @@ public sealed class UpdateService : IUpdateService
             a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
             && a.Name.Contains("WinOptimizer", StringComparison.OrdinalIgnoreCase));
         return string.IsNullOrWhiteSpace(zip.Url) ? null : zip.Url;
-    }
-
-    /// <summary>Выбирает именно EXE-установщик для ручной загрузки, независимо от типа текущей установки.</summary>
-    internal static string? PickInstallerAsset(IReadOnlyList<(string Name, string Url)> assets)
-    {
-        var setup = assets.FirstOrDefault(a =>
-            a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-            && a.Name.Contains("Setup", StringComparison.OrdinalIgnoreCase));
-        if (!string.IsNullOrWhiteSpace(setup.Url)) return setup.Url;
-
-        var anyExe = assets.FirstOrDefault(a => a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
-        return string.IsNullOrWhiteSpace(anyExe.Url) ? null : anyExe.Url;
     }
 
     /// <summary>
@@ -264,101 +251,6 @@ public sealed class UpdateService : IUpdateService
             Logger.Error("Update check failed", ex);
             return new UpdateCheckResult(false, current, null, null, null,
                 "Не удалось проверить обновления: " + ex.Message);
-        }
-    }
-
-    /// <summary>Скачивает EXE последнего релиза выбранного канала в папку загрузок, не запуская установщик.</summary>
-    public async Task<(bool Ok, string Message, string? FilePath)> DownloadLatestInstallerAsync(
-        IProgress<string>? progress = null, CancellationToken ct = default)
-    {
-        string? temporaryDownload = null;
-        try
-        {
-            var beta = AppSettings.Current.UpdateChannel == AppSettings.BetaChannel;
-            var apiUrl = $"https://api.github.com/repos/{DefaultOwner}/{DefaultRepo}/releases?per_page=20";
-            progress?.Report("Ищу последнюю версию на GitHub…");
-            using var response = await Http.GetAsync(apiUrl, ct).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            await using var responseStream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            using var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: ct).ConfigureAwait(false);
-
-            if (PickRelease(document.RootElement, beta) is not { } release)
-                return (false, beta ? "Бета-релизы пока не опубликованы." : "Стабильные релизы пока не опубликованы.", null);
-
-            var tag = release.GetProperty("tag_name").GetString() ?? "последняя версия";
-            var latestVersion = NormalizeVersion(tag);
-            var latestIsBeta = (release.TryGetProperty("prerelease", out var prerelease)
-                                && prerelease.ValueKind == JsonValueKind.True)
-                               || tag.EndsWith("-beta", StringComparison.OrdinalIgnoreCase);
-            var latestChannel = latestIsBeta ? AppSettings.BetaChannel : AppSettings.StableChannel;
-
-            // Кнопка ручной загрузки тоже не должна повторно скачивать уже установленный релиз.
-            // Исключение — реальный переход с beta на stable, даже если номер совпадает.
-            if (!IsUpdate(CurrentVersion, InstalledChannel, latestVersion, latestChannel, beta))
-                return (false, $"У вас уже установлена актуальная версия {DisplayVersion}.", null);
-
-            var assets = new List<(string Name, string Url)>();
-            if (release.TryGetProperty("assets", out var assetArray))
-            {
-                foreach (var asset in assetArray.EnumerateArray())
-                {
-                    var name = asset.GetProperty("name").GetString() ?? "";
-                    var url = asset.GetProperty("browser_download_url").GetString();
-                    if (url is not null) assets.Add((name, url));
-                }
-            }
-
-            var downloadUrl = PickInstallerAsset(assets);
-            if (downloadUrl is null)
-                return (false, $"В релизе {tag} не найден EXE-установщик.", null);
-            if (!IsTrustedDownloadUrl(downloadUrl))
-                return (false, "GitHub вернул недоверенную ссылку на установщик.", null);
-
-            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var downloadsDirectory = string.IsNullOrWhiteSpace(userProfile)
-                ? AppPaths.DownloadsDirectory
-                : Path.Combine(userProfile, "Downloads");
-            Directory.CreateDirectory(downloadsDirectory);
-            var fileName = Path.GetFileName(new Uri(downloadUrl).AbsolutePath);
-            if (string.IsNullOrWhiteSpace(fileName) || !fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                return (false, "Не удалось определить имя EXE-файла.", null);
-
-            var destination = Path.Combine(downloadsDirectory, fileName);
-            temporaryDownload = destination + "." + Guid.NewGuid().ToString("N") + ".download";
-            progress?.Report($"Скачиваю установщик {tag}…");
-            await using (var output = new FileStream(
-                temporaryDownload, FileMode.CreateNew, FileAccess.Write, FileShare.None,
-                bufferSize: 81920, options: FileOptions.Asynchronous | FileOptions.SequentialScan))
-            {
-                await using var input = await Http.GetStreamAsync(new Uri(downloadUrl), ct).ConfigureAwait(false);
-                await input.CopyToAsync(output, ct).ConfigureAwait(false);
-                await output.FlushAsync(ct).ConfigureAwait(false);
-            }
-
-            ct.ThrowIfCancellationRequested();
-            File.Move(temporaryDownload, destination, overwrite: true);
-            temporaryDownload = null;
-            return (true, $"Установщик {tag} скачан: {destination}", destination);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Latest installer download failed", ex);
-            return (false, "Не удалось скачать установщик: " + ex.Message, null);
-        }
-        finally
-        {
-            if (temporaryDownload is not null)
-            {
-                try { File.Delete(temporaryDownload); }
-                catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
-                {
-                    Logger.Error("Не удалось удалить неполный файл установщика", cleanupError);
-                }
-            }
         }
     }
 
