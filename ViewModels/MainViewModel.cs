@@ -842,10 +842,20 @@ public sealed class MainViewModel : ObservableObject
     private void ResetSelection()
     {
         if (!IsTweakStateReady || IsBusy) return;
+
+        // Сброс выбора возвращает и индикатор быстрого набора к исходному уровню.
+        _selectedOptimizationPresetId = "light";
+        OnPropertyChanged(nameof(SelectedOptimizationPreset));
+        OnPropertyChanged(nameof(GaugeProgressValue));
+        OnPropertyChanged(nameof(GaugeProgressLabel));
+        OnPropertyChanged(nameof(PresetSelectionSummary));
+
         foreach (var tweak in Tweaks)
         {
             tweak.IsSelected = tweak.IsApplied;
         }
+
+        StatusText = "Выбор твиков сброшен. Быстрый набор возвращён к исходному уровню.";
     }
 
     private async Task ApplyAsync()
