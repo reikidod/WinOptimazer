@@ -172,7 +172,8 @@ jobs:
           $changelog = Get-Content CHANGELOG.md -Raw
           # Номер запуска workflow не совпадает с номером версии в CHANGELOG.
           # Берём самый новый версионированный раздел; он одинаково подходит для beta и stable.
-          $pattern = '(?ms)^##\s+0\.6\.\d+[^\r\n]*\r?\n(.*?)(?=^##\s|\z)'
+          $pattern = '(?ms)^##\s+0\.7\.\d+[^\r\n]*\r?\n(.*?)(?=^##\s|\z)'
+
           $match = [regex]::Match($changelog, $pattern)
           if ($match.Success) {
             $match.Groups[1].Value.Trim() | Set-Content -Path notes.md -Encoding utf8
