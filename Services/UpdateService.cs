@@ -68,17 +68,6 @@ public sealed class UpdateService : IUpdateService
     /// <summary>Приложение поставлено установщиком (рядом лежит unins000.exe), а не распаковано из архива.</summary>
     internal static bool InstalledByInstaller => File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
 
-    /// <summary>Автообновление всегда использует ZIP и заменяет файлы текущей установки без запуска нового Setup.</summary>
-    internal static string? PickAsset(IReadOnlyList<(string Name, string Url)> assets, bool installerInstall)
-    {
-        string? Find(Func<string, bool> match) => assets.FirstOrDefault(a => match(a.Name)).Url;
-        var setup = Find(n => n.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-                              && n.Contains("Setup", StringComparison.OrdinalIgnoreCase));
-        var zip = Find(n => n.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
-        var anyExe = Find(n => n.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
-        return installerInstall ? setup ?? zip ?? anyExe : zip ?? setup ?? anyExe;
-    }
-
     /// <summary>Архив для встроенного обновления: только ZIP, без перехода на новый Setup.exe.</summary>
     internal static string? PickUpdateArchiveAsset(IReadOnlyList<(string Name, string Url)> assets)
     {
