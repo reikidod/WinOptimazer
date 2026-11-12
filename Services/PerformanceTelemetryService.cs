@@ -148,6 +148,8 @@ public static class PerformanceTelemetryService
     private static readonly NetworkTrafficRateTracker Tracker = new();
     private static readonly object DiskCounterSync = new();
     private static readonly Dictionary<string, PhysicalDiskCounterPair> DiskCounters = new(StringComparer.OrdinalIgnoreCase);
+    private static string[] _diskInstances = Array.Empty<string>();
+    private static DateTime _lastDiskInstanceRefreshUtc = DateTime.MinValue;
 
     private sealed class PhysicalDiskCounterPair : IDisposable
     {
@@ -184,20 +186,28 @@ public static class PerformanceTelemetryService
     {
         lock (DiskCounterSync)
         {
-            string[] instances;
-            try
+            var now = DateTime.UtcNow;
+            if (now - _lastDiskInstanceRefreshUtc >= TimeSpan.FromSeconds(15))
             {
-                instances = new PerformanceCounterCategory("PhysicalDisk").GetInstanceNames()
-                    .Where(name => !string.Equals(name, "_Total", StringComparison.OrdinalIgnoreCase))
-                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
-            }
-            catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException
-                                           or System.ComponentModel.Win32Exception or PlatformNotSupportedException)
-            {
-                return Array.Empty<PhysicalDiskActivitySnapshot>();
+                try
+                {
+                    _diskInstances = new PerformanceCounterCategory("PhysicalDisk").GetInstanceNames()
+                        .Where(name => !string.Equals(name, "_Total", StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+                }
+                catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException
+                                               or System.ComponentModel.Win32Exception or PlatformNotSupportedException)
+                {
+                    _lastDiskInstanceRefreshUtc = now;
+                    if (_diskInstances.Length == 0)
+                        return Array.Empty<PhysicalDiskActivitySnapshot>();
+                }
+
+                _lastDiskInstanceRefreshUtc = now;
             }
 
+            var instances = _diskInstances;
             var active = instances.ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (var stale in DiskCounters.Keys.Where(name => !active.Contains(name)).ToArray())
             {
@@ -262,6 +272,8 @@ public static class PerformanceTelemetryService
             foreach (var pair in DiskCounters.Values)
                 pair.Dispose();
             DiskCounters.Clear();
+            _diskInstances = Array.Empty<string>();
+            _lastDiskInstanceRefreshUtc = DateTime.MinValue;
         }
     }
 
