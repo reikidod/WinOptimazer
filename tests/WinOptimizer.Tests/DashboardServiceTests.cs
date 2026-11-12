@@ -392,7 +392,8 @@ public sealed class DashboardServiceTests : IDisposable
     {
         var now = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
         var measured = new PhysicalDiskActivitySnapshot("0 C:", 1_048_576, 512, now);
-        var warmingUp = new PhysicalDiskActivitySnapshot("1 D:", null, null, now);
+        var warmingUp = new PhysicalDiskActivitySnapshot("1 D:", null, null, now) { IsWarmingUp = true };
+        var unavailable = new PhysicalDiskActivitySnapshot("2 E:", null, null, now);
 
         Assert.True(measured.IsAvailable);
         Assert.Equal("1 МБ/с", measured.ReadText);
@@ -400,6 +401,9 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.False(warmingUp.IsAvailable);
         Assert.Equal("Измерение…", warmingUp.ReadText);
         Assert.Equal("Измерение…", warmingUp.WriteText);
+        Assert.False(unavailable.IsAvailable);
+        Assert.Equal("н/д", unavailable.ReadText);
+        Assert.Equal("н/д", unavailable.WriteText);
     }
 
 }
