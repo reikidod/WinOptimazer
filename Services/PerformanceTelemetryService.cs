@@ -50,6 +50,74 @@ public sealed class NetworkTrafficRateTracker
     }
 }
 
+public sealed record DiskActivityRate(double? ReadBytesPerSecond, double? WriteBytesPerSecond)
+{
+    public bool IsAvailable => ReadBytesPerSecond.HasValue && WriteBytesPerSecond.HasValue;
+
+    public string ReadText => ReadBytesPerSecond is double value ? FormatRate(value) : "—";
+    public string WriteText => WriteBytesPerSecond is double value ? FormatRate(value) : "—";
+
+    private static string FormatRate(double bytesPerSecond)
+    {
+        string[] units = ["Б/с", "КБ/с", "МБ/с", "ГБ/с"];
+        var value = Math.Max(0, bytesPerSecond);
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1) { value /= 1024; unit++; }
+        return $"{value:0.#} {units[unit]}";
+    }
+}
+
+/// <summary>
+/// Преобразует накопительные счётчики физического диска в скорость чтения/записи.
+/// Экземпляр трекера должен соответствовать одному диску; первый замер только задаёт базу.
+/// </summary>
+public sealed class DiskActivityRateTracker
+{
+    private long? _readBytes;
+    private long? _writeBytes;
+    private DateTime? _capturedAt;
+
+    public DiskActivityRate Update(long? readBytes, long? writeBytes, DateTime capturedAt)
+    {
+        if (readBytes < 0)
+            throw new ArgumentOutOfRangeException(nameof(readBytes), "Счётчик чтения не может быть отрицательным.");
+        if (writeBytes < 0)
+            throw new ArgumentOutOfRangeException(nameof(writeBytes), "Счётчик записи не может быть отрицательным.");
+
+        if (readBytes is null || writeBytes is null)
+        {
+            Reset();
+            return new DiskActivityRate(null, null);
+        }
+
+        var previousRead = _readBytes;
+        var previousWrite = _writeBytes;
+        var previousAt = _capturedAt;
+
+        _readBytes = readBytes;
+        _writeBytes = writeBytes;
+        _capturedAt = capturedAt;
+
+        if (previousRead is null || previousWrite is null || previousAt is null)
+            return new DiskActivityRate(null, null);
+
+        var elapsed = (capturedAt - previousAt.Value).TotalSeconds;
+        if (elapsed <= 0 || elapsed > 30 || readBytes.Value < previousRead || writeBytes.Value < previousWrite)
+            return new DiskActivityRate(null, null);
+
+        return new DiskActivityRate(
+            (readBytes.Value - previousRead.Value) / elapsed,
+            (writeBytes.Value - previousWrite.Value) / elapsed);
+    }
+
+    public void Reset()
+    {
+        _readBytes = null;
+        _writeBytes = null;
+        _capturedAt = null;
+    }
+}
+
 public static class PerformanceTelemetryService
 {
     private static readonly object Sync = new();
