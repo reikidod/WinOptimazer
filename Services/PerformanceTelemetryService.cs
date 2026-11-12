@@ -1,4 +1,5 @@
 using System.Net.NetworkInformation;
+using System.Diagnostics;
 
 namespace WinOptimizer.Services;
 
@@ -118,10 +119,131 @@ public sealed class DiskActivityRateTracker
     }
 }
 
+
+public sealed record PhysicalDiskActivitySnapshot(
+    string InstanceName,
+    double? ReadBytesPerSecond,
+    double? WriteBytesPerSecond,
+    DateTime CapturedAt)
+{
+    public bool IsAvailable => ReadBytesPerSecond.HasValue && WriteBytesPerSecond.HasValue;
+    public string ReadText => ReadBytesPerSecond is double value ? FormatRate(value) : "Измерение…";
+    public string WriteText => WriteBytesPerSecond is double value ? FormatRate(value) : "Измерение…";
+    public string DisplayName => InstanceName.Replace(" ", " · ", StringComparison.Ordinal);
+
+    private static string FormatRate(double bytesPerSecond)
+    {
+        string[] units = ["Б/с", "КБ/с", "МБ/с", "ГБ/с"];
+        var value = Math.Max(0, bytesPerSecond);
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1) { value /= 1024; unit++; }
+        return $"${value:0.#} {units[unit]}";
+    }
+}
+
 public static class PerformanceTelemetryService
 {
     private static readonly object Sync = new();
     private static readonly NetworkTrafficRateTracker Tracker = new();
+    private static readonly object DiskCounterSync = new();
+    private static readonly Dictionary<string, PhysicalDiskCounterPair> DiskCounters = new(StringComparer.OrdinalIgnoreCase);
+
+    private sealed class PhysicalDiskCounterPair : IDisposable
+    {
+        public PhysicalDiskCounterPair(string instanceName)
+        {
+            Read = new PerformanceCounter("PhysicalDisk", "Disk Read Bytes/sec", instanceName, readOnly: true);
+            Write = new PerformanceCounter("PhysicalDisk", "Disk Write Bytes/sec", instanceName, readOnly: true);
+        }
+
+        public PerformanceCounter Read { get; }
+        public PerformanceCounter Write { get; }
+
+        public void Dispose()
+        {
+            Read.Dispose();
+            Write.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Читает скорость чтения/записи отдельно для каждого физического диска.
+    /// Первый вызов NextValue только прогревает счётчики и намеренно возвращает «измерение».
+    /// Недоступность одного экземпляра не скрывает остальные диски.
+    /// </summary>
+    public static IReadOnlyList<PhysicalDiskActivitySnapshot> CollectPhysicalDiskActivity()
+    {
+        lock (DiskCounterSync)
+        {
+            string[] instances;
+            try
+            {
+                instances = new PerformanceCounterCategory("PhysicalDisk").GetInstanceNames()
+                    .Where(name => !string.Equals(name, "_Total", StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException
+                                           or System.ComponentModel.Win32Exception or PlatformNotSupportedException)
+            {
+                return Array.Empty<PhysicalDiskActivitySnapshot>();
+            }
+
+            var active = instances.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var stale in DiskCounters.Keys.Where(name => !active.Contains(name)).ToArray())
+            {
+                DiskCounters[stale].Dispose();
+                DiskCounters.Remove(stale);
+            }
+
+            var capturedAt = DateTime.UtcNow;
+            var result = new List<PhysicalDiskActivitySnapshot>(instances.Length);
+            foreach (var instance in instances)
+            {
+                if (!DiskCounters.TryGetValue(instance, out var pair))
+                {
+                    try
+                    {
+                        pair = new PhysicalDiskCounterPair(instance);
+                        _ = pair.Read.NextValue();
+                        _ = pair.Write.NextValue();
+                        DiskCounters.Add(instance, pair);
+                        result.Add(new PhysicalDiskActivitySnapshot(instance, null, null, capturedAt));
+                    }
+                    catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException
+                                                   or System.ComponentModel.Win32Exception or PlatformNotSupportedException
+                                                   or ArgumentException)
+                    {
+                        pair?.Dispose();
+                        result.Add(new PhysicalDiskActivitySnapshot(instance, null, null, capturedAt));
+                    }
+
+                    continue;
+                }
+
+                try
+                {
+                    var read = pair.Read.NextValue();
+                    var write = pair.Write.NextValue();
+                    result.Add(new PhysicalDiskActivitySnapshot(
+                        instance,
+                        float.IsFinite(read) && read >= 0 ? read : null,
+                        float.IsFinite(write) && write >= 0 ? write : null,
+                        capturedAt));
+                }
+                catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException
+                                               or System.ComponentModel.Win32Exception or PlatformNotSupportedException
+                                               or ArgumentException)
+                {
+                    pair.Dispose();
+                    DiskCounters.Remove(instance);
+                    result.Add(new PhysicalDiskActivitySnapshot(instance, null, null, capturedAt));
+                }
+            }
+
+            return result;
+        }
+    }
 
     public static NetworkTrafficRate CollectNetworkRate()
     {
