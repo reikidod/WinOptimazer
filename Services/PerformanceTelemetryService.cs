@@ -137,7 +137,7 @@ public sealed record PhysicalDiskActivitySnapshot(
         var value = Math.Max(0, bytesPerSecond);
         var unit = 0;
         while (value >= 1024 && unit < units.Length - 1) { value /= 1024; unit++; }
-        return $"${value:0.#} {units[unit]}";
+        return $"{value:0.#} {units[unit]}";
     }
 }
 
