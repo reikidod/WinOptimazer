@@ -156,6 +156,7 @@ public static class SystemMonitorService
             AdditionalDrives = CollectAdditionalDrives(systemRoot),
             PhysicalDiskActivity = PerformanceTelemetryService.CollectPhysicalDiskActivity(),
             GpuActivity = GpuTelemetryService.Collect(),
+            TemperatureMetrics = TemperatureTelemetryService.Collect(),
         };
     }
 
