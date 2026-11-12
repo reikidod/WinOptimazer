@@ -415,6 +415,27 @@ public sealed class DashboardServiceTests : IDisposable
     }
 
     [Theory]
+    [InlineData(-30)]
+    [InlineData(151)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void TemperatureNormalizer_RejectsNonFiniteAndOutOfRangeValues(double value)
+    {
+        Assert.False(TemperatureTelemetryService.TryNormalizeTemperature(value, out _));
+    }
+
+    [Theory]
+    [InlineData(-10)]
+    [InlineData(0)]
+    [InlineData(99.5)]
+    [InlineData(150)]
+    public void TemperatureNormalizer_PreservesPlausibleValues(double value)
+    {
+        Assert.True(TemperatureTelemetryService.TryNormalizeTemperature(value, out var normalized));
+        Assert.Equal(value, normalized);
+    }
+
+    [Theory]
     [InlineData("/intelcpu/0/temperature/0", "CPU Package", "CPU")]
     [InlineData("/gpu-nvidia/0/temperature/0", "GPU Core", "GPU")]
     [InlineData("/nvme/0/temperature/0", "Temperature", "NVMe / накопитель")]
