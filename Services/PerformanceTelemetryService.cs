@@ -79,9 +79,9 @@ public sealed class DiskActivityRateTracker
 
     public DiskActivityRate Update(long? readBytes, long? writeBytes, DateTime capturedAt)
     {
-        if (readBytes < 0)
+        if (readBytes.HasValue && readBytes.Value < 0)
             throw new ArgumentOutOfRangeException(nameof(readBytes), "Счётчик чтения не может быть отрицательным.");
-        if (writeBytes < 0)
+        if (writeBytes.HasValue && writeBytes.Value < 0)
             throw new ArgumentOutOfRangeException(nameof(writeBytes), "Счётчик записи не может быть отрицательным.");
 
         if (readBytes is null || writeBytes is null)
@@ -102,7 +102,7 @@ public sealed class DiskActivityRateTracker
             return new DiskActivityRate(null, null);
 
         var elapsed = (capturedAt - previousAt.Value).TotalSeconds;
-        if (elapsed <= 0 || elapsed > 30 || readBytes.Value < previousRead || writeBytes.Value < previousWrite)
+        if (elapsed <= 0 || elapsed > 30 || readBytes.Value < previousRead.Value || writeBytes.Value < previousWrite.Value)
             return new DiskActivityRate(null, null);
 
         return new DiskActivityRate(
