@@ -73,6 +73,7 @@ public static class TemperatureTelemetryService
             var seenSensorIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var provider in Providers)
             {
+                var providerHadSensors = false;
                 var providerName = provider.Contains("LibreHardwareMonitor", StringComparison.Ordinal)
                     ? "LibreHardwareMonitor"
                     : "OpenHardwareMonitor";
@@ -121,7 +122,8 @@ public static class TemperatureTelemetryService
                             catch (InvalidCastException) { }
 
                             var availability = value.HasValue ? MetricAvailability.Available : MetricAvailability.Unavailable;
-                            if (!seenSensorIdentifiers.Add(identifier))
+                            var deduplicationKey = string.IsNullOrWhiteSpace(identifier) ? $"{category}|{name}" : identifier;
+                            if (!seenSensorIdentifiers.Add(deduplicationKey))
                                 continue;
 
                             result.Add(new TemperatureMetricSnapshot(
@@ -132,13 +134,17 @@ public static class TemperatureTelemetryService
                                 now,
                                 availability,
                                 value.HasValue ? null : "Провайдер не вернул корректное значение температуры"));
+                            providerHadSensors = true;
                         }
                     }
                 }
-                catch (Exception ex) when (ex is ManagementException or COMException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException or InvalidOperationException)
+                catch (Exception ex) when (ex is ManagementException or COMException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException or InvalidOperationException or PlatformNotSupportedException or TimeoutException)
                 {
                     // Отсутствие необязательного провайдера не является ошибкой сбора остальных метрик.
                 }
+
+                if (providerHadSensors)
+                    break;
             }
 
             _cached = result
