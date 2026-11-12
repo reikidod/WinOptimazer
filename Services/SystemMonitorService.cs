@@ -20,6 +20,8 @@ public sealed record SystemSnapshot(
     /// <summary>PerformanceCounter может быть недоступен (например, отключены системные счётчики).</summary>
     public IReadOnlyList<DriveSnapshot> AdditionalDrives { get; init; } = Array.Empty<DriveSnapshot>();
     public IReadOnlyList<PhysicalDiskActivitySnapshot> PhysicalDiskActivity { get; init; } = Array.Empty<PhysicalDiskActivitySnapshot>();
+    public IReadOnlyList<GpuAdapterActivitySnapshot> GpuActivity { get; init; } = Array.Empty<GpuAdapterActivitySnapshot>();
+    public IReadOnlyList<TemperatureMetricSnapshot> TemperatureMetrics { get; init; } = Array.Empty<TemperatureMetricSnapshot>();
     public bool CpuAvailable { get; init; } = true;
     public NetworkTrafficRate NetworkTraffic { get; init; } = new(null, null);
     public string NetworkTrafficSummary => NetworkTraffic.Summary;
