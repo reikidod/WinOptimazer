@@ -42,7 +42,7 @@ public sealed class NetworkTrafficRateTracker
             return new NetworkTrafficRate(null, null);
 
         var elapsed = (capturedAt - previousAt.Value).TotalSeconds;
-        if (elapsed <= 0 || elapsed > 30 || receivedBytes < previousReceived || sentBytes < previousSent)
+        if (elapsed <= 0 || elapsed > PerformanceTelemetryPolicy.MaximumCounterSampleGap.TotalSeconds || receivedBytes < previousReceived || sentBytes < previousSent)
             return new NetworkTrafficRate(null, null);
 
         return new NetworkTrafficRate(
@@ -196,7 +196,7 @@ public static class PerformanceTelemetryService
         lock (DiskCounterSync)
         {
             var now = DateTime.UtcNow;
-            if (now - _lastDiskInstanceRefreshUtc >= TimeSpan.FromSeconds(15))
+            if (now - _lastDiskInstanceRefreshUtc >= PerformanceTelemetryPolicy.DeviceEnumerationRefreshInterval)
             {
                 try
                 {
