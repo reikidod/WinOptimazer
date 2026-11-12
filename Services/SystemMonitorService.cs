@@ -155,6 +155,7 @@ public static class SystemMonitorService
             NetworkTraffic = PerformanceTelemetryService.CollectNetworkRate(),
             AdditionalDrives = CollectAdditionalDrives(systemRoot),
             PhysicalDiskActivity = PerformanceTelemetryService.CollectPhysicalDiskActivity(),
+            GpuActivity = GpuTelemetryService.Collect(),
         };
     }
 
