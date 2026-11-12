@@ -407,6 +407,26 @@ public sealed class DashboardServiceTests : IDisposable
     }
 
     [Fact]
+    public void GpuAndDiskTelemetry_ExposeTheSharedMetricContract()
+    {
+        var capturedAt = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var gpu = new GpuAdapterActivitySnapshot(1, 42.5, capturedAt).ToMetricSnapshot();
+        var disk = new PhysicalDiskActivitySnapshot("1 D:", 1_024, 2_048, capturedAt).ToMetricSnapshots();
+
+        Assert.Equal("Графический адаптер 2", gpu.Name);
+        Assert.Equal(42.5, gpu.Value);
+        Assert.Equal("%", gpu.Unit);
+        Assert.Equal("Windows GPU Engine", gpu.Source);
+        Assert.Equal(MetricAvailability.Available, gpu.Availability);
+        Assert.Equal(2, disk.Count);
+        Assert.Equal("Windows PhysicalDisk", disk[0].Source);
+        Assert.Equal("1 D: · чтение", disk[0].Name);
+        Assert.Equal(1_024d, disk[0].Value);
+        Assert.Equal("Б/с", disk[0].Unit);
+        Assert.Equal(capturedAt, disk[1].CapturedAt);
+    }
+
+    [Fact]
     public void TemperatureMetricSnapshot_UsesUnifiedMetricContractAndPreservesSource()
     {
         var capturedAt = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
