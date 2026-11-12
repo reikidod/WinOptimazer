@@ -125,6 +125,9 @@ public sealed class MainViewModel : ObservableObject
                 OnPropertyChanged(nameof(AdditionalDrives));
                 OnPropertyChanged(nameof(HasAdditionalDrives));
                 OnPropertyChanged(nameof(HasNoAdditionalDrives));
+                OnPropertyChanged(nameof(PhysicalDiskActivity));
+                OnPropertyChanged(nameof(HasPhysicalDiskActivity));
+                OnPropertyChanged(nameof(HasNoPhysicalDiskActivity));
 
                 if (value is not null)
                 {
@@ -197,6 +200,12 @@ public sealed class MainViewModel : ObservableObject
     public bool HasAdditionalDrives => AdditionalDrives.Count > 0;
 
     public bool HasNoAdditionalDrives => !HasAdditionalDrives;
+
+    public IReadOnlyList<PhysicalDiskActivitySnapshot> PhysicalDiskActivity => DashboardSnapshot?.PhysicalDiskActivity ?? Array.Empty<PhysicalDiskActivitySnapshot>();
+
+    public bool HasPhysicalDiskActivity => PhysicalDiskActivity.Count > 0;
+
+    public bool HasNoPhysicalDiskActivity => !HasPhysicalDiskActivity;
 
     public string DashboardStatus
     {
