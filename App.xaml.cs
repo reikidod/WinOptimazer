@@ -99,6 +99,8 @@ public partial class App : Application
         catch (Exception ex) { Logger.Error("Освобождение счётчиков дисков при выходе", ex); }
         try { GpuTelemetryService.Dispose(); }
         catch (Exception ex) { Logger.Error("Освобождение счётчиков GPU при выходе", ex); }
+        try { TemperatureTelemetryService.Dispose(); }
+        catch (Exception ex) { Logger.Error("Очистка кэша температур при выходе", ex); }
         try { _instanceMutex?.ReleaseMutex(); catch (ApplicationException) { /* уже освобождён */ }
         _instanceMutex?.Dispose();
         base.OnExit(e);
