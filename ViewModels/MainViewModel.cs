@@ -128,6 +128,12 @@ public sealed class MainViewModel : ObservableObject
                 OnPropertyChanged(nameof(PhysicalDiskActivity));
                 OnPropertyChanged(nameof(HasPhysicalDiskActivity));
                 OnPropertyChanged(nameof(HasNoPhysicalDiskActivity));
+                OnPropertyChanged(nameof(GpuActivity));
+                OnPropertyChanged(nameof(HasGpuActivity));
+                OnPropertyChanged(nameof(HasNoGpuActivity));
+                OnPropertyChanged(nameof(TemperatureMetrics));
+                OnPropertyChanged(nameof(HasTemperatureMetrics));
+                OnPropertyChanged(nameof(HasNoTemperatureMetrics));
 
                 if (value is not null)
                 {
