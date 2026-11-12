@@ -97,6 +97,8 @@ public partial class App : Application
         try { AppSettings.Current.Save(); } catch (Exception ex) { Logger.Error("Сохранение настроек при выходе", ex); }
         try { PerformanceTelemetryService.DisposePhysicalDiskCounters(); }
         catch (Exception ex) { Logger.Error("Освобождение счётчиков дисков при выходе", ex); }
+        try { GpuTelemetryService.Dispose(); }
+        catch (Exception ex) { Logger.Error("Освобождение счётчиков GPU при выходе", ex); }
         try { _instanceMutex?.ReleaseMutex(); catch (ApplicationException) { /* уже освобождён */ }
         _instanceMutex?.Dispose();
         base.OnExit(e);
