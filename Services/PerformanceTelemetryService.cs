@@ -153,7 +153,15 @@ public static class PerformanceTelemetryService
         public PhysicalDiskCounterPair(string instanceName)
         {
             Read = new PerformanceCounter("PhysicalDisk", "Disk Read Bytes/sec", instanceName, readOnly: true);
-            Write = new PerformanceCounter("PhysicalDisk", "Disk Write Bytes/sec", instanceName, readOnly: true);
+            try
+            {
+                Write = new PerformanceCounter("PhysicalDisk", "Disk Write Bytes/sec", instanceName, readOnly: true);
+            }
+            catch
+            {
+                Read.Dispose();
+                throw;
+            }
         }
 
         public PerformanceCounter Read { get; }
