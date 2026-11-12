@@ -329,4 +329,62 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             tracker.Update(-1, 0, DateTime.UtcNow));
     }
+    [Fact]
+    public void DiskActivityRateTracker_UsesPerDiskCounterDeltasAndElapsedTime()
+    {
+        var tracker = new DiskActivityRateTracker();
+        var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+        var first = tracker.Update(1_000, 2_000, start);
+        var second = tracker.Update(5_000, 8_000, start.AddSeconds(2));
+
+        Assert.False(first.IsAvailable);
+        Assert.Equal(2_000d, second.ReadBytesPerSecond);
+        Assert.Equal(3_000d, second.WriteBytesPerSecond);
+        Assert.Equal("2 КБ/с", second.ReadText);
+        Assert.Equal("2.9 КБ/с", second.WriteText);
+    }
+
+    [Fact]
+    public void DiskActivityRateTracker_ResetsBaselineAfterCounterRegressionOrUnavailableData()
+    {
+        var tracker = new DiskActivityRateTracker();
+        var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+        tracker.Update(10_000, 10_000, start);
+        Assert.False(tracker.Update(100, 100, start.AddSeconds(2)).IsAvailable);
+        var recovered = tracker.Update(2_100, 3_100, start.AddSeconds(3));
+        Assert.Equal(2_000d, recovered.ReadBytesPerSecond);
+        Assert.Equal(3_000d, recovered.WriteBytesPerSecond);
+
+        Assert.False(tracker.Update(null, 4_100, start.AddSeconds(4)).IsAvailable);
+        Assert.False(tracker.Update(4_100, 5_100, start.AddSeconds(5)).IsAvailable);
+        var afterGap = tracker.Update(6_100, 7_100, start.AddSeconds(6));
+        Assert.Equal(2_000d, afterGap.ReadBytesPerSecond);
+        Assert.Equal(2_000d, afterGap.WriteBytesPerSecond);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(31)]
+    public void DiskActivityRateTracker_RejectsInvalidElapsedIntervals(int elapsedSeconds)
+    {
+        var tracker = new DiskActivityRateTracker();
+        var start = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+        tracker.Update(1_000, 1_000, start);
+        Assert.False(tracker.Update(2_000, 2_000, start.AddSeconds(elapsedSeconds)).IsAvailable);
+    }
+
+    [Fact]
+    public void DiskActivityRateTracker_RejectsNegativeCounters()
+    {
+        var tracker = new DiskActivityRateTracker();
+        var now = DateTime.UtcNow;
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => tracker.Update(-1, 0, now));
+        Assert.Throws<ArgumentOutOfRangeException>(() => tracker.Update(0, -1, now));
+    }
+
 }
