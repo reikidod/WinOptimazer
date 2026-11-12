@@ -10,6 +10,10 @@ public sealed record GpuAdapterActivitySnapshot(int AdapterIndex, double? Utiliz
     public bool ShowProgress => HasUtilization || IsWarmingUp;
     public string UtilizationText => UtilizationPercent is double value ? $"{value:0.#}%" : IsWarmingUp ? "Измерение…" : "н/д";
     public string StatusText => UtilizationPercent.HasValue ? $"Обновлено {CapturedAt.ToLocalTime():HH:mm:ss}" : IsWarmingUp ? "Подготовка счётчиков" : "Датчик недоступен";
+    public TelemetryMetricSnapshot ToMetricSnapshot() => new(
+        DisplayName, UtilizationPercent, "%", "Windows GPU Engine", CapturedAt,
+        UtilizationPercent.HasValue ? MetricAvailability.Available : IsWarmingUp ? MetricAvailability.WarmingUp : MetricAvailability.Unavailable,
+        UtilizationPercent.HasValue ? null : IsWarmingUp ? "Первый замер счётчика" : "Счётчики GPU Engine недоступны");
 }
 
 public static class GpuTelemetryService
