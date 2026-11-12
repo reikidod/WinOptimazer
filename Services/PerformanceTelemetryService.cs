@@ -127,8 +127,9 @@ public sealed record PhysicalDiskActivitySnapshot(
     DateTime CapturedAt)
 {
     public bool IsAvailable => ReadBytesPerSecond.HasValue && WriteBytesPerSecond.HasValue;
-    public string ReadText => ReadBytesPerSecond is double value ? FormatRate(value) : "Измерение…";
-    public string WriteText => WriteBytesPerSecond is double value ? FormatRate(value) : "Измерение…";
+    public bool IsWarmingUp { get; init; }
+    public string ReadText => ReadBytesPerSecond is double value ? FormatRate(value) : IsWarmingUp ? "Измерение…" : "н/д";
+    public string WriteText => WriteBytesPerSecond is double value ? FormatRate(value) : IsWarmingUp ? "Измерение…" : "н/д";
     public string DisplayName => InstanceName.Replace(" ", " · ", StringComparison.Ordinal);
 
     private static string FormatRate(double bytesPerSecond)
@@ -216,7 +217,7 @@ public static class PerformanceTelemetryService
                         _ = pair.Read.NextValue();
                         _ = pair.Write.NextValue();
                         DiskCounters.Add(instance, pair);
-                        result.Add(new PhysicalDiskActivitySnapshot(instance, null, null, capturedAt));
+                        result.Add(new PhysicalDiskActivitySnapshot(instance, null, null, capturedAt) { IsWarmingUp = true });
                     }
                     catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException
                                                    or System.ComponentModel.Win32Exception or PlatformNotSupportedException
