@@ -76,7 +76,7 @@ public static class TemperatureTelemetryService
         lock (Sync)
         {
             var now = DateTime.UtcNow;
-            if (now - _lastCollectedUtc < TimeSpan.FromSeconds(5))
+            if (now - _lastCollectedUtc < PerformanceTelemetryPolicy.TemperatureRefreshInterval)
                 return _cached;
 
             var result = new List<TemperatureMetricSnapshot>();
