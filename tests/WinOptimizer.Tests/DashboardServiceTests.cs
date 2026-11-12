@@ -387,4 +387,19 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => tracker.Update(0, -1, now));
     }
 
+    [Fact]
+    public void PhysicalDiskActivitySnapshot_ShowsRatesAndKeepsWarmupUnavailable()
+    {
+        var now = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var measured = new PhysicalDiskActivitySnapshot("0 C:", 1_048_576, 512, now);
+        var warmingUp = new PhysicalDiskActivitySnapshot("1 D:", null, null, now);
+
+        Assert.True(measured.IsAvailable);
+        Assert.Equal("1 МБ/с", measured.ReadText);
+        Assert.Equal("512 Б/с", measured.WriteText);
+        Assert.False(warmingUp.IsAvailable);
+        Assert.Equal("Измерение…", warmingUp.ReadText);
+        Assert.Equal("Измерение…", warmingUp.WriteText);
+    }
+
 }
