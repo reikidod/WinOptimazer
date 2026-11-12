@@ -77,7 +77,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         // Показатели на панели обновляются сами, пока она открыта (процессор меняется каждую секунду).
-        _dashboardTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(2) };
+        _dashboardTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = PerformanceTelemetryPolicy.DashboardRefreshInterval };
         _dashboardTimer.Tick += async (_, _) => await RefreshDashboardQuietAsync();
         _dashboardTimer.Start();
 
