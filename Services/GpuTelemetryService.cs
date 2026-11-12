@@ -6,6 +6,8 @@ namespace WinOptimizer.Services;
 public sealed record GpuAdapterActivitySnapshot(int AdapterIndex, double? UtilizationPercent, DateTime CapturedAt, bool IsWarmingUp = false)
 {
     public string DisplayName => $"Графический адаптер {AdapterIndex + 1}";
+    public bool HasUtilization => UtilizationPercent.HasValue;
+    public bool ShowProgress => HasUtilization || IsWarmingUp;
     public string UtilizationText => UtilizationPercent is double value ? $"{value:0.#}%" : IsWarmingUp ? "Измерение…" : "н/д";
     public string StatusText => UtilizationPercent.HasValue ? $"Обновлено {CapturedAt.ToLocalTime():HH:mm:ss}" : IsWarmingUp ? "Подготовка счётчиков" : "Датчик недоступен";
 }
