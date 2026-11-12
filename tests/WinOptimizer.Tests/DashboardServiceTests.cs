@@ -507,6 +507,33 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.False(unavailable.ShowProgress);
     }
 
+    [Fact]
+    public void GpuEngineParser_ExtractsEngineType()
+    {
+        Assert.True(GpuTelemetryService.TryGetEngineType("pid_1_luid_0x0_phys_0_eng_0_engtype_3D", out var engineType));
+        Assert.Equal("3D", engineType);
+        Assert.False(GpuTelemetryService.TryGetEngineType("pid_1_luid_0x0_phys_0_eng_0", out _));
+    }
+
+    [Fact]
+    public void GpuEngineAggregation_SumsProcessesPerEngineAndUsesMaximumEngineType()
+    {
+        var samples = new[]
+        {
+            new GpuEngineUtilizationSample(0, "3D", 20),
+            new GpuEngineUtilizationSample(0, "3D", 30),
+            new GpuEngineUtilizationSample(0, "Copy", 80),
+            new GpuEngineUtilizationSample(1, "3D", 15),
+            new GpuEngineUtilizationSample(0, "3D", 90),
+            new GpuEngineUtilizationSample(0, "VideoDecode", double.NaN),
+        };
+
+        var result = GpuTelemetryService.AggregateUtilization(samples);
+
+        Assert.Equal(100d, result[0]);
+        Assert.Equal(15d, result[1]);
+    }
+
     [Theory]
     [InlineData("pid_123_luid_0x00000000_0x00001234_phys_0_eng_0_engtype_3D", 0)]
     [InlineData("pid_456_luid_0x00000000_0x00005678_phys_12_eng_1_engtype_Copy", 12)]
