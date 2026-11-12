@@ -95,7 +95,9 @@ public partial class App : Application
     {
         // Ползунки сохраняются с задержкой; при закрытии сразу после изменения записываем значения принудительно.
         try { AppSettings.Current.Save(); } catch (Exception ex) { Logger.Error("Сохранение настроек при выходе", ex); }
-        try { _instanceMutex?.ReleaseMutex(); } catch (ApplicationException) { /* уже освобождён */ }
+        try { PerformanceTelemetryService.DisposePhysicalDiskCounters(); }
+        catch (Exception ex) { Logger.Error("Освобождение счётчиков дисков при выходе", ex); }
+        try { _instanceMutex?.ReleaseMutex(); catch (ApplicationException) { /* уже освобождён */ }
         _instanceMutex?.Dispose();
         base.OnExit(e);
     }
