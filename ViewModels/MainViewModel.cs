@@ -213,6 +213,12 @@ public sealed class MainViewModel : ObservableObject
 
     public bool HasNoGpuActivity => DashboardSnapshot is not null && !HasGpuActivity;
 
+    public IReadOnlyList<TemperatureMetricSnapshot> TemperatureMetrics => DashboardSnapshot?.TemperatureMetrics ?? Array.Empty<TemperatureMetricSnapshot>();
+
+    public bool HasTemperatureMetrics => TemperatureMetrics.Count > 0;
+
+    public bool HasNoTemperatureMetrics => DashboardSnapshot is not null && !HasTemperatureMetrics;
+
     public string DashboardStatus
     {
         get => _dashboardStatus;
