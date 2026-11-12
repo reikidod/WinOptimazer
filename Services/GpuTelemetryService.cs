@@ -3,6 +3,8 @@ using System.Globalization;
 
 namespace WinOptimizer.Services;
 
+public sealed record GpuEngineUtilizationSample(int AdapterIndex, string EngineType, double UtilizationPercent);
+
 public sealed record GpuAdapterActivitySnapshot(int AdapterIndex, double? UtilizationPercent, DateTime CapturedAt, bool IsWarmingUp = false)
 {
     public string DisplayName => $"Графический адаптер {AdapterIndex + 1}";
@@ -36,6 +38,40 @@ public static class GpuTelemetryService
         return int.TryParse(token, NumberStyles.None, CultureInfo.InvariantCulture, out adapterIndex) && adapterIndex >= 0;
     }
 
+    public static bool TryGetEngineType(string? instanceName, out string engineType)
+    {
+        engineType = string.Empty;
+        if (string.IsNullOrWhiteSpace(instanceName))
+            return false;
+
+        const string marker = "_engtype_";
+        var markerIndex = instanceName.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex < 0 || markerIndex + marker.Length >= instanceName.Length)
+            return false;
+
+        engineType = instanceName[(markerIndex + marker.Length)..].Trim();
+        return engineType.Length > 0;
+    }
+
+    public static IReadOnlyDictionary<int, double> AggregateUtilization(IEnumerable<GpuEngineUtilizationSample> samples)
+    {
+        ArgumentNullException.ThrowIfNull(samples);
+        var engineTotals = new Dictionary<(int AdapterIndex, string EngineType), double>();
+        foreach (var sample in samples)
+        {
+            if (sample.AdapterIndex < 0 || string.IsNullOrWhiteSpace(sample.EngineType) ||
+                !double.IsFinite(sample.UtilizationPercent) || sample.UtilizationPercent < 0)
+                continue;
+
+            var key = (sample.AdapterIndex, sample.EngineType);
+            engineTotals[key] = Math.Min(100, engineTotals.GetValueOrDefault(key) + sample.UtilizationPercent);
+        }
+
+        return engineTotals
+            .GroupBy(pair => pair.Key.AdapterIndex)
+            .ToDictionary(group => group.Key, group => group.Max(pair => pair.Value));
+    }
+
     public static IReadOnlyList<GpuAdapterActivitySnapshot> Collect()
     {
         lock (Sync)
@@ -63,13 +99,13 @@ public static class GpuTelemetryService
                 Counters.Remove(stale);
             }
 
-            var values = new Dictionary<int, double>();
+            var samples = new List<GpuEngineUtilizationSample>();
             var warming = new HashSet<int>();
             var seen = new HashSet<int>();
             var capturedAt = DateTime.UtcNow;
             foreach (var instance in _instances)
             {
-                if (!TryGetAdapterIndex(instance, out var adapterIndex)) continue;
+                if (!TryGetAdapterIndex(instance, out var adapterIndex) || !TryGetEngineType(instance, out var engineType)) continue;
                 seen.Add(adapterIndex);
                 if (!Counters.TryGetValue(instance, out var counter))
                 {
@@ -91,8 +127,7 @@ public static class GpuTelemetryService
                 {
                     var value = counter.NextValue();
                     if (!float.IsFinite(value) || value < 0) continue;
-                    var utilization = Math.Clamp((double)value, 0, 100);
-                    if (!values.TryGetValue(adapterIndex, out var current) || utilization > current) values[adapterIndex] = utilization;
+                    samples.Add(new GpuEngineUtilizationSample(adapterIndex, engineType, Math.Clamp((double)value, 0, 100)));
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or PlatformNotSupportedException or ArgumentException)
                 {
@@ -101,6 +136,7 @@ public static class GpuTelemetryService
                 }
             }
 
+            var values = AggregateUtilization(samples);
             return seen.OrderBy(index => index).Select(index => new GpuAdapterActivitySnapshot(
                 index, values.TryGetValue(index, out var value) ? value : null, capturedAt,
                 !values.ContainsKey(index) && warming.Contains(index))).ToArray();
