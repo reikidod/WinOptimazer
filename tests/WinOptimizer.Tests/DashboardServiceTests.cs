@@ -528,7 +528,10 @@ public sealed class DashboardServiceTests : IDisposable
     {
         Assert.True(GpuTelemetryService.TryGetEngineType("pid_1_luid_0x0_phys_0_eng_0_engtype_3D", out var engineType));
         Assert.Equal("3D", engineType);
+        Assert.True(GpuTelemetryService.TryGetEngineIndex("pid_1_luid_0x0_phys_0_eng_12_engtype_3D", out var engineIndex));
+        Assert.Equal(12, engineIndex);
         Assert.False(GpuTelemetryService.TryGetEngineType("pid_1_luid_0x0_phys_0_eng_0", out _));
+        Assert.False(GpuTelemetryService.TryGetEngineIndex("pid_1_luid_0x0_phys_0_engtype_3D", out _));
     }
 
     [Fact]
@@ -536,12 +539,13 @@ public sealed class DashboardServiceTests : IDisposable
     {
         var samples = new[]
         {
-            new GpuEngineUtilizationSample(0, "3D", 20),
-            new GpuEngineUtilizationSample(0, "3D", 30),
-            new GpuEngineUtilizationSample(0, "Copy", 80),
-            new GpuEngineUtilizationSample(1, "3D", 15),
-            new GpuEngineUtilizationSample(0, "3D", 90),
-            new GpuEngineUtilizationSample(0, "VideoDecode", double.NaN),
+            new GpuEngineUtilizationSample(0, 0, "3D", 20),
+            new GpuEngineUtilizationSample(0, 0, "3D", 30),
+            new GpuEngineUtilizationSample(0, 1, "3D", 70),
+            new GpuEngineUtilizationSample(0, 2, "Copy", 80),
+            new GpuEngineUtilizationSample(1, 0, "3D", 15),
+            new GpuEngineUtilizationSample(0, 0, "3D", 90),
+            new GpuEngineUtilizationSample(0, 3, "VideoDecode", double.NaN),
         };
 
         var result = GpuTelemetryService.AggregateUtilization(samples);
