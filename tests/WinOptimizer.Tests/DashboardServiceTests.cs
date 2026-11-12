@@ -387,6 +387,24 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => tracker.Update(0, -1, now));
     }
 
+    [Theory]
+    [InlineData("pid_123_luid_0x00000000_0x00001234_phys_0_eng_0_engtype_3D", 0)]
+    [InlineData("pid_456_luid_0x00000000_0x00005678_phys_12_eng_1_engtype_Copy", 12)]
+    public void GpuEngineParser_ExtractsPhysicalAdapterIndex(string instanceName, int expected)
+    {
+        Assert.True(GpuTelemetryService.TryGetAdapterIndex(instanceName, out var actual));
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("pid_123_luid_0x00000000_eng_0_engtype_3D")]
+    [InlineData("phys_x_eng_0")]
+    public void GpuEngineParser_RejectsMalformedOrUnmappedInstances(string instanceName)
+    {
+        Assert.False(GpuTelemetryService.TryGetAdapterIndex(instanceName, out _));
+    }
+
     [Fact]
     public void PhysicalDiskActivitySnapshot_ShowsRatesAndKeepsWarmupUnavailable()
     {
