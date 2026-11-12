@@ -205,7 +205,7 @@ public sealed class MainViewModel : ObservableObject
 
     public bool HasPhysicalDiskActivity => PhysicalDiskActivity.Count > 0;
 
-    public bool HasNoPhysicalDiskActivity => !HasPhysicalDiskActivity;
+    public bool HasNoPhysicalDiskActivity => DashboardSnapshot is not null && !HasPhysicalDiskActivity;
 
     public string DashboardStatus
     {
