@@ -254,6 +254,17 @@ public static class PerformanceTelemetryService
         }
     }
 
+    /// <summary>Освобождает долгоживущие Windows-счётчики при завершении приложения.</summary>
+    public static void DisposePhysicalDiskCounters()
+    {
+        lock (DiskCounterSync)
+        {
+            foreach (var pair in DiskCounters.Values)
+                pair.Dispose();
+            DiskCounters.Clear();
+        }
+    }
+
     public static NetworkTrafficRate CollectNetworkRate()
     {
         long received = 0;
