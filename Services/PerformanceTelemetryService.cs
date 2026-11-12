@@ -131,6 +131,15 @@ public sealed record PhysicalDiskActivitySnapshot(
     public string ReadText => ReadBytesPerSecond is double value ? FormatRate(value) : IsWarmingUp ? "Измерение…" : "н/д";
     public string WriteText => WriteBytesPerSecond is double value ? FormatRate(value) : IsWarmingUp ? "Измерение…" : "н/д";
     public string DisplayName => InstanceName.Replace(" ", " · ", StringComparison.Ordinal);
+    public IReadOnlyList<TelemetryMetricSnapshot> ToMetricSnapshots() =>
+    [
+        new($"{DisplayName} · чтение", ReadBytesPerSecond, "Б/с", "Windows PhysicalDisk", CapturedAt,
+            ReadBytesPerSecond.HasValue ? MetricAvailability.Available : IsWarmingUp ? MetricAvailability.WarmingUp : MetricAvailability.Unavailable,
+            ReadBytesPerSecond.HasValue ? null : IsWarmingUp ? "Первый замер счётчика" : "Счётчик чтения недоступен"),
+        new($"{DisplayName} · запись", WriteBytesPerSecond, "Б/с", "Windows PhysicalDisk", CapturedAt,
+            WriteBytesPerSecond.HasValue ? MetricAvailability.Available : IsWarmingUp ? MetricAvailability.WarmingUp : MetricAvailability.Unavailable,
+            WriteBytesPerSecond.HasValue ? null : IsWarmingUp ? "Первый замер счётчика" : "Счётчик записи недоступен"),
+    ];
 
     private static string FormatRate(double bytesPerSecond)
     {
