@@ -32,6 +32,16 @@ public static class TemperatureTelemetryService
     private static IReadOnlyList<TemperatureMetricSnapshot> _cached = Array.Empty<TemperatureMetricSnapshot>();
     private static DateTime _lastCollectedUtc = DateTime.MinValue;
 
+    public static bool TryNormalizeTemperature(double value, out double normalized)
+    {
+        normalized = 0;
+        if (!double.IsFinite(value) || value is < MinimumTemperatureCelsius or > MaximumTemperatureCelsius)
+            return false;
+
+        normalized = value;
+        return true;
+    }
+
     public static bool TryClassifySensor(string? identifier, string? name, out string category)
     {
         category = string.Empty;
@@ -114,12 +124,13 @@ public static class TemperatureTelemetryService
                                 if (sensor["Value"] is not null)
                                 {
                                     var parsed = Convert.ToDouble(sensor["Value"], CultureInfo.InvariantCulture);
-                                    if (double.IsFinite(parsed) && parsed is >= MinimumTemperatureCelsius and <= MaximumTemperatureCelsius)
-                                        value = parsed;
+                                    if (TryNormalizeTemperature(parsed, out var normalized))
+                                        value = normalized;
                                 }
                             }
                             catch (FormatException) { }
                             catch (InvalidCastException) { }
+                            catch (OverflowException) { }
 
                             var availability = value.HasValue ? MetricAvailability.Available : MetricAvailability.Unavailable;
                             var deduplicationKey = string.IsNullOrWhiteSpace(identifier) ? $"{category}|{name}" : identifier;
