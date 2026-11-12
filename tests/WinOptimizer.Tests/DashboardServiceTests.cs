@@ -387,6 +387,41 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => tracker.Update(0, -1, now));
     }
 
+    [Theory]
+    [InlineData("/intelcpu/0/temperature/0", "CPU Package", "CPU")]
+    [InlineData("/gpu-nvidia/0/temperature/0", "GPU Core", "GPU")]
+    [InlineData("/nvme/0/temperature/0", "Temperature", "NVMe / накопитель")]
+    public void TemperatureSensorClassifier_RecognizesSupportedHardware(string identifier, string name, string expected)
+    {
+        Assert.True(TemperatureTelemetryService.TryClassifySensor(identifier, name, out var category));
+        Assert.Equal(expected, category);
+    }
+
+    [Theory]
+    [InlineData("/amdcpu/0/temperature/0", "CPU Core")]
+    [InlineData("/gpu-amd/0/temperature/0", "GPU Hot Spot")]
+    [InlineData("/nvme/0/temperature/0", "Drive")]
+    public void TemperatureSensorClassifier_UsesIdentifierAndSensorName(string identifier, string name)
+    {
+        Assert.True(TemperatureTelemetryService.TryClassifySensor(identifier, name, out _));
+    }
+
+    [Fact]
+    public void TemperatureMetricSnapshot_UsesUnifiedMetricContractAndPreservesSource()
+    {
+        var capturedAt = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var temperature = new TemperatureMetricSnapshot("CPU", "CPU Package", 72.5, "LibreHardwareMonitor", capturedAt, MetricAvailability.Available);
+        var metric = temperature.ToMetricSnapshot();
+
+        Assert.Equal("CPU Package", metric.Name);
+        Assert.Equal(72.5, metric.Value);
+        Assert.Equal("°C", metric.Unit);
+        Assert.Equal("LibreHardwareMonitor", metric.Source);
+        Assert.Equal(capturedAt, metric.CapturedAt);
+        Assert.Equal(MetricAvailability.Available, metric.Availability);
+        Assert.Equal("72.5 °C", metric.DisplayValue);
+    }
+
     [Fact]
     public void GpuAdapterActivitySnapshot_DistinguishesMeasuredWarmupAndUnavailableStates()
     {
