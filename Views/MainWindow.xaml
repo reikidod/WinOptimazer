@@ -514,7 +514,7 @@
                                 <TextBlock Text="Температуры компонентов" FontSize="13" FontWeight="SemiBold" Margin="0,10,0,3" />
                                 <TextBlock Text="Источники: LibreHardwareMonitor или OpenHardwareMonitor. Без совместимого WMI-провайдера данные не отображаются; ACPI Thermal Zone не используется как температура CPU."
                                            Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,0,0,7" />
-                                <TextBlock Text="Совместимые датчики не найдены. Установите и запустите LibreHardwareMonitor для получения температур."
+                                <TextBlock Text="Совместимые датчики не найдены. Запустите LibreHardwareMonitor или OpenHardwareMonitor с включённым WMI-провайдером."
                                            Visibility="{Binding HasNoTemperatureMetrics, Converter={StaticResource BoolToVis}}"
                                            Style="{StaticResource SecondaryText}" />
                                 <ItemsControl ItemsSource="{Binding TemperatureMetrics}">
