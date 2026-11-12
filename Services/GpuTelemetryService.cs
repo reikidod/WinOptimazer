@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace WinOptimizer.Services;
 
-public sealed record GpuEngineUtilizationSample(int AdapterIndex, string EngineType, double UtilizationPercent);
+public sealed record GpuEngineUtilizationSample(int AdapterIndex, int EngineIndex, string EngineType, double UtilizationPercent);
 
 public sealed record GpuAdapterActivitySnapshot(int AdapterIndex, double? UtilizationPercent, DateTime CapturedAt, bool IsWarmingUp = false)
 {
@@ -38,6 +38,27 @@ public static class GpuTelemetryService
         return int.TryParse(token, NumberStyles.None, CultureInfo.InvariantCulture, out adapterIndex) && adapterIndex >= 0;
     }
 
+    public static bool TryGetEngineIndex(string? instanceName, out int engineIndex)
+    {
+        engineIndex = -1;
+        if (string.IsNullOrWhiteSpace(instanceName))
+            return false;
+
+        const string marker = "_eng_";
+        const string engineTypeMarker = "_engtype_";
+        var markerIndex = instanceName.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex < 0)
+            return false;
+
+        var start = markerIndex + marker.Length;
+        var end = instanceName.IndexOf(engineTypeMarker, start, StringComparison.OrdinalIgnoreCase);
+        if (end < 0)
+            return false;
+
+        return int.TryParse(instanceName[start..end], NumberStyles.None, CultureInfo.InvariantCulture, out engineIndex)
+            && engineIndex >= 0;
+    }
+
     public static bool TryGetEngineType(string? instanceName, out string engineType)
     {
         engineType = string.Empty;
@@ -59,11 +80,11 @@ public static class GpuTelemetryService
         var engineTotals = new Dictionary<(int AdapterIndex, string EngineType), double>();
         foreach (var sample in samples)
         {
-            if (sample.AdapterIndex < 0 || string.IsNullOrWhiteSpace(sample.EngineType) ||
+            if (sample.AdapterIndex < 0 || sample.EngineIndex < 0 || string.IsNullOrWhiteSpace(sample.EngineType) ||
                 !double.IsFinite(sample.UtilizationPercent) || sample.UtilizationPercent < 0)
                 continue;
 
-            var key = (sample.AdapterIndex, sample.EngineType);
+            var key = (sample.AdapterIndex, sample.EngineIndex);
             engineTotals[key] = Math.Min(100, engineTotals.GetValueOrDefault(key) + sample.UtilizationPercent);
         }
 
@@ -105,7 +126,7 @@ public static class GpuTelemetryService
             var capturedAt = DateTime.UtcNow;
             foreach (var instance in _instances)
             {
-                if (!TryGetAdapterIndex(instance, out var adapterIndex) || !TryGetEngineType(instance, out var engineType)) continue;
+                if (!TryGetAdapterIndex(instance, out var adapterIndex) || !TryGetEngineIndex(instance, out var engineIndex) || !TryGetEngineType(instance, out var engineType)) continue;
                 seen.Add(adapterIndex);
                 if (!Counters.TryGetValue(instance, out var counter))
                 {
@@ -127,7 +148,7 @@ public static class GpuTelemetryService
                 {
                     var value = counter.NextValue();
                     if (!float.IsFinite(value) || value < 0) continue;
-                    samples.Add(new GpuEngineUtilizationSample(adapterIndex, engineType, Math.Clamp((double)value, 0, 100)));
+                    samples.Add(new GpuEngineUtilizationSample(adapterIndex, engineIndex, engineType, Math.Clamp((double)value, 0, 100)));
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or PlatformNotSupportedException or ArgumentException)
                 {
