@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Management;
+using System.Runtime.InteropServices;
 
 namespace WinOptimizer.Services;
 
@@ -69,6 +70,7 @@ public static class TemperatureTelemetryService
                 return _cached;
 
             var result = new List<TemperatureMetricSnapshot>();
+            var seenSensorIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var provider in Providers)
             {
                 var providerName = provider.Contains("LibreHardwareMonitor", StringComparison.Ordinal)
@@ -119,8 +121,7 @@ public static class TemperatureTelemetryService
                             catch (InvalidCastException) { }
 
                             var availability = value.HasValue ? MetricAvailability.Available : MetricAvailability.Unavailable;
-                            var key = $"{providerName}|{identifier}";
-                            if (result.Any(item => string.Equals($"{item.Source}|{item.Name}", key, StringComparison.OrdinalIgnoreCase)))
+                            if (!seenSensorIdentifiers.Add(identifier))
                                 continue;
 
                             result.Add(new TemperatureMetricSnapshot(
