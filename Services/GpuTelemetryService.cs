@@ -77,7 +77,7 @@ public static class GpuTelemetryService
         lock (Sync)
         {
             var now = DateTime.UtcNow;
-            if (now - _lastRefreshUtc >= TimeSpan.FromSeconds(15))
+            if (now - _lastRefreshUtc >= PerformanceTelemetryPolicy.DeviceEnumerationRefreshInterval)
             {
                 try
                 {
