@@ -511,6 +511,32 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
+                                <TextBlock Text="Температуры компонентов" FontSize="13" FontWeight="SemiBold" Margin="0,10,0,3" />
+                                <TextBlock Text="Источники: LibreHardwareMonitor или OpenHardwareMonitor. Без совместимого WMI-провайдера данные не отображаются; ACPI Thermal Zone не используется как температура CPU."
+                                           Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,0,0,7" />
+                                <TextBlock Text="Совместимые датчики не найдены. Установите и запустите LibreHardwareMonitor для получения температур."
+                                           Visibility="{Binding HasNoTemperatureMetrics, Converter={StaticResource BoolToVis}}"
+                                           Style="{StaticResource SecondaryText}" />
+                                <ItemsControl ItemsSource="{Binding TemperatureMetrics}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="235" Margin="0,0,10,8" Padding="10"
+                                                    Background="{DynamicResource BgCardHoverBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Category}" Style="{StaticResource SecondaryText}" FontSize="10" />
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding DisplayValue}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,2" />
+                                                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource SecondaryText}" FontSize="10" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
                                 <TextBlock Text="Активность физических дисков" FontSize="13" FontWeight="SemiBold" Margin="0,10,0,3" />
                                 <TextBlock Text="Скорость чтения и записи по физическим дискам. Первое измерение прогревает системные счётчики."
                                            Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,0,0,7" />
