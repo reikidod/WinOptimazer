@@ -387,6 +387,23 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => tracker.Update(0, -1, now));
     }
 
+    [Fact]
+    public void GpuAdapterActivitySnapshot_DistinguishesMeasuredWarmupAndUnavailableStates()
+    {
+        var now = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var measured = new GpuAdapterActivitySnapshot(0, 67.5, now);
+        var warming = new GpuAdapterActivitySnapshot(1, null, now, IsWarmingUp: true);
+        var unavailable = new GpuAdapterActivitySnapshot(2, null, now);
+
+        Assert.Equal("Графический адаптер 1", measured.DisplayName);
+        Assert.Equal("67.5%", measured.UtilizationText);
+        Assert.True(measured.ShowProgress);
+        Assert.Equal("Измерение…", warming.UtilizationText);
+        Assert.True(warming.ShowProgress);
+        Assert.Equal("н/д", unavailable.UtilizationText);
+        Assert.False(unavailable.ShowProgress);
+    }
+
     [Theory]
     [InlineData("pid_123_luid_0x00000000_0x00001234_phys_0_eng_0_engtype_3D", 0)]
     [InlineData("pid_456_luid_0x00000000_0x00005678_phys_12_eng_1_engtype_Copy", 12)]
