@@ -22,6 +22,7 @@ public sealed record SystemSnapshot(
     public IReadOnlyList<PhysicalDiskActivitySnapshot> PhysicalDiskActivity { get; init; } = Array.Empty<PhysicalDiskActivitySnapshot>();
     public IReadOnlyList<GpuAdapterActivitySnapshot> GpuActivity { get; init; } = Array.Empty<GpuAdapterActivitySnapshot>();
     public IReadOnlyList<TemperatureMetricSnapshot> TemperatureMetrics { get; init; } = Array.Empty<TemperatureMetricSnapshot>();
+    public DateTime CapturedAt { get; init; } = DateTime.UtcNow;
     public bool CpuAvailable { get; init; } = true;
     public NetworkTrafficRate NetworkTraffic { get; init; } = new(null, null);
     public string NetworkTrafficSummary => NetworkTraffic.Summary;
@@ -41,6 +42,33 @@ public sealed record SystemSnapshot(
     public string DiskSummary => $"{DiskFreeText} свободно из {DiskTotalText}";
     public double DiskFreePercent => DriveTotalBytes <= 0 ? 0 : Math.Clamp(DriveFreeBytes * 100d / DriveTotalBytes, 0, 100);
     public string NetworkSummary => NetworkAvailable ? "Подключение доступно" : "Нет активного сетевого подключения";
+
+    /// <summary>Представляет текущие системные показатели единым контрактом метрик.</summary>
+    public IReadOnlyList<TelemetryMetricSnapshot> ToMetricSnapshots()
+    {
+        var metrics = new List<TelemetryMetricSnapshot>
+        {
+            new("CPU", CpuAvailable ? CpuPercent : null, "%", "Windows Processor Performance Counter", CapturedAt,
+                CpuAvailable ? MetricAvailability.Available : MetricAvailability.Unavailable,
+                CpuAvailable ? null : "Счётчик процессора недоступен"),
+            new("Использование RAM", MemoryLoadPercent, "%", "GlobalMemoryStatusEx", CapturedAt, MetricAvailability.Available),
+            new("Свободно на системном диске", Math.Max(0, DriveFreeBytes), "Б", "DriveInfo", CapturedAt,
+                DriveTotalBytes > 0 ? MetricAvailability.Available : MetricAvailability.Unavailable,
+                DriveTotalBytes > 0 ? null : "Системный том недоступен"),
+            new("Сеть · входящий трафик", NetworkTraffic.ReceivedBytesPerSecond, "Б/с", "NetworkInterface counters", CapturedAt,
+                NetworkTraffic.ReceivedBytesPerSecond.HasValue ? MetricAvailability.Available : MetricAvailability.Unavailable,
+                NetworkTraffic.ReceivedBytesPerSecond.HasValue ? null : "Счётчик входящего трафика ещё не готов или недоступен"),
+            new("Сеть · исходящий трафик", NetworkTraffic.SentBytesPerSecond, "Б/с", "NetworkInterface counters", CapturedAt,
+                NetworkTraffic.SentBytesPerSecond.HasValue ? MetricAvailability.Available : MetricAvailability.Unavailable,
+                NetworkTraffic.SentBytesPerSecond.HasValue ? null : "Счётчик исходящего трафика ещё не готов или недоступен"),
+        };
+
+        metrics.AddRange(GpuActivity.Select(item => item.ToMetricSnapshot()));
+        metrics.AddRange(PhysicalDiskActivity.SelectMany(item => item.ToMetricSnapshots()));
+        metrics.AddRange(TemperatureMetrics.Select(item => item.ToMetricSnapshot()));
+        return metrics;
+    }
+
 
     private static string FormatBytes(ulong bytes)
     {
@@ -159,6 +187,7 @@ public static class SystemMonitorService
             PhysicalDiskActivity = PerformanceTelemetryService.CollectPhysicalDiskActivity(),
             GpuActivity = GpuTelemetryService.Collect(),
             TemperatureMetrics = TemperatureTelemetryService.Collect(),
+            CapturedAt = DateTime.UtcNow,
         };
     }
 
