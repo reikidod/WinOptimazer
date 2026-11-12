@@ -207,6 +207,12 @@ public sealed class MainViewModel : ObservableObject
 
     public bool HasNoPhysicalDiskActivity => DashboardSnapshot is not null && !HasPhysicalDiskActivity;
 
+    public IReadOnlyList<GpuAdapterActivitySnapshot> GpuActivity => DashboardSnapshot?.GpuActivity ?? Array.Empty<GpuAdapterActivitySnapshot>();
+
+    public bool HasGpuActivity => GpuActivity.Count > 0;
+
+    public bool HasNoGpuActivity => DashboardSnapshot is not null && !HasGpuActivity;
+
     public string DashboardStatus
     {
         get => _dashboardStatus;
