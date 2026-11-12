@@ -20,7 +20,7 @@ public class ProcessTrackerTests
         tracker.Update(new[] { Sample(10, "game", 2) }, T0.AddSeconds(2));
 
         // 2 с процессорного времени за 2 с на 4 ядрах = 25 %
-        Assert.Equal(25, tracker.GetActive(10).Single().CpuPercent, 3);
+        Assert.Equal(25d, tracker.GetActive(10).Single().CpuPercent!.Value, 3);
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public class ProcessTrackerTests
         tracker.Update(new[] { Sample(10, "a", 0) }, T0);
         tracker.Update(new[] { Sample(10, "a", 50) }, T0.AddSeconds(2));
 
-        Assert.Equal(100, tracker.GetActive(10).Single().CpuPercent);
+        Assert.Equal((double?)100d, tracker.GetActive(10).Single().CpuPercent);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class ProcessTrackerTests
         var exited = Assert.Single(tracker.Exited);
         Assert.Equal("tool", exited.Name);
         Assert.Equal(7, exited.Pid);
-        Assert.Equal(25, exited.LastCpuPercent, 3);
+        Assert.Equal(25d, exited.LastCpuPercent!.Value, 3);
         Assert.Equal(300L * 1024 * 1024, exited.PeakWorkingSetBytes);
         Assert.Equal(T0.AddSeconds(4), exited.ExitedAtUtc);
         Assert.Equal(0, tracker.ActiveCount);
@@ -90,7 +90,7 @@ public class ProcessTrackerTests
         var chrome = active.Single(a => a.Name == "chrome");
         Assert.Equal(2, chrome.Count);
         Assert.Equal(300L * 1024 * 1024, chrome.WorkingSetBytes);
-        Assert.Equal(20, chrome.CpuPercent, 3);
+        Assert.Equal(20d, chrome.CpuPercent!.Value, 3);
     }
 
     [Fact]
@@ -116,14 +116,53 @@ public class ProcessTrackerTests
     }
 
     [Fact]
-    public void UnreadableCpuTime_DoesNotThrow_AndShowsZero()
+    public void UnreadableCpuTime_DoesNotThrow_AndRemainsUnknown()
     {
         var tracker = new ProcessTracker(4);
         var protectedProcess = new ProcessSample(4, "System", 0, null, 10 * 1024 * 1024);
         tracker.Update(new[] { protectedProcess }, T0);
         tracker.Update(new[] { protectedProcess }, T0.AddSeconds(2));
 
-        Assert.Equal(0, tracker.GetActive(5).Single().CpuPercent);
+        Assert.Null(tracker.GetActive(5).Single().CpuPercent);
+    }
+
+    [Fact]
+    public void UnreadableCpuTime_ResetsBaselineAndDoesNotReuseStaleValue()
+    {
+        var tracker = new ProcessTracker(1);
+        tracker.Update(new[] { Sample(8, "protected-app", 0) }, T0);
+        tracker.Update(new[] { Sample(8, "protected-app", 1) }, T0.AddSeconds(1));
+        Assert.Equal((double?)100d, tracker.GetActive(5).Single().CpuPercent);
+
+        tracker.Update(new[] { new ProcessSample(8, "protected-app", 0, null, 10 * 1024 * 1024) }, T0.AddSeconds(2));
+        Assert.Null(tracker.GetActive(5).Single().CpuPercent);
+
+        tracker.Update(new[] { Sample(8, "protected-app", 4) }, T0.AddSeconds(3));
+        Assert.Null(tracker.GetActive(5).Single().CpuPercent);
+
+        tracker.Update(new[] { Sample(8, "protected-app", 5) }, T0.AddSeconds(4));
+        Assert.Equal((double?)100d, tracker.GetActive(5).Single().CpuPercent);
+    }
+
+    [Fact]
+    public void GroupedProcessCpu_IsUnknownWhenAnyMemberCannotBeMeasured()
+    {
+        var tracker = new ProcessTracker(1);
+        tracker.Update(new[]
+        {
+            Sample(1, "browser", 0),
+            new ProcessSample(2, "browser", 0, null, 50 * 1024 * 1024),
+        }, T0);
+        tracker.Update(new[]
+        {
+            Sample(1, "browser", 1),
+            new ProcessSample(2, "browser", 0, null, 50 * 1024 * 1024),
+        }, T0.AddSeconds(1));
+
+        var browser = Assert.Single(tracker.GetActive(5));
+        Assert.Equal(2, browser.Count);
+        Assert.Null(browser.CpuPercent);
+        Assert.Null(tracker.GetTotals().CpuPercent);
     }
 
     [Fact]
@@ -134,7 +173,7 @@ public class ProcessTrackerTests
         tracker.Update(new[] { Sample(1, "a", 0.5, 100), Sample(2, "b", 0.25, 200) }, T0.AddSeconds(1));
 
         var (cpu, memory) = tracker.GetTotals();
-        Assert.Equal(75, cpu, 3);
+        Assert.Equal((double?)75d, cpu);
         Assert.Equal(300L * 1024 * 1024, memory);
     }
 

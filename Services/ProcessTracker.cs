@@ -8,10 +8,10 @@ namespace WinOptimizer.Services;
 public sealed record ProcessSample(int Pid, string Name, long StartTicks, TimeSpan? CpuTime, long WorkingSetBytes);
 
 /// <summary>Сводка по активным процессам одного имени (у браузеров их десятки — показываем одной строкой).</summary>
-public sealed record ProcessUsage(string Name, int Count, double CpuPercent, long WorkingSetBytes);
+public sealed record ProcessUsage(string Name, int Count, double? CpuPercent, long WorkingSetBytes);
 
 /// <summary>Процесс, который закрылся, пока мы за ним следили, и его последние замеры.</summary>
-public sealed record ExitedProcess(string Name, int Pid, DateTime ExitedAtUtc, TimeSpan RunTime, double LastCpuPercent, long PeakWorkingSetBytes);
+public sealed record ExitedProcess(string Name, int Pid, DateTime ExitedAtUtc, TimeSpan RunTime, double? LastCpuPercent, long PeakWorkingSetBytes);
 
 /// <summary>
 /// Следит за процессами по серии замеров: считает загрузку процессора между замерами и замечает, какие процессы пропали.
@@ -26,7 +26,7 @@ public sealed class ProcessTracker
         public required DateTime FirstSeenUtc { get; init; }
         public TimeSpan? CpuTime { get; set; }
         public DateTime CpuAtUtc { get; set; }
-        public double CpuPercent { get; set; }
+        public double? CpuPercent { get; set; }
         public long WorkingSet { get; set; }
         public long PeakWorkingSet { get; set; }
     }
@@ -66,13 +66,24 @@ public sealed class ProcessTracker
                     if (st.CpuTime is { } prev)
                     {
                         var elapsed = (nowUtc - st.CpuAtUtc).TotalSeconds;
-                        if (elapsed > 0)
-                        {
-                            st.CpuPercent = Math.Clamp((cpu - prev).TotalSeconds / elapsed / _cores * 100, 0, 100);
-                        }
+                        st.CpuPercent = elapsed > 0
+                            ? Math.Clamp((cpu - prev).TotalSeconds / elapsed / _cores * 100, 0, 100)
+                            : null;
+                    }
+                    else
+                    {
+                        // Первый доступный замер после запуска/пропуска — только новая база, не 0%.
+                        st.CpuPercent = null;
                     }
 
                     st.CpuTime = cpu;
+                    st.CpuAtUtc = nowUtc;
+                }
+                else
+                {
+                    // Не переносим старое значение через интервал, в котором Windows закрыла доступ к CPU time.
+                    st.CpuTime = null;
+                    st.CpuPercent = null;
                     st.CpuAtUtc = nowUtc;
                 }
 
@@ -116,8 +127,10 @@ public sealed class ProcessTracker
     {
         return _known.Values
             .GroupBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(g => new ProcessUsage(g.First().Name, g.Count(), g.Sum(x => x.CpuPercent), g.Sum(x => x.WorkingSet)))
-            .OrderByDescending(u => u.CpuPercent)
+            .Select(g => new ProcessUsage(g.First().Name, g.Count(),
+                g.All(x => x.CpuPercent.HasValue) ? g.Sum(x => x.CpuPercent!.Value) : null,
+                g.Sum(x => x.WorkingSet)))
+            .OrderByDescending(u => u.CpuPercent ?? double.NegativeInfinity)
             .ThenByDescending(u => u.WorkingSetBytes)
             .ThenBy(u => u.Name, StringComparer.OrdinalIgnoreCase)
             .Take(Math.Max(1, top))
@@ -125,8 +138,16 @@ public sealed class ProcessTracker
     }
 
     /// <summary>Суммарная загрузка процессора (0–100 %) и память всех известных процессов.</summary>
-    public (double CpuPercent, long WorkingSetBytes) GetTotals() =>
-        (Math.Min(100, _known.Values.Sum(s => s.CpuPercent)), _known.Values.Sum(s => s.WorkingSet));
+    /// <summary>CPU остаётся неизвестным, пока все известные процессы не имеют полного интервала измерения.</summary>
+    public (double? CpuPercent, long WorkingSetBytes) GetTotals()
+    {
+        var cpuValues = _known.Values.Select(s => s.CpuPercent).ToArray();
+        var cpu = cpuValues.Length > 0 && cpuValues.All(value => value.HasValue)
+            ? Math.Min(100, cpuValues.Sum(value => value!.Value))
+            : null;
+
+        return (cpu, _known.Values.Sum(s => s.WorkingSet));
+    }
 }
 
 /// <summary>Читает список процессов из Windows. Вызывать не из UI-потока: обход сотни процессов занимает заметное время.</summary>

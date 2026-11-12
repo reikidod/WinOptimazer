@@ -10,7 +10,7 @@ public sealed record ProcessUsageRow(string Name, string CpuText, string MemoryT
 {
     public static ProcessUsageRow From(ProcessUsage u) => new(
         u.Count > 1 ? $"{u.Name} ×{u.Count}" : u.Name,
-        ProcessFormat.Cpu(u.CpuPercent),
+        u.CpuPercent is double cpu ? ProcessFormat.Cpu(cpu) : "н/д",
         ProcessFormat.Memory(u.WorkingSetBytes));
 }
 
@@ -21,7 +21,7 @@ public sealed record ExitedProcessRow(string Name, string ExitedAtText, string R
         p.Name,
         p.ExitedAtUtc.ToLocalTime().ToString("HH:mm:ss"),
         ProcessFormat.Duration(p.RunTime),
-        ProcessFormat.Cpu(p.LastCpuPercent),
+        p.LastCpuPercent is double cpu ? ProcessFormat.Cpu(cpu) : "н/д",
         ProcessFormat.Memory(p.PeakWorkingSetBytes));
 }
 
@@ -137,7 +137,7 @@ public sealed class ProcessMonitorViewModel : ObservableObject
         var (cpu, memory) = _tracker.GetTotals();
         ActiveHeader = $"Активные процессы · {_tracker.ActiveCount}";
         ExitedHeader = $"Завершённые процессы · {_tracker.Exited.Count}";
-        ActiveSummary = $"Все процессы вместе: процессор {ProcessFormat.Cpu(cpu)}, память {ProcessFormat.Memory(memory)}";
+        ActiveSummary = $"Все процессы вместе: процессор {(cpu is double value ? ProcessFormat.Cpu(value) : "н/д · часть счётчиков недоступна")}, память {ProcessFormat.Memory(memory)}";
 
         if (_showActive)
         {
