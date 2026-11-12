@@ -16,6 +16,22 @@ public sealed class DashboardServiceTests : IDisposable
     }
 
     [Fact]
+    public void PerformanceTelemetryPolicy_UsesBoundedConsistentPollingIntervals()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(2), PerformanceTelemetryPolicy.DashboardRefreshInterval);
+        Assert.Equal(TimeSpan.FromSeconds(15), PerformanceTelemetryPolicy.DeviceEnumerationRefreshInterval);
+        Assert.Equal(TimeSpan.FromSeconds(5), PerformanceTelemetryPolicy.TemperatureRefreshInterval);
+        Assert.Equal(TimeSpan.FromSeconds(30), PerformanceTelemetryPolicy.MaximumCounterSampleGap);
+        Assert.All(new[]
+        {
+            PerformanceTelemetryPolicy.DashboardRefreshInterval,
+            PerformanceTelemetryPolicy.DeviceEnumerationRefreshInterval,
+            PerformanceTelemetryPolicy.TemperatureRefreshInterval,
+            PerformanceTelemetryPolicy.MaximumCounterSampleGap,
+        }, interval => Assert.True(interval > TimeSpan.Zero));
+    }
+
+    [Fact]
     public void SystemSnapshot_ExportsCpuMemoryNetworkGpuDiskAndTemperatureThroughSharedMetricContract()
     {
         var capturedAt = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
