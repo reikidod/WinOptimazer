@@ -103,7 +103,7 @@ public sealed class DiskActivityRateTracker
             return new DiskActivityRate(null, null);
 
         var elapsed = (capturedAt - previousAt.Value).TotalSeconds;
-        if (elapsed <= 0 || elapsed > 30 || readBytes.Value < previousRead.Value || writeBytes.Value < previousWrite.Value)
+        if (elapsed <= 0 || elapsed > PerformanceTelemetryPolicy.MaximumCounterSampleGap.TotalSeconds || readBytes.Value < previousRead.Value || writeBytes.Value < previousWrite.Value)
             return new DiskActivityRate(null, null);
 
         return new DiskActivityRate(
