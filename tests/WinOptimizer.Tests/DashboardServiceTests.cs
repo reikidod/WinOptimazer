@@ -16,6 +16,33 @@ public sealed class DashboardServiceTests : IDisposable
     }
 
     [Fact]
+    public void SystemSnapshot_ExportsCpuMemoryNetworkGpuDiskAndTemperatureThroughSharedMetricContract()
+    {
+        var capturedAt = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var snapshot = new SystemSnapshot(
+            "Windows test", 8, 35, 42,
+            16UL * 1024 * 1024 * 1024, 8UL * 1024 * 1024 * 1024,
+            "C:\\\\", 100L * 1024 * 1024 * 1024, 60L * 1024 * 1024 * 1024, true)
+        {
+            CapturedAt = capturedAt,
+            NetworkTraffic = new NetworkTrafficRate(2_048, 1_024),
+            GpuActivity = [new GpuAdapterActivitySnapshot(0, 55, capturedAt)],
+            PhysicalDiskActivity = [new PhysicalDiskActivitySnapshot("0 C:", 4_096, 2_048, capturedAt)],
+            TemperatureMetrics = [new TemperatureMetricSnapshot("CPU", "CPU Package", 70, "LibreHardwareMonitor", capturedAt, MetricAvailability.Available)],
+        };
+
+        var metrics = snapshot.ToMetricSnapshots();
+
+        Assert.Contains(metrics, metric => metric.Name == "CPU" && metric.Value == 35 && metric.Unit == "%");
+        Assert.Contains(metrics, metric => metric.Name == "Использование RAM" && metric.Value == 42);
+        Assert.Contains(metrics, metric => metric.Name == "Сеть · входящий трафик" && metric.Value == 2_048);
+        Assert.Contains(metrics, metric => metric.Name == "Графический адаптер 1" && metric.Value == 55);
+        Assert.Contains(metrics, metric => metric.Name == "0 C: · чтение" && metric.Value == 4_096);
+        Assert.Contains(metrics, metric => metric.Name == "CPU Package" && metric.Value == 70 && metric.Unit == "°C");
+        Assert.All(metrics, metric => Assert.Equal(capturedAt, metric.CapturedAt));
+    }
+
+    [Fact]
     public void SystemSnapshot_ExposesConsistentDashboardMetrics()
     {
         var snapshot = new SystemSnapshot(
