@@ -19,6 +19,7 @@ public sealed record SystemSnapshot(
 {
     /// <summary>PerformanceCounter может быть недоступен (например, отключены системные счётчики).</summary>
     public IReadOnlyList<DriveSnapshot> AdditionalDrives { get; init; } = Array.Empty<DriveSnapshot>();
+    public IReadOnlyList<PhysicalDiskActivitySnapshot> PhysicalDiskActivity { get; init; } = Array.Empty<PhysicalDiskActivitySnapshot>();
     public bool CpuAvailable { get; init; } = true;
     public NetworkTrafficRate NetworkTraffic { get; init; } = new(null, null);
     public string NetworkTrafficSummary => NetworkTraffic.Summary;
@@ -153,6 +154,7 @@ public static class SystemMonitorService
             CpuAvailable = cpuAvailable,
             NetworkTraffic = PerformanceTelemetryService.CollectNetworkRate(),
             AdditionalDrives = CollectAdditionalDrives(systemRoot),
+            PhysicalDiskActivity = PerformanceTelemetryService.CollectPhysicalDiskActivity(),
         };
     }
 
