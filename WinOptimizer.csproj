@@ -83,4 +83,12 @@
     <MakeDir Directories="$(OutDir)GameBoostService" />
     <Copy SourceFiles="@(GameBoostServiceFiles)" DestinationFiles="@(GameBoostServiceFiles->'$(OutDir)GameBoostService\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
+
+  <Target Name="CopyGameBoostServiceToPublish" BeforeTargets="Publish">
+    <ItemGroup>
+      <GameBoostServicePublishFiles Include="GameBoostService\bin\$(Configuration)\net8.0-windows\win-x64\**\*" />
+    </ItemGroup>
+    <MakeDir Directories="$(PublishDir)GameBoostService" />
+    <Copy SourceFiles="@(GameBoostServicePublishFiles)" DestinationFiles="@(GameBoostServicePublishFiles->'$(PublishDir)GameBoostService\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
