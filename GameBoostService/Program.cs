@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Security.Principal;
-using System.ServiceProcess;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -34,9 +32,9 @@ internal static class ServiceInstaller
         RunSc("stop");
         RunSc("delete");
         var binPath = $"\\"{Executable}\\"";
-        var create = RunSc("create", $"binPath= {binPath}", "start= auto", "obj= LocalSystem", "DisplayName= WinOptimizer Game Boost");
+        var create = RunSc("create", $"binPath= \"{Executable}\"", "start= auto", "obj= LocalSystem", "DisplayName= \"WinOptimizer Game Boost\"");
         if (create != 0) return create;
-        RunSc("description", "WinOptimizerGameBoost", "Автоматическое повышение производительности игр с восстановлением настроек");
+        RunSc("description", "Автоматическое повышение производительности игр с восстановлением настроек");
         return RunSc("start");
     }
 
@@ -51,7 +49,7 @@ internal static class ServiceInstaller
         using var process = Process.Start(new ProcessStartInfo
         {
             FileName = Path.Combine(Environment.SystemDirectory, "sc.exe"),
-            Arguments = string.Join(" ", new[] { ServiceName }.Concat(args.Select(Quote))),
+            Arguments = string.Join(" ", new[] { args[0], ServiceName }.Concat(args.Skip(1))),
             UseShellExecute = false,
             CreateNoWindow = true
         });
@@ -59,5 +57,4 @@ internal static class ServiceInstaller
         return process?.ExitCode ?? 1;
     }
 
-    private static string Quote(string value) => value.Contains(' ') ? $"\\"{value}\\"" : value;
 }
