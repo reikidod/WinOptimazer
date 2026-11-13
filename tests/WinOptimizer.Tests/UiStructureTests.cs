@@ -410,7 +410,7 @@ public sealed class UiStructureTests
         var document = LoadView("Views/MainWindow.xaml");
 
         Assert.Contains(Elements(document, "TextBlock"), element =>
-            Attribute(element, "Text") == "Производительность");
+            Attribute(element, "Text") == "Мой ПК");
         Assert.Contains(Elements(document, "TextBlock"), element =>
             Attribute(element, "Text") == "Центр производительности");
         Assert.Contains(Elements(document, "ItemsControl"), element =>
