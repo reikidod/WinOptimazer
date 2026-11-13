@@ -31,8 +31,10 @@ public static class GpuTelemetryService
     private static readonly Dictionary<string, PerformanceCounter> Counters = new(StringComparer.OrdinalIgnoreCase);
     private static string[] _instances = Array.Empty<string>();
     private static DateTime _lastRefreshUtc = DateTime.MinValue;
+    private static IReadOnlyDictionary<int,GpuAdapterMetadata> _metadata=new Dictionary<int,GpuAdapterMetadata>();
+    private static DateTime _metadataAt=DateTime.MinValue;
 
-    private IReadOnlyDictionary<int,GpuAdapterMetadata> ReadMetadata()
+    private static IReadOnlyDictionary<int,GpuAdapterMetadata> ReadMetadata()
     {
         var result=new Dictionary<int,GpuAdapterMetadata>();
         using var searcher=new ManagementObjectSearcher("SELECT Name, DriverVersion, Status FROM Win32_VideoController");
@@ -41,7 +43,7 @@ public static class GpuTelemetryService
             if(!string.IsNullOrWhiteSpace(name))result[index]=new(name,Convert.ToString(row["DriverVersion"],CultureInfo.InvariantCulture)?.Trim()??"неизвестно",Convert.ToString(row["Status"],CultureInfo.InvariantCulture)?.Trim()??"неизвестно");index++;}}
         return result;
     }
-    private IReadOnlyDictionary<int,GpuAdapterMetadata> GetMetadata(DateTime now)
+    private static IReadOnlyDictionary<int,GpuAdapterMetadata> GetMetadata(DateTime now)
     {
         if(now-_metadataAt<TimeSpan.FromMinutes(2))return _metadata;
         try{var current=ReadMetadata();if(current.Count>0||_metadata.Count==0)_metadata=current;}
