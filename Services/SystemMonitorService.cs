@@ -61,6 +61,20 @@ public sealed record SystemSnapshot(
         AddNetworkMetric(metrics, "Сеть · входящий трафик", NetworkTraffic.ReceivedBytesPerSecond);
         AddNetworkMetric(metrics, "Сеть · исходящий трафик", NetworkTraffic.SentBytesPerSecond);
 
+        var networkAvailability = !NetworkAvailable
+            ? MetricAvailability.Unavailable
+            : NetworkTraffic.IsAvailable ? MetricAvailability.Available : MetricAvailability.WarmingUp;
+        var networkReason = networkAvailability switch
+        {
+            MetricAvailability.Unavailable => "Нет активного сетевого подключения",
+            MetricAvailability.WarmingUp => "Ожидание следующего замера сетевых счётчиков",
+            _ => null,
+        };
+        metrics.Add(new TelemetryMetricSnapshot("Сеть · входящий трафик", NetworkTraffic.ReceivedBytesPerSecond,
+            "Б/с", "Windows Network Interface", CapturedAt, networkAvailability, networkReason));
+        metrics.Add(new TelemetryMetricSnapshot("Сеть · исходящий трафик", NetworkTraffic.SentBytesPerSecond,
+            "Б/с", "Windows Network Interface", CapturedAt, networkAvailability, networkReason));
+
         metrics.AddRange(GpuActivity.Select(item => item.ToMetricSnapshot()));
         metrics.AddRange(PhysicalDiskActivity.SelectMany(item => item.ToMetricSnapshots()));
         metrics.AddRange(TemperatureMetrics.Select(item => item.ToMetricSnapshot()));
