@@ -93,7 +93,7 @@ public static class TemperatureTelemetryService
                     var options = new ConnectionOptions { Timeout = TimeSpan.FromSeconds(2) };
                     var scope = new ManagementScope($@"\\.\{provider}", options);
                     scope.Connect();
-                    var enumeration = new EnumerationOptions
+                    var enumeration = new System.Management.EnumerationOptions
                     {
                         Timeout = TimeSpan.FromSeconds(2),
                         ReturnImmediately = true,
