@@ -45,6 +45,8 @@ internal static class ServiceInstaller
         }
 
         RunSc("description", "\"Автоматическое повышение производительности игр с восстановлением настроек\"");
+        RunSc("failure", "reset= 0", "actions= restart/5000/restart/5000/restart/5000");
+        RunSc("failureflag", "1");
         return RunSc("start");
     }
 
