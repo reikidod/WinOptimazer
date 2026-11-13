@@ -4,25 +4,37 @@
 
 <br>
 
-**Бесплатный инструмент для настройки, обслуживания и оптимизации Windows 10/11.**
+# WinOptimizer
 
-Твики с возможностью отката · установка программ · обслуживание системы · игровые настройки
+### Единый центр управления Windows 10/11
 
-[![Stable](https://img.shields.io/github/v/release/reikidod/WinOptimazer?style=for-the-badge&label=Stable&color=C0262D)](https://github.com/reikidod/WinOptimazer/releases/latest)
-[![Лицензия MIT](https://img.shields.io/badge/лицензия-MIT-2F3640?style=for-the-badge)](LICENSE)
-[![.NET 8](https://img.shields.io/badge/.NET-8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/8.0)
+Настройка, обслуживание и оптимизация системы в одном приложении. Контролируемые изменения, понятные предупреждения и возможность отката — без лишней сложности.
 
-![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square&logo=windows11&logoColor=white)
-![WPF](https://img.shields.io/badge/UI-WPF-2F3640?style=flat-square)
-![Язык](https://img.shields.io/badge/язык-C%23-68217A?style=flat-square)
+<br>
 
-[**⬇ Скачать последнюю стабильную версию**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Все релизы](https://github.com/reikidod/WinOptimazer/releases) · [Возможности](#-возможности) · [Безопасность](#-безопасность) · [Сообщить о проблеме](https://github.com/reikidod/WinOptimazer/issues)
+[![Stable](https://img.shields.io/github/v/release/reikidod/WinOptimazer?style=for-the-badge&label=STABLE&color=4B6CA3)](https://github.com/reikidod/WinOptimazer/releases/latest)
+[![Beta](https://img.shields.io/github/v/release/reikidod/WinOptimazer?include_prereleases&style=for-the-badge&label=BETA&color=C0262D)](https://github.com/reikidod/WinOptimazer/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/reikidod/WinOptimazer/ci.yml?branch=main&style=for-the-badge&label=STABLE%20BUILD)](https://github.com/reikidod/WinOptimazer/actions/workflows/ci.yml)
+[![Загрузки](https://img.shields.io/github/downloads/reikidod/WinOptimazer/total?style=for-the-badge&label=DOWNLOADS&color=353840)](https://github.com/reikidod/WinOptimazer/releases)
+[![MIT](https://img.shields.io/badge/LICENSE-MIT-8AAAD8?style=for-the-badge)](LICENSE)
+
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-202225?style=flat-square&logo=windows11&logoColor=8AAAD8)
+![.NET 8](https://img.shields.io/badge/.NET-8-202225?style=flat-square&logo=dotnet&logoColor=8AAAD8)
+![WPF](https://img.shields.io/badge/UI-WPF-202225?style=flat-square)
+![C#](https://img.shields.io/badge/C%23-202225?style=flat-square&logo=csharp&logoColor=8AAAD8)
+
+<br>
+
+[**Скачать Stable**](https://github.com/reikidod/WinOptimazer/releases/latest) · [Бета-версии](https://github.com/reikidod/WinOptimazer/releases) · [Официальный сайт](https://reikidod.github.io/WinOptimazer-site/) · [Возможности](#возможности) · [Безопасность](#безопасность) · [Обратная связь](https://github.com/reikidod/WinOptimazer/issues/new/choose)
 
 </div>
 
 ---
 
-## ✨ Возможности
+> [!IMPORTANT]
+> **Стабильный канал:** ветка `main` предназначена для повседневного использования. Новые функции сначала проходят проверку в `beta` и публикуются отдельно. Если хотите тестировать предварительные возможности, используйте Beta-релизы.
+
+## Возможности
 
 <table>
 <tr>
@@ -83,7 +95,7 @@
 </tr>
 </table>
 
-## 🚀 Быстрый старт
+## Быстрый старт
 
 1. Откройте [страницу последнего стабильного релиза](https://github.com/reikidod/WinOptimazer/releases/latest).
 2. Скачайте установщик `WinOptimizer-Setup.exe` или архив `WinOptimizer-win-x64.zip`, если он доступен в релизе.
@@ -102,7 +114,7 @@
 | Среда выполнения | [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) |
 | Права доступа | Администратор для операций с HKLM и системными службами |
 
-## 🔒 Безопасность
+## Безопасность и прозрачность
 
 - Поддерживаемые изменения реестра сохраняют исходные значения для последующего отката.
 - Скачиваемые установщики и библиотеки проверяются по SHA-256 там, где это предусмотрено механизмом загрузки.
