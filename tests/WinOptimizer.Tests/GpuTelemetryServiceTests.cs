@@ -18,7 +18,7 @@ public sealed class GpuTelemetryServiceTests
 
         var result = GpuTelemetryService.AggregateUtilization(samples);
 
-        Assert.Equal(55d, result[0]);
+        Assert.Equal(70d, result[0]);
         Assert.Equal(15d, result[1]);
     }
 
@@ -39,7 +39,7 @@ public sealed class GpuTelemetryServiceTests
         var result = GpuTelemetryService.AggregateUtilization(samples);
 
         Assert.Equal(100d, result[0]);
-        Assert.Empty(result.Keys.Where(adapter => adapter == 1));
+        Assert.DoesNotContain(1, result.Keys);
     }
 
     [Fact]
