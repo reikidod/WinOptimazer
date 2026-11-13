@@ -143,28 +143,23 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void Dashboard_ContainsCollapsibleDrivesDiagnosticsAndEventJournal()
+    public void Dashboard_ShowsCoreInformationWithoutCollapsedLists()
     {
         var document = LoadView("Views/MainWindow.xaml");
-        var expanders = Elements(document, "Expander").ToList();
+        var dashboard = Assert.Single(Elements(document, "Grid"), element =>
+            Attribute(element, "Visibility") == "{Binding IsDashboardPage, Converter={StaticResource BoolToVis}}");
 
-        Assert.Contains(expanders, element =>
-            Attribute(element, "Header") == "Другие диски" &&
-            Attribute(element, "IsExpanded") == "False");
-
-        Assert.Contains(expanders, element =>
-            Attribute(element, "Header") == "{Binding DiagnosticHeader}" &&
-            Attribute(element, "IsExpanded") == "False");
-
-        Assert.Contains(expanders, element =>
-            Attribute(element, "Header") == "Журнал событий" &&
-            Attribute(element, "IsExpanded") == "False");
-
-        Assert.Contains(Elements(document, "Button"), element =>
+        Assert.Empty(Elements(dashboard, "Expander"));
+        Assert.Contains(Elements(dashboard, "Button"), element =>
             Attribute(element, "Command") == "{Binding RunDiagnosticsCommand}");
-
-        Assert.Contains(Elements(document, "Button"), element =>
-            Attribute(element, "Command") == "{Binding Settings.OpenLogCommand}");
+        Assert.Contains(Elements(dashboard, "ItemsControl"), element =>
+            Attribute(element, "ItemsSource") == "{Binding AdditionalDrives}");
+        Assert.Contains(Elements(dashboard, "TextBlock"), element =>
+            Attribute(element, "Text") == "{Binding DashboardSnapshot.CpuSummary, TargetNullValue='…'}");
+        Assert.Contains(Elements(dashboard, "TextBlock"), element =>
+            Attribute(element, "Text") == "{Binding DiagnosticSummary}");
+        Assert.Contains(Elements(dashboard, "Button"), element =>
+            Attribute(element, "CommandParameter") == "System");
     }
 
     [Fact]
