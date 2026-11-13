@@ -142,7 +142,7 @@ public sealed class ProcessTracker
     public (double? CpuPercent, long WorkingSetBytes) GetTotals()
     {
         var cpuValues = _known.Values.Select(s => s.CpuPercent).ToArray();
-        var cpu = cpuValues.Length > 0 && cpuValues.All(value => value.HasValue)
+        double? cpu = cpuValues.Length > 0 && cpuValues.All(value => value.HasValue)
             ? Math.Min(100, cpuValues.Sum(value => value!.Value))
             : null;
 
