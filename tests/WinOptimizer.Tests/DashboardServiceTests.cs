@@ -53,7 +53,7 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Contains(metrics, metric => metric.Name == "Использование RAM" && metric.Value == 42);
         Assert.Contains(metrics, metric => metric.Name == "Сеть · входящий трафик" && metric.Value == 2_048);
         Assert.Contains(metrics, metric => metric.Name == "Графический адаптер 1" && metric.Value == 55);
-        Assert.Contains(metrics, metric => metric.Name == "0 C: · чтение" && metric.Value == 4_096);
+        Assert.Contains(metrics, metric => metric.Name == "0 · C: · чтение" && metric.Value == 4_096);
         Assert.Contains(metrics, metric => metric.Name == "CPU Package" && metric.Value == 70 && metric.Unit == "°C");
         Assert.All(metrics, metric => Assert.Equal(capturedAt, metric.CapturedAt));
     }
@@ -484,7 +484,7 @@ public sealed class DashboardServiceTests : IDisposable
         Assert.Equal(MetricAvailability.Available, gpu.Availability);
         Assert.Equal(2, disk.Count);
         Assert.Equal("Windows PhysicalDisk", disk[0].Source);
-        Assert.Equal("1 D: · чтение", disk[0].Name);
+        Assert.Equal("1 · D: · чтение", disk[0].Name);
         Assert.Equal(1_024d, disk[0].Value);
         Assert.Equal("Б/с", disk[0].Unit);
         Assert.Equal(capturedAt, disk[1].CapturedAt);
