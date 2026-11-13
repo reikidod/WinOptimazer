@@ -118,7 +118,7 @@ internal static class TemperatureReader
         try
         {
             var performanceZones = ReadThermalZoneQuery(
-                @"root\\cimv2",
+                @"root\cimv2",
                 "SELECT Name, Temperature, HighPrecisionTemperature FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation",
                 "Name",
                 "HighPrecisionTemperature",
@@ -137,7 +137,7 @@ internal static class TemperatureReader
         try
         {
             return ReadThermalZoneQuery(
-                @"root\\WMI",
+                @"root\WMI",
                 "SELECT InstanceName, CurrentTemperature FROM MSAcpi_ThermalZoneTemperature",
                 "InstanceName",
                 "CurrentTemperature",
