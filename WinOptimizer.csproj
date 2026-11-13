@@ -59,6 +59,7 @@
 
   <ItemGroup>
     <ProjectReference Include="dll\WinOptimizer.Settings\WinOptimizer.Settings.csproj" />
+    <ProjectReference Include="GameBoostService\WinOptimizer.GameBoostService.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -73,9 +74,9 @@
 
   <Target Name="CopyGameBoostService" AfterTargets="Build">
     <ItemGroup>
-      <GameBoostServiceFiles Include="GameBoostService\\bin\\$(Configuration)\\net8.0-windows\\win-x64\\**\\*" />
+      <GameBoostServiceFiles Include="GameBoostService\bin\$(Configuration)\net8.0-windows\win-x64\**\*" />
     </ItemGroup>
     <MakeDir Directories="$(OutDir)GameBoostService" />
-    <Copy SourceFiles="@(GameBoostServiceFiles)" DestinationFiles="@(GameBoostServiceFiles->'$(OutDir)GameBoostService\\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(GameBoostServiceFiles)" DestinationFiles="@(GameBoostServiceFiles->'$(OutDir)GameBoostService\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 </Project>
