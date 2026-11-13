@@ -335,7 +335,7 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Обзор компьютера" Style="{StaticResource PageTitle}"/>
-                                <TextBlock Text="Главное о состоянии Windows — без сложных технических терминов"
+                                <TextBlock Text="Как чувствует себя ваш компьютер — простым и понятным языком"
                                            Style="{StaticResource SecondaryText}" Margin="0,4,0,0"/>
                             </StackPanel>
                             <Button Grid.Column="1" Content="Обновить данные" VerticalAlignment="Center"
@@ -771,15 +771,6 @@
                         <TextBlock Text="{Binding PendingText}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                     </StackPanel>
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
-                        <Button Content="Импорт профиля" Margin="0,0,6,6"
-                                Command="{Binding LoadProfileCommand}" />
-                        <Button Content="Экспорт профиля" Margin="0,0,6,6"
-                                Command="{Binding SaveProfileCommand}" />
-                        <Button Content="Сбросить выбор" Margin="0,0,6,6"
-                                Command="{Binding ResetSelectionCommand}" />
-                        <Button Content="Снимок системы" Margin="0,0,6,6"
-                                Command="{Binding CreateRestorePointCommand}"
-                                ToolTip="Создать точку восстановления Windows прямо сейчас" />
                         <Button Content="Применить" Style="{StaticResource AccentButton}" Margin="0,0,0,6"
                                 Command="{Binding ApplyCommand}" />
                     </WrapPanel>
@@ -793,7 +784,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Выберите, насколько глубоко оптимизировать Windows" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock Text="Выберите подходящий режим для своего компьютера" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
                             <Grid Width="250" Height="158" Margin="0,2,0,0"
                                   HorizontalAlignment="Left" AutomationProperties.Name="Индикатор уровня оптимизации">
                                 <Canvas Width="250" Height="158">
@@ -827,7 +818,7 @@
                             </Grid>
                         </StackPanel>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,8,0">
-                            <TextBlock Text="Простые твики" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="Готовый режим" FontSize="15" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding SelectedOptimizationPreset.Subtitle}"
                                        Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,3,0,0" />
                             <TextBlock Text="{Binding SelectedOptimizationPreset.Description}"
@@ -857,9 +848,23 @@
                     <Expander Style="{StaticResource SectionExpander}" Header="Дополнительные настройки (для опытных)" IsExpanded="False"
                               AutomationProperties.Name="Дополнительные настройки для опытных пользователей">
                         <StackPanel>
-                            <TextBlock Text="Здесь можно включать отдельные параметры Windows вручную. Если вы не уверены, что делает настройка, оставьте её выключенной — для большинства задач достаточно простого режима выше."
+                            <TextBlock Text="Обычному пользователю достаточно выбрать один из трёх режимов выше. Здесь собраны дополнительные инструменты для тех, кто хочет точнее настроить Windows."
                                        Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
                                        Margin="0,0,16,12" />
+                            <Expander Style="{StaticResource SectionExpander}" Header="Профили и восстановление" IsExpanded="False"
+                                      Margin="0,0,16,12" AutomationProperties.Name="Дополнительные действия с профилями и восстановлением">
+                                <WrapPanel Margin="0,4,0,0">
+                                    <Button Content="Импорт профиля" Margin="0,0,8,8"
+                                            Command="{Binding LoadProfileCommand}" />
+                                    <Button Content="Экспорт профиля" Margin="0,0,8,8"
+                                            Command="{Binding SaveProfileCommand}" />
+                                    <Button Content="Сбросить выбор" Margin="0,0,8,8"
+                                            Command="{Binding ResetSelectionCommand}" />
+                                    <Button Content="Создать точку восстановления" Margin="0,0,8,8"
+                                            Command="{Binding CreateRestorePointCommand}"
+                                            ToolTip="Создать точку восстановления Windows перед ручными изменениями" />
+                                </WrapPanel>
+                            </Expander>
                             <Expander Style="{StaticResource SectionExpander}" Header="Фильтры категорий" IsExpanded="True"
                                       Margin="0,0,16,12" AutomationProperties.Name="Фильтры категорий сложных твиков">
                                 <ItemsControl ItemsSource="{Binding TweakCategories}">
