@@ -11,7 +11,7 @@ namespace WinOptimizer.Tests;
 /// </summary>
 public sealed class UiStructureTests
 {
-    private static string RepositoryRoot()
+    internal static string RepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "WinOptimizer.csproj")))
@@ -21,7 +21,7 @@ public sealed class UiStructureTests
             ?? throw new InvalidOperationException("Не удалось найти корень репозитория.");
     }
 
-    private static XDocument LoadView(string relativePath) =>
+    internal static XDocument LoadView(string relativePath) =>
         XDocument.Load(Path.Combine(RepositoryRoot(), relativePath));
 
     private static IEnumerable<XElement> Elements(XDocument document, string name) =>
@@ -440,8 +440,8 @@ public sealed class CpuUsageTrackerRegressionTests
     [Fact]
     public void GpuCardsShowWindowsDetectedDriverMetadata()
     {
-        var service=File.ReadAllText(Path.Combine(RepositoryRoot(),"Services/GpuTelemetryService.cs"));
-        var view=LoadView("Views/MainWindow.xaml");
+        var service=File.ReadAllText(Path.Combine(UiStructureTests.RepositoryRoot(),"Services/GpuTelemetryService.cs"));
+        var view=UiStructureTests.LoadView("Views/MainWindow.xaml");
         Assert.Contains("Win32_VideoController",service);
         Assert.Contains("DriverInfoText",view.ToString());
     }
