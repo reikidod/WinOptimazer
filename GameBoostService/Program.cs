@@ -25,7 +25,10 @@ internal static class Program
 internal static class ServiceInstaller
 {
     public const string ServiceName = "WinOptimizerGameBoost";
-    private static string Executable => Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule!.FileName!;
+    private static readonly string ServiceDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+        "WinOptimizer", "GameBoost", "Service");
+    private static string Executable => Path.Combine(ServiceDirectory, "WinOptimizer.GameBoostService.exe");
 
     public static int Install()
     {
@@ -34,15 +37,21 @@ internal static class ServiceInstaller
         {
             RunSc("stop");
             if (!WaitForStopped()) return 2;
-            if (RunSc("config", $"binPath= \"{Executable}\"", "start= auto", "obj= LocalSystem",
-                    "DisplayName= \"WinOptimizer Game Boost\"") != 0)
-                return 3;
         }
-        else if (RunSc("create", $"binPath= \"{Executable}\"", "start= auto", "obj= LocalSystem",
-                     "DisplayName= \"WinOptimizer Game Boost\"") != 0)
+
+        if (!CopyAndProtectPayload()) return 6;
+
+        var serviceArguments = new[]
         {
-            return 4;
-        }
+            $"binPath= \"{Executable}\"",
+            "start= auto",
+            "obj= LocalSystem",
+            "DisplayName= \"WinOptimizer Game Boost\""
+        };
+        var configured = exists
+            ? RunSc("config", serviceArguments)
+            : RunSc("create", serviceArguments);
+        if (configured != 0) return 3;
 
         RunSc("description", "\"Автоматическое повышение производительности игр с восстановлением настроек\"");
         RunSc("failure", "reset= 0", "actions= restart/5000/restart/5000/restart/5000");
@@ -55,7 +64,53 @@ internal static class ServiceInstaller
         if (RunSc("query") != 0) return 0;
         RunSc("stop");
         if (!WaitForStopped()) return 5;
-        return RunSc("delete");
+        var result = RunSc("delete");
+        if (result == 0)
+        {
+            try { if (Directory.Exists(ServiceDirectory)) Directory.Delete(ServiceDirectory, recursive: true); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
+        return result;
+    }
+
+    private static bool CopyAndProtectPayload()
+    {
+        try
+        {
+            var sourceDirectory = AppContext.BaseDirectory;
+            var sourceExecutable = Path.Combine(sourceDirectory, "WinOptimizer.GameBoostService.exe");
+            if (!File.Exists(sourceExecutable)) return false;
+
+            Directory.CreateDirectory(ServiceDirectory);
+            foreach (var source in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.TopDirectoryOnly))
+                File.Copy(source, Path.Combine(ServiceDirectory, Path.GetFileName(source)), overwrite: true);
+
+            using var acl = Process.Start(new ProcessStartInfo
+            {
+                FileName = Path.Combine(Environment.SystemDirectory, "icacls.exe"),
+                ArgumentList =
+                {
+                    ServiceDirectory,
+                    "/inheritance:r",
+                    "/grant:r",
+                    "*S-1-5-18:(OI)(CI)F",
+                    "*S-1-5-32-544:(OI)(CI)F",
+                    "/T",
+                    "/C"
+                },
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            });
+            if (acl is null) return false;
+            acl.WaitForExit(15000);
+            return acl.ExitCode == 0;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception or InvalidOperationException)
+        {
+            return false;
+        }
     }
 
     private static bool WaitForStopped()
@@ -83,16 +138,18 @@ internal static class ServiceInstaller
         return false;
     }
 
-    private static int RunSc(params string[] args)
+    private static int RunSc(string command, params string[] arguments)
     {
         using var process = Process.Start(new ProcessStartInfo
         {
             FileName = Path.Combine(Environment.SystemDirectory, "sc.exe"),
-            Arguments = string.Join(" ", new[] { args[0], ServiceName }.Concat(args.Skip(1))),
+            Arguments = string.Join(" ", new[] { command, ServiceName }.Concat(arguments)),
             UseShellExecute = false,
             CreateNoWindow = true
         });
         process?.WaitForExit(15000);
         return process?.ExitCode ?? 1;
     }
+
+    private static int RunSc(string command, string[] arguments) => RunSc(command, arguments.AsEnumerable().ToArray());
 }
