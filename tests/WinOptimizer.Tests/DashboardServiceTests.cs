@@ -51,7 +51,9 @@ public sealed class DashboardServiceTests : IDisposable
 
         Assert.Contains(metrics, metric => metric.Name == "CPU" && metric.Value == 35 && metric.Unit == "%");
         Assert.Contains(metrics, metric => metric.Name == "Использование RAM" && metric.Value == 42);
-        Assert.Contains(metrics, metric => metric.Name == "Сеть · входящий трафик" && metric.Value == 2_048);
+        Assert.Single(metrics, metric => metric.Name == "Сеть · входящий трафик" && metric.Value == 2_048);
+        Assert.Single(metrics, metric => metric.Name == "Сеть · исходящий трафик" && metric.Value == 1_024);
+        Assert.Equal(metrics.Count, metrics.Select(metric => metric.Name).Distinct().Count());
         Assert.Contains(metrics, metric => metric.Name == "Графический адаптер 1" && metric.Value == 55);
         Assert.Contains(metrics, metric => metric.Name == "0 · C: · чтение" && metric.Value == 4_096);
         Assert.Contains(metrics, metric => metric.Name == "CPU Package" && metric.Value == 70 && metric.Unit == "°C");
