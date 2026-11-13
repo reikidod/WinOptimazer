@@ -77,7 +77,7 @@ public static class GpuTelemetryService
     public static IReadOnlyDictionary<int, double> AggregateUtilization(IEnumerable<GpuEngineUtilizationSample> samples)
     {
         ArgumentNullException.ThrowIfNull(samples);
-        var engineTotals = new Dictionary<(int AdapterIndex, string EngineType), double>();
+        var engineTotals = new Dictionary<(int AdapterIndex, int EngineIndex), double>();
         foreach (var sample in samples)
         {
             if (sample.AdapterIndex < 0 || sample.EngineIndex < 0 || string.IsNullOrWhiteSpace(sample.EngineType) ||
