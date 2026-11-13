@@ -324,7 +324,8 @@ public sealed class GamesViewModel : ObservableObject
                     _opti.HasHighPerformanceGpu(g.ExePath)));
             }
             OnPropertyChanged(nameof(FilteredGames));
-            if (GameBoostInstalled) await SyncGameBoostGamesAsync();
+            if (GameBoostInstalled && GameBoostRunning) await SyncGameBoostGamesAsync();
+            else if (GameBoostInstalled) GameBoostStatus = "Служба остановлена. Нажмите «Установить службу» для восстановления.";
             Status = Games.Count == 0
                 ? "Игры не найдены. Проверьте Steam/Epic или добавьте папку Games на диске."
                 : $"Найдено игр: {Games.Count}. Можно поставить OptiScaler или режим высокой производительности GPU.";
