@@ -1358,6 +1358,26 @@
 
                 <Border Grid.Row="1" Style="{StaticResource BorderCard}" Margin="0,0,16,12" Padding="14">
                     <StackPanel>
+                        <Border Background="{DynamicResource BgCardHoverBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="WINDOWS GAME BOOST" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
+                                <TextBlock Text="{Binding Games.GameBoostStatus}" Margin="0,5,0,0" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding Games.ConfiguredGameCount, StringFormat=Профилей игр в службе: {0}}" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,8" />
+                                <WrapPanel>
+                                    <Button Content="Установить службу" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
+                                            Visibility="{Binding Games.GameBoostNotInstalled, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding Games.InstallGameBoostServiceCommand}" />
+                                    <Button Content="Удалить службу" Margin="0,0,8,0"
+                                            Visibility="{Binding Games.GameBoostInstalled, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding Games.RemoveGameBoostServiceCommand}" />
+                                    <Button Content="Синхронизировать список игр" Margin="0,0,8,0"
+                                            Visibility="{Binding Games.GameBoostInstalled, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding Games.SyncGameBoostGamesCommand}" />
+                                    <Button Content="Обновить статус" Command="{Binding Games.RefreshGameBoostStatusCommand}" />
+                                </WrapPanel>
+                                <TextBlock Text="Служба запускается вместе с Windows. Для выбранных игр временно устанавливает Above Normal и план высокой производительности; после выхода возвращает исходные параметры." FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextDimBrush}" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
                         <WrapPanel>
                             <Button Content="Найти игры" Style="{StaticResource AccentButton}" Margin="0,0,8,8"
                                     Command="{Binding Games.ScanCommand}" />
