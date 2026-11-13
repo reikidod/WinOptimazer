@@ -123,7 +123,9 @@
                                           Data="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Оптимизация системы" VerticalAlignment="Center"/>
+                            <TextBlock Text="Оптимизация" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="HiddenPages"
@@ -193,7 +195,7 @@
                                           Data="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Производительность" VerticalAlignment="Center"/>
+                            <TextBlock Text="Мой ПК" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
@@ -207,7 +209,7 @@
                                           Data="M15.55 13c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2h7.45zM6.16 6h12.15l-2.76 5H8.53L6.16 6zM7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Очистка и автозагрузка" VerticalAlignment="Center"/>
+                            <TextBlock Text="Обслуживание" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
@@ -223,21 +225,6 @@
                             <TextBlock Text="Настройки" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
-                    <Border Margin="6,14,6,0" Padding="10,8" CornerRadius="10"
-                            Background="{DynamicResource BgCardBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            ToolTip="Mouse 4 и Mouse 5 работают как кнопки «Назад» и «Вперёд» в истории разделов.">
-                        <StackPanel>
-                            <TextBlock Text="БЫСТРАЯ НАВИГАЦИЯ" FontSize="9" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextDimBrush}" />
-                            <TextBlock Text="Боковые кнопки мыши" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,4,0,2" />
-                            <TextBlock Text="Mouse 4  ←  Назад" FontSize="10"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                            <TextBlock Text="Mouse 5  →  Вперёд" FontSize="10"
-                                       Foreground="{DynamicResource TextSecondaryBrush}" />
-                        </StackPanel>
-                    </Border>
                 </StackPanel>
 
                 <!-- Иконки + версия + обновление -->
@@ -349,12 +336,77 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="Главная" Style="{StaticResource PageTitle}"/>
-                                <TextBlock Text="Состояние компьютера и быстрый доступ к инструментам"
+                                <TextBlock Text="Обзор компьютера" Style="{StaticResource PageTitle}"/>
+                                <TextBlock Text="Главное о состоянии Windows — без сложных технических терминов"
                                            Style="{StaticResource SecondaryText}" Margin="0,4,0,0"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Обновить" VerticalAlignment="Center"
+                            <Button Grid.Column="1" Content="Обновить данные" VerticalAlignment="Center"
                                     Command="{Binding RefreshDashboardCommand}"/>
+                        </Grid>
+
+                        <!-- Первый шаг для начинающего пользователя -->
+                        <Border Background="{DynamicResource BgCardBrush}"
+                                BorderBrush="{DynamicResource BorderHoverBrush}" BorderThickness="1"
+                                CornerRadius="16" Padding="18" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Не знаете, с чего начать?"
+                                               FontSize="17" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Сначала проверьте компьютер. WinOptimizer покажет возможные проблемы и подскажет, что можно сделать. Проверка ничего не меняет в Windows."
+                                               Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                                               Margin="0,5,0,0" MaxWidth="620"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Проверить компьютер"
+                                        Style="{StaticResource AccentButton}" VerticalAlignment="Center"
+                                        Command="{Binding RunDiagnosticsCommand}" Padding="16,10"/>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Text="Быстрые действия" FontSize="16" FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Margin="0,0,6,0" Padding="14,12"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Tweaks"
+                                    ToolTip="Выберите готовый уровень оптимизации или отдельные настройки.">
+                                <StackPanel>
+                                    <TextBlock Text="Оптимизация" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Настроить скорость и удобство Windows"
+                                               Style="{StaticResource SecondaryText}" FontSize="11"
+                                               TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="1" Margin="3,0" Padding="14,12"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Maintenance"
+                                    ToolTip="Проверьте временные файлы и инструменты обслуживания.">
+                                <StackPanel>
+                                    <TextBlock Text="Освободить место" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Проверить временные файлы и автозагрузку"
+                                               Style="{StaticResource SecondaryText}" FontSize="11"
+                                               TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="2" Margin="6,0,0,0" Padding="14,12"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{Binding NavigateCommand}" CommandParameter="Apps"
+                                    ToolTip="Просмотр установленных приложений и каталога.">
+                                <StackPanel>
+                                    <TextBlock Text="Приложения" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Установить или удалить программы"
+                                               Style="{StaticResource SecondaryText}" FontSize="11"
+                                               TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Button>
                         </Grid>
 
                         <!-- Равные карточки с одинаковой высотой и без повторяющих подписей -->
