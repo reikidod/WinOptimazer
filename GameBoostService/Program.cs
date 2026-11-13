@@ -34,7 +34,7 @@ internal static class ServiceInstaller
         var binPath = $"\\"{Executable}\\"";
         var create = RunSc("create", $"binPath= \"{Executable}\"", "start= auto", "obj= LocalSystem", "DisplayName= \"WinOptimizer Game Boost\"");
         if (create != 0) return create;
-        RunSc("description", "Автоматическое повышение производительности игр с восстановлением настроек");
+        RunSc("description", "\"Автоматическое повышение производительности игр с восстановлением настроек\"");
         return RunSc("start");
     }
 
