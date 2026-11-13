@@ -77,17 +77,24 @@ public sealed class GameBoostClient
 
     private static async Task<PipeResponse?> SendAsync(PipeRequest request)
     {
-        try
+        for (var attempt = 0; attempt < 3; attempt++)
         {
-            await using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            await pipe.ConnectAsync(1500);
-            using var reader = new StreamReader(pipe, Encoding.UTF8, leaveOpen: true);
-            await using var writer = new StreamWriter(pipe, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true };
-            await writer.WriteLineAsync(JsonSerializer.Serialize(request));
-            var line = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(3));
-            return string.IsNullOrWhiteSpace(line) ? null : JsonSerializer.Deserialize<PipeResponse>(line);
+            try
+            {
+                await using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+                await pipe.ConnectAsync(1500);
+                using var reader = new StreamReader(pipe, Encoding.UTF8, leaveOpen: true);
+                await using var writer = new StreamWriter(pipe, new UTF8Encoding(false), leaveOpen: true) { AutoFlush = true };
+                await writer.WriteLineAsync(JsonSerializer.Serialize(request));
+                var line = await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(3));
+                return string.IsNullOrWhiteSpace(line) ? null : JsonSerializer.Deserialize<PipeResponse>(line);
+            }
+            catch
+            {
+                if (attempt < 2) await Task.Delay(400);
+            }
         }
-        catch { return null; }
+        return null;
     }
 
     private sealed record PipeRequest(string Command, string[]? Paths = null);
