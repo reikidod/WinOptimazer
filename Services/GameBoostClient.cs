@@ -64,7 +64,12 @@ public sealed class GameBoostClient
         try
         {
             using var process = Process.Start(new ProcessStartInfo(_serviceExecutable, argument)
-            { UseShellExecute = true, Verb = "runas", WorkingDirectory = Path.GetDirectoryName(_serviceExecutable)! });
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                WorkingDirectory = Path.GetDirectoryName(_serviceExecutable)!
+            });
             if (process is null) return (false, "Не удалось запустить установщик службы.");
             await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
             return process.ExitCode == 0 ? (true, "Операция со службой выполнена.")
