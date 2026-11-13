@@ -31,7 +31,13 @@ internal sealed class GameBoostWorker : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            try { await ScanProcessesAsync(stoppingToken); }
+            try
+            {
+                await _gate.WaitAsync(stoppingToken);
+                try { await ScanProcessesAsync(stoppingToken); }
+                finally { _gate.Release(); }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex) { WriteLog("Game scan failed: " + ex.Message); }
             await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken).ContinueWith(_ => { }, CancellationToken.None);
         }
