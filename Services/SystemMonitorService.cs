@@ -56,12 +56,28 @@ public sealed record SystemSnapshot(
                 DriveTotalBytes > 0 ? null : "Системный том недоступен"),
         };
 
+        // Сетевой трафик является частью общего контракта метрик Dashboard/Performance Center.
+        // Нулевые или ещё не прогретые счётчики не подменяем нулём: сохраняем состояние «измерение».
+        AddNetworkMetric(metrics, "Сеть · входящий трафик", NetworkTraffic.ReceivedBytesPerSecond);
+        AddNetworkMetric(metrics, "Сеть · исходящий трафик", NetworkTraffic.SentBytesPerSecond);
+
         metrics.AddRange(GpuActivity.Select(item => item.ToMetricSnapshot()));
         metrics.AddRange(PhysicalDiskActivity.SelectMany(item => item.ToMetricSnapshots()));
         metrics.AddRange(TemperatureMetrics.Select(item => item.ToMetricSnapshot()));
         return metrics;
     }
 
+
+    private void AddNetworkMetric(List<TelemetryMetricSnapshot> metrics, string name, double? value)
+    {
+        var availability = value.HasValue
+            ? MetricAvailability.Available
+            : NetworkAvailable ? MetricAvailability.WarmingUp : MetricAvailability.Unavailable;
+        var reason = value.HasValue
+            ? null
+            : NetworkAvailable ? "Первый замер сетевых счётчиков" : "Нет активного сетевого подключения";
+        metrics.Add(new TelemetryMetricSnapshot(name, value, "Б/с", "Windows Network Interface", CapturedAt, availability, reason));
+    }
 
     private static string FormatBytes(ulong bytes)
     {
