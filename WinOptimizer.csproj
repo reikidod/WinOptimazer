@@ -44,6 +44,10 @@
     <EmbeddedResource Remove="dll\**" />
     <None Remove="dll\**" />
     <Page Remove="dll\**" />
+    <!-- Служба собирается отдельным проектом и копируется в каталог приложения после Build. -->
+    <Compile Remove="GameBoostService\**" />
+    <EmbeddedResource Remove="GameBoostService\**" />
+    <None Remove="GameBoostService\**" />
   </ItemGroup>
 
   <ItemGroup>
