@@ -126,8 +126,6 @@
                             <TextBlock Text="Оптимизация" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
-                        </StackPanel>
-                    </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="HiddenPages"
                                  IsChecked="{Binding IsDebloatPage, Mode=TwoWay}"
                                  Visibility="Collapsed"
