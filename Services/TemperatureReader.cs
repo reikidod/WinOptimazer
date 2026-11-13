@@ -112,29 +112,64 @@ internal static class TemperatureReader
 
     private static IEnumerable<InfoLine> ReadThermalZones()
     {
-        var result = new List<InfoLine>();
-
-        // Счётчик «Thermal Zone Information»: те же данные, что видит диспетчер задач и perfmon.
-        foreach (var zone in SystemInfoService.Query(@"root\cimv2",
-                     "SELECT Name, Temperature, HighPrecisionTemperature FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation"))
+        // Не все версии Windows и OEM-прошивки публикуют этот performance-класс.
+        // WMI может выбросить ManagementException именно при перечислении коллекции,
+        // поэтому каждый источник читается в отдельном try/catch.
+        try
         {
-            var celsius = FromDeciKelvin(zone["HighPrecisionTemperature"]) ?? FromKelvin(zone["Temperature"]);
-            if (celsius is { } c)
+            var performanceZones = ReadThermalZoneQuery(
+                @"root\\cimv2",
+                "SELECT Name, Temperature, HighPrecisionTemperature FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation",
+                "Name",
+                "HighPrecisionTemperature",
+                "Temperature");
+
+            if (performanceZones.Count > 0)
             {
-                result.Add(new InfoLine($"Тепловая зона {ZoneName(Convert.ToString(zone["Name"], CultureInfo.InvariantCulture) ?? "ACPI")}", Format(c)));
+                return performanceZones;
             }
         }
-
-        if (result.Count > 0)
+        catch (ManagementException)
         {
-            return result;
+            // Источник не поддерживается — пробуем ACPI ниже.
         }
 
-        foreach (var zone in SystemInfoService.Query(@"root\WMI", "SELECT InstanceName, CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"))
+        try
         {
-            if (FromDeciKelvin(zone["CurrentTemperature"]) is { } c)
+            return ReadThermalZoneQuery(
+                @"root\\WMI",
+                "SELECT InstanceName, CurrentTemperature FROM MSAcpi_ThermalZoneTemperature",
+                "InstanceName",
+                "CurrentTemperature",
+                null);
+        }
+        catch (ManagementException)
+        {
+            // На некоторых устройствах Windows не предоставляет ни один WMI-датчик.
+            return [];
+        }
+    }
+
+    private static List<InfoLine> ReadThermalZoneQuery(
+        string scope,
+        string query,
+        string nameProperty,
+        string temperatureProperty,
+        string? fallbackTemperatureProperty)
+    {
+        var result = new List<InfoLine>();
+        foreach (var zone in SystemInfoService.Query(scope, query))
+        {
+            var celsius = FromDeciKelvin(zone[temperatureProperty]);
+            if (celsius is null && fallbackTemperatureProperty is not null)
             {
-                result.Add(new InfoLine($"Тепловая зона {ZoneName(Convert.ToString(zone["InstanceName"], CultureInfo.InvariantCulture) ?? "ACPI")}", Format(c)));
+                celsius = FromKelvin(zone[fallbackTemperatureProperty]);
+            }
+
+            if (celsius is { } value)
+            {
+                var name = Convert.ToString(zone[nameProperty], CultureInfo.InvariantCulture) ?? "ACPI";
+                result.Add(new InfoLine($"Тепловая зона {ZoneName(name)}", Format(value)));
             }
         }
 
