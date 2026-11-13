@@ -47,8 +47,7 @@ internal sealed class GameBoostWorker : BackgroundService
             if (File.Exists(ConfigPath))
             {
                 var paths = JsonSerializer.Deserialize<string[]>(File.ReadAllText(ConfigPath)) ?? Array.Empty<string>();
-                _games = paths.Where(IsSafeExecutablePath).Select(Path.GetFileName)
-                    .Where(x => !string.IsNullOrWhiteSpace(x)).Cast<string>().ToHashSet(StringComparer.OrdinalIgnoreCase);
+                _games = paths.Where(IsSafeExecutablePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
             }
         }
         catch (Exception ex) { WriteLog("Configuration load failed: " + ex.Message); }
@@ -96,8 +95,7 @@ internal sealed class GameBoostWorker : BackgroundService
                 var temp = ConfigPath + ".tmp";
                 await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(paths, new JsonSerializerOptions { WriteIndented = true }));
                 File.Move(temp, ConfigPath, true);
-                _games = paths.Select(Path.GetFileName).Where(x => !string.IsNullOrWhiteSpace(x)).Cast<string>()
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                _games = paths.Select(Path.GetFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
             }
             finally { _gate.Release(); }
             return new(true, $"Профилей игр: {paths.Length}", _games.Order().ToArray(), _sessionActive);
@@ -116,7 +114,8 @@ internal sealed class GameBoostWorker : BackgroundService
             token.ThrowIfCancellationRequested();
             try
             {
-                if (_games.Contains(process.ProcessName + ".exe")) running.Add(process);
+                var executablePath = process.MainModule?.FileName;
+                if (!string.IsNullOrWhiteSpace(executablePath) && _games.Contains(Path.GetFullPath(executablePath))) running.Add(process);
                 else process.Dispose();
             }
             catch { process.Dispose(); }
@@ -135,7 +134,7 @@ internal sealed class GameBoostWorker : BackgroundService
                     var snapshot = new ProcessSnapshot(process.Id, start, (int)original);
                     _changedProcesses[process.Id] = snapshot;
                     await SaveJournalAsync();
-                    if (original < ProcessPriorityClass.AboveNormal)
+                    if (original is ProcessPriorityClass.Idle or ProcessPriorityClass.BelowNormal or ProcessPriorityClass.Normal)
                         process.PriorityClass = ProcessPriorityClass.AboveNormal;
                 }
                 catch (Exception ex) { WriteLog($"Cannot boost PID {SafePid(process)}: {ex.Message}"); }
@@ -235,7 +234,7 @@ internal sealed class GameBoostWorker : BackgroundService
     private static bool IsSafeExecutablePath(string path) =>
         !string.IsNullOrWhiteSpace(path) && Path.IsPathFullyQualified(path) &&
         string.Equals(Path.GetExtension(path), ".exe", StringComparison.OrdinalIgnoreCase) &&
-        !path.StartsWith(@"\\.\", StringComparison.OrdinalIgnoreCase);
+        !path.StartsWith(@"\\.\", StringComparison.OrdinalIgnoreCase) && File.Exists(path);
 
     private static int SafePid(Process p) { try { return p.Id; } catch { return -1; } }
     private static void WriteLog(string message)
