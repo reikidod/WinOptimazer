@@ -167,6 +167,7 @@ public static class SystemMonitorService
             PhysicalDiskActivity = PerformanceTelemetryService.CollectPhysicalDiskActivity(),
             GpuActivity = GpuTelemetryService.Collect(),
             TemperatureMetrics = TemperatureTelemetryService.Collect(),
+            NetworkTraffic = PerformanceTelemetryService.CollectNetworkRate(),
             CapturedAt = DateTime.UtcNow,
         };
     }
