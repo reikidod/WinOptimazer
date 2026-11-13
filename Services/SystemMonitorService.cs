@@ -47,19 +47,13 @@ public sealed record SystemSnapshot(
     {
         var metrics = new List<TelemetryMetricSnapshot>
         {
-            new("CPU", CpuAvailable ? CpuPercent : null, "%", "Windows Processor Performance Counter", CapturedAt,
+            new("CPU", CpuAvailable ? CpuPercent : null, "%", "GetSystemTimes", CapturedAt,
                 CpuAvailable ? MetricAvailability.Available : MetricAvailability.Unavailable,
                 CpuAvailable ? null : "Счётчик процессора недоступен"),
             new("Использование RAM", MemoryLoadPercent, "%", "GlobalMemoryStatusEx", CapturedAt, MetricAvailability.Available),
             new("Свободно на системном диске", Math.Max(0, DriveFreeBytes), "Б", "DriveInfo", CapturedAt,
                 DriveTotalBytes > 0 ? MetricAvailability.Available : MetricAvailability.Unavailable,
                 DriveTotalBytes > 0 ? null : "Системный том недоступен"),
-            new("Сеть · входящий трафик", NetworkTraffic.ReceivedBytesPerSecond, "Б/с", "NetworkInterface counters", CapturedAt,
-                NetworkTraffic.ReceivedBytesPerSecond.HasValue ? MetricAvailability.Available : MetricAvailability.Unavailable,
-                NetworkTraffic.ReceivedBytesPerSecond.HasValue ? null : "Счётчик входящего трафика ещё не готов или недоступен"),
-            new("Сеть · исходящий трафик", NetworkTraffic.SentBytesPerSecond, "Б/с", "NetworkInterface counters", CapturedAt,
-                NetworkTraffic.SentBytesPerSecond.HasValue ? MetricAvailability.Available : MetricAvailability.Unavailable,
-                NetworkTraffic.SentBytesPerSecond.HasValue ? null : "Счётчик исходящего трафика ещё не готов или недоступен"),
         };
 
         metrics.AddRange(GpuActivity.Select(item => item.ToMetricSnapshot()));
