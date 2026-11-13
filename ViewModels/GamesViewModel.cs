@@ -89,6 +89,11 @@ public sealed class GamesViewModel : ObservableObject
     private HardwareProfile? _profile;
     private HardwareScores? _scores;
     private string _hardwareSummary = "";
+    private readonly GameBoostClient _gameBoost = new();
+    private string _boostStatus = "Проверяю состояние службы…";
+    private bool _gameBoostInstalled;
+    private bool _gameBoostActive;
+    private int _configuredGameCount;
 
     public GamesViewModel(IGameDiscoveryService discovery, IOptiScalerService opti, IDialogService dialogs,
         IHardwareProfileService? hardware = null, IBenchmarkService? benchmarks = null)
@@ -112,6 +117,11 @@ public sealed class GamesViewModel : ObservableObject
         ToggleGpuCommand = new RelayCommand<GameItemViewModel>(ToggleGpu);
         OpenFolderCommand = new RelayCommand<GameItemViewModel>(OpenFolder);
         DownloadOptiCommand = new AsyncRelayCommand(DownloadOptiAsync, () => !IsBusy, Report);
+        InstallGameBoostServiceCommand = new AsyncRelayCommand(InstallGameBoostServiceAsync, () => !IsBusy, Report);
+        RemoveGameBoostServiceCommand = new AsyncRelayCommand(RemoveGameBoostServiceAsync, () => !IsBusy, Report);
+        SyncGameBoostGamesCommand = new AsyncRelayCommand(SyncGameBoostGamesAsync, () => !IsBusy && GameBoostInstalled, Report);
+        RefreshGameBoostStatusCommand = new AsyncRelayCommand(RefreshGameBoostStatusAsync, () => !IsBusy, Report);
+        _ = RefreshGameBoostStatusAsync();
     }
 
     public ObservableCollection<GameItemViewModel> Games { get; } = new();
@@ -161,6 +171,62 @@ public sealed class GamesViewModel : ObservableObject
     public ICommand DownloadOptiCommand { get; }
     public ICommand OptimizeCommand { get; }
     public ICommand DetectHardwareCommand { get; }
+    public ICommand InstallGameBoostServiceCommand { get; }
+    public ICommand RemoveGameBoostServiceCommand { get; }
+    public ICommand SyncGameBoostGamesCommand { get; }
+    public ICommand RefreshGameBoostStatusCommand { get; }
+
+    public string GameBoostStatus { get => _boostStatus; private set => SetField(ref _boostStatus, value); }
+    public bool GameBoostInstalled { get => _gameBoostInstalled; private set { if (SetField(ref _gameBoostInstalled, value)) OnPropertyChanged(nameof(GameBoostNotInstalled)); } }
+    public bool GameBoostNotInstalled => !GameBoostInstalled;
+    public bool GameBoostActive { get => _gameBoostActive; private set => SetField(ref _gameBoostActive, value); }
+    public int ConfiguredGameCount { get => _configuredGameCount; private set => SetField(ref _configuredGameCount, value); }
+
+    private async Task RefreshGameBoostStatusAsync()
+    {
+        var status = await _gameBoost.GetStatusAsync();
+        GameBoostInstalled = status.IsInstalled;
+        GameBoostActive = status.IsActive;
+        ConfiguredGameCount = status.ConfiguredGames;
+        GameBoostStatus = status.Message;
+    }
+
+    private async Task InstallGameBoostServiceAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            GameBoostStatus = "Запрашиваю права администратора для установки службы…";
+            var result = await _gameBoost.InstallAsync();
+            GameBoostStatus = result.Message;
+            if (!result.Success) _dialogs.Info("Game Boost", result.Message, DialogKind.Warning);
+            await RefreshGameBoostStatusAsync();
+            if (result.Success) await SyncGameBoostGamesAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task RemoveGameBoostServiceAsync()
+    {
+        if (!_dialogs.Confirm("Game Boost", "Удалить службу Game Boost? Автоматическая оптимизация игр будет отключена.")) return;
+        IsBusy = true;
+        try
+        {
+            var result = await _gameBoost.UninstallAsync();
+            GameBoostStatus = result.Message;
+            if (!result.Success) _dialogs.Info("Game Boost", result.Message, DialogKind.Warning);
+            await RefreshGameBoostStatusAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task SyncGameBoostGamesAsync()
+    {
+        var result = await _gameBoost.ConfigureAsync(Games.Select(g => g.Path));
+        GameBoostStatus = result.Message;
+        if (result.Success) { ConfiguredGameCount = result.Count; GameBoostActive = result.Active; }
+        else _dialogs.Info("Game Boost", result.Message, DialogKind.Warning);
+    }
 
     public string HardwareSummary
     {
@@ -255,6 +321,7 @@ public sealed class GamesViewModel : ObservableObject
                     _opti.HasHighPerformanceGpu(g.ExePath)));
             }
             OnPropertyChanged(nameof(FilteredGames));
+            if (GameBoostInstalled) await SyncGameBoostGamesAsync();
             Status = Games.Count == 0
                 ? "Игры не найдены. Проверьте Steam/Epic или добавьте папку Games на диске."
                 : $"Найдено игр: {Games.Count}. Можно поставить OptiScaler или режим высокой производительности GPU.";
