@@ -141,7 +141,7 @@ internal static class ServiceInstaller
     {
         try
         {
-            var sourceDirectory = AppContext.BaseDirectory;
+            var sourceDirectory = Path.GetFullPath(AppContext.BaseDirectory);
             var sourceExecutable = Path.Combine(sourceDirectory, "WinOptimizer.GameBoostService.exe");
             if (!File.Exists(sourceExecutable))
             {
@@ -150,56 +150,55 @@ internal static class ServiceInstaller
             }
 
             Directory.CreateDirectory(ServiceDirectory);
+            var copiedFiles = 0;
             foreach (var source in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.TopDirectoryOnly))
-                File.Copy(source, Path.Combine(ServiceDirectory, Path.GetFileName(source)), overwrite: true);
-
-            if (!File.Exists(Executable))
             {
-                WriteLog("После копирования исполняемый файл службы не найден: " + Executable);
+                var destination = Path.Combine(ServiceDirectory, Path.GetFileName(source));
+                if (File.Exists(destination))
+                {
+                    try
+                    {
+                        var attributes = File.GetAttributes(destination);
+                        if ((attributes & FileAttributes.ReadOnly) != 0)
+                            File.SetAttributes(destination, attributes & ~FileAttributes.ReadOnly);
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        WriteLog($"Не удалось снять атрибут ReadOnly с {destination}: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                File.Copy(source, destination, overwrite: true);
+                copiedFiles++;
+            }
+
+            if (copiedFiles == 0 || !File.Exists(Executable))
+            {
+                WriteLog($"Копирование payload не завершено: файлов={copiedFiles}; ожидаемый файл={Executable}");
                 return false;
             }
 
-            var aclInfo = new ProcessStartInfo
-            {
-                FileName = Path.Combine(Environment.SystemDirectory, "icacls.exe"),
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-            foreach (var argument in new[]
-            {
+            var acl = RunIcacls(
                 ServiceDirectory, "/inheritance:r", "/grant:r",
-                "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F", "/T", "/C"
-            })
-                aclInfo.ArgumentList.Add(argument);
-
-            using var acl = Process.Start(aclInfo);
-            if (acl is null)
-            {
-                WriteLog("Не удалось запустить icacls.exe.");
-                return false;
-            }
-
-            var stdout = acl.StandardOutput.ReadToEndAsync();
-            var stderr = acl.StandardError.ReadToEndAsync();
-            if (!acl.WaitForExit(15000))
-            {
-                try { acl.Kill(entireProcessTree: true); } catch { }
-                WriteLog("icacls.exe превысил лимит времени.");
-                return false;
-            }
-
-            var output = stdout.GetAwaiter().GetResult();
-            var errors = stderr.GetAwaiter().GetResult();
-            if (!string.IsNullOrWhiteSpace(output) || !string.IsNullOrWhiteSpace(errors))
-                WriteLog("icacls output: " + output + " " + errors);
+                "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F", "/T", "/C");
             if (acl.ExitCode != 0)
             {
-                WriteLog("icacls.exe завершился с кодом " + acl.ExitCode);
-                return false;
+                WriteLog($"Первичная настройка ACL завершилась с кодом {acl.ExitCode}: {acl.Output} {acl.Error}");
+
+                // Повторная попытка без флагов наследования для систем, где icacls
+                // не принимает комбинацию /inheritance:r и object/container inheritance.
+                var fallback = RunIcacls(
+                    ServiceDirectory, "/grant:r",
+                    "*S-1-5-18:F", "*S-1-5-32-544:F", "/T", "/C");
+                if (fallback.ExitCode != 0)
+                {
+                    WriteLog($"Повторная настройка ACL завершилась с кодом {fallback.ExitCode}: {fallback.Output} {fallback.Error}");
+                    return false;
+                }
             }
 
+            WriteLog($"Payload службы подготовлен: скопировано файлов={copiedFiles}; ACL подтверждены.");
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
@@ -207,6 +206,34 @@ internal static class ServiceInstaller
             WriteLog("Ошибка подготовки файлов службы: " + ex);
             return false;
         }
+    }
+
+    private static (int ExitCode, string Output, string Error) RunIcacls(params string[] arguments)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = Path.Combine(Environment.SystemDirectory, "icacls.exe"),
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        foreach (var argument in arguments)
+            startInfo.ArgumentList.Add(argument);
+
+        using var process = Process.Start(startInfo);
+        if (process is null)
+            return (-1, "", "Не удалось запустить icacls.exe.");
+
+        var stdout = process.StandardOutput.ReadToEndAsync();
+        var stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(15000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { }
+            return (-1, "", "icacls.exe превысил лимит времени.");
+        }
+
+        return (process.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
     }
 
     private static bool WaitForState(int expectedState)
