@@ -448,7 +448,7 @@
                                     <TextBlock Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,6,0,0">
                                         <Run Text="из"/> <Run Text="{Binding DashboardSnapshot.DiskTotalText, Mode=OneWay}"/> <Run Text="·"/> <Run Text="{Binding DashboardSnapshot.SystemDrive, Mode=OneWay}"/>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding DashboardSnapshot.NetworkTrafficSummary}" Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,4,0,0"/>
+                                    <Button Content="Открыть статистику сети" HorizontalAlignment="Left" Margin="0,8,0,0" Padding="10,5" Click="OnOpenNetworkMonitor"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -504,6 +504,7 @@
                                                     <TextBlock Text="{Binding UtilizationText}" FontSize="18" FontWeight="SemiBold" Margin="0,5,0,2" />
                                                     <ProgressBar Maximum="100" Value="{Binding UtilizationPercent, Mode=OneWay}"
                                                                  IsIndeterminate="{Binding IsWarmingUp}" Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVis}}" Height="6" />
+                                                    <TextBlock Text="{Binding DriverInfoText}" Style="{StaticResource SecondaryText}" FontSize="10" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                                     <TextBlock Text="{Binding StatusText}" Style="{StaticResource SecondaryText}" FontSize="10" Margin="0,5,0,0" />
                                                 </StackPanel>
                                             </Border>

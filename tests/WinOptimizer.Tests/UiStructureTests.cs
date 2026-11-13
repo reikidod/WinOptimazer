@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using WinOptimizer.Services;
 using Xunit;
 
 namespace WinOptimizer.Tests;
@@ -419,4 +420,21 @@ public sealed class UiStructureTests
             Attribute(element, "Opacity") == "{Binding CpuBarOpacity}");
     }
 
+    [Fact]
+    public void NetworkStatisticsAreSeparatedFromDiskCard()
+    {
+        var main=LoadView("Views/MainWindow.xaml");
+        Assert.Contains(Elements(main,"Button"),e=>Attribute(e,"Click")=="OnOpenNetworkMonitor");
+        Assert.DoesNotContain(Elements(main,"TextBlock"),e=>Attribute(e,"Text")=="{Binding DashboardSnapshot.NetworkTrafficSummary}");
+        var network=LoadView("Views/NetworkMonitorWindow.xaml");
+        Assert.Contains(Elements(network,"TextBlock"),e=>Attribute(e,"Text")=="Статистика сети");
+        Assert.Contains(Elements(network,"ItemsControl"),e=>Attribute(e,"ItemsSource")=="{Binding Adapters}");
+    }
+}
+
+public sealed class CpuUsageTrackerRegressionTests
+{
+    [Fact] public void FirstSampleIsBaseline(){Assert.Null(new CpuUsageTracker().Update(100,200,100));}
+    [Fact] public void CpuLoadUsesSystemTimeDeltas(){var t=new CpuUsageTracker();t.Update(100,200,100);Assert.Equal(80d,t.Update(120,260,140));}
+    [Fact] public void CounterResetIsUnavailable(){var t=new CpuUsageTracker();t.Update(100,200,100);Assert.Null(t.Update(90,220,120));}
 }

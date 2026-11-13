@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Management;
+using System.Runtime.InteropServices;
 
 namespace WinOptimizer.Services;
 
@@ -7,7 +9,11 @@ public sealed record GpuEngineUtilizationSample(int AdapterIndex, int EngineInde
 
 public sealed record GpuAdapterActivitySnapshot(int AdapterIndex, double? UtilizationPercent, DateTime CapturedAt, bool IsWarmingUp = false)
 {
-    public string DisplayName => $"Графический адаптер {AdapterIndex + 1}";
+    public string AdapterName { get; init; } = string.Empty;
+    public string DriverVersion { get; init; } = string.Empty;
+    public string DriverStatus { get; init; } = string.Empty;
+    public string DisplayName => string.IsNullOrWhiteSpace(AdapterName) ? $"Графический адаптер {AdapterIndex + 1}" : AdapterName;
+    public string DriverInfoText => string.IsNullOrWhiteSpace(AdapterName) ? "Данные драйвера Windows недоступны" : $"Драйвер Windows {DriverVersion} · {DriverStatus}";
     public bool HasUtilization => UtilizationPercent.HasValue;
     public bool ShowProgress => HasUtilization || IsWarmingUp;
     public string UtilizationText => UtilizationPercent is double value ? $"{value:0.#}%" : IsWarmingUp ? "Измерение…" : "н/д";
@@ -18,6 +24,7 @@ public sealed record GpuAdapterActivitySnapshot(int AdapterIndex, double? Utiliz
         UtilizationPercent.HasValue ? null : IsWarmingUp ? "Первый замер счётчика" : "Счётчики GPU Engine недоступны");
 }
 
+public sealed record GpuAdapterMetadata(string Name,string Version,string Status);
 public static class GpuTelemetryService
 {
     private static readonly object Sync = new();
@@ -25,6 +32,22 @@ public static class GpuTelemetryService
     private static string[] _instances = Array.Empty<string>();
     private static DateTime _lastRefreshUtc = DateTime.MinValue;
 
+    private IReadOnlyDictionary<int,GpuAdapterMetadata> ReadMetadata()
+    {
+        var result=new Dictionary<int,GpuAdapterMetadata>();
+        using var searcher=new ManagementObjectSearcher("SELECT Name, DriverVersion, Status FROM Win32_VideoController");
+        using var rows=searcher.Get();var index=0;
+        foreach(ManagementObject row in rows){using(row){var name=Convert.ToString(row["Name"],CultureInfo.InvariantCulture)?.Trim();
+            if(!string.IsNullOrWhiteSpace(name))result[index]=new(name,Convert.ToString(row["DriverVersion"],CultureInfo.InvariantCulture)?.Trim()??"неизвестно",Convert.ToString(row["Status"],CultureInfo.InvariantCulture)?.Trim()??"неизвестно");index++;}}
+        return result;
+    }
+    private IReadOnlyDictionary<int,GpuAdapterMetadata> GetMetadata(DateTime now)
+    {
+        if(now-_metadataAt<TimeSpan.FromMinutes(2))return _metadata;
+        try{var current=ReadMetadata();if(current.Count>0||_metadata.Count==0)_metadata=current;}
+        catch(Exception ex) when(ex is ManagementException or COMException or UnauthorizedAccessException or InvalidOperationException or PlatformNotSupportedException or TypeInitializationException){}
+        _metadataAt=now;return _metadata;
+    }
     public static bool TryGetAdapterIndex(string? instanceName, out int adapterIndex)
     {
         adapterIndex = -1;
@@ -98,6 +121,7 @@ public static class GpuTelemetryService
         lock (Sync)
         {
             var now = DateTime.UtcNow;
+            var metadata=GetMetadata(now);
             if (now - _lastRefreshUtc >= PerformanceTelemetryPolicy.DeviceEnumerationRefreshInterval)
             {
                 try
@@ -158,9 +182,11 @@ public static class GpuTelemetryService
             }
 
             var values = AggregateUtilization(samples);
-            return seen.OrderBy(index => index).Select(index => new GpuAdapterActivitySnapshot(
-                index, values.TryGetValue(index, out var value) ? value : null, capturedAt,
-                !values.ContainsKey(index) && warming.Contains(index))).ToArray();
+            return seen.Concat(metadata.Keys).Distinct().OrderBy(index=>index).Select(index=>{
+                metadata.TryGetValue(index,out var info);
+                return new GpuAdapterActivitySnapshot(index,values.TryGetValue(index,out var value)?value:null,capturedAt,!values.ContainsKey(index)&&warming.Contains(index))
+                {AdapterName=info?.Name??string.Empty,DriverVersion=info?.Version??string.Empty,DriverStatus=info?.Status??string.Empty};
+            }).ToArray();
         }
     }
 
@@ -172,6 +198,7 @@ public static class GpuTelemetryService
             Counters.Clear();
             _instances = Array.Empty<string>();
             _lastRefreshUtc = DateTime.MinValue;
+            _metadata=new Dictionary<int,GpuAdapterMetadata>();_metadataAt=DateTime.MinValue;
         }
     }
 }

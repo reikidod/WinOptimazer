@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
@@ -17,7 +16,7 @@ public sealed record SystemSnapshot(
     long DriveFreeBytes,
     bool NetworkAvailable)
 {
-    /// <summary>PerformanceCounter может быть недоступен (например, отключены системные счётчики).</summary>
+    /// <summary>Первый системный замер CPU задаёт базу для расчёта.</summary>
     public IReadOnlyList<DriveSnapshot> AdditionalDrives { get; init; } = Array.Empty<DriveSnapshot>();
     public IReadOnlyList<PhysicalDiskActivitySnapshot> PhysicalDiskActivity { get; init; } = Array.Empty<PhysicalDiskActivitySnapshot>();
     public IReadOnlyList<GpuAdapterActivitySnapshot> GpuActivity { get; init; } = Array.Empty<GpuAdapterActivitySnapshot>();
@@ -119,43 +118,31 @@ public sealed record DriveSnapshot(
     }
 }
 
+/// <summary>Считает загрузку CPU по дельтам системного времени Windows.</summary>
+public sealed class CpuUsageTracker
+{
+    private ulong? idle,kernel,user;
+    public double? Update(ulong i,ulong k,ulong u)
+    {
+        var pi=idle;var pk=kernel;var pu=user;idle=i;kernel=k;user=u;
+        if(!pi.HasValue||!pk.HasValue||!pu.HasValue||i<pi||k<pk||u<pu)return null;
+        var di=i-pi.Value;var dk=k-pk.Value;var du=u-pu.Value;
+        if(dk>ulong.MaxValue-du)return null;var total=dk+du;
+        return total==0||di>total?null:Math.Clamp((total-di)*100d/total,0,100);
+    }
+}
+
 /// <summary>
-/// Снимок ресурсов Windows. CPU — через PerformanceCounter; память/диск — Win32 / DriveInfo.
+/// Снимок ресурсов Windows. CPU — через GetSystemTimes; память/диск — Win32 / DriveInfo.
 /// Collect вызывается по запросу Dashboard (и по таймеру на главной).
 /// </summary>
 public static class SystemMonitorService
 {
-    private static PerformanceCounter? _cpu;
     private static readonly object CpuLock = new();
-    private static bool _cpuInitTried;
-
+    private static readonly CpuUsageTracker CpuTracker = new();
     public static SystemSnapshot Collect()
     {
-        EnsureCpuCounter();
-        double cpuPct = 0;
-        var cpuAvailable = false;
-        try
-        {
-            lock (CpuLock)
-            {
-                if (_cpu is not null)
-                {
-                    cpuPct = _cpu.NextValue();
-                    if (cpuPct < 0.1)
-                    {
-                        System.Threading.Thread.Sleep(120);
-                        cpuPct = _cpu.NextValue();
-                    }
-                    cpuAvailable = true;
-                }
-            }
-        }
-        catch
-        {
-            // Не выдаём недоступный счётчик за реальную загрузку CPU 0%.
-            cpuPct = 0;
-            cpuAvailable = false;
-        }
+        var cpuAvailable = TryCollectCpuUsage(out var cpuPct);
 
         var memory = new MemoryStatusEx();
         if (!GlobalMemoryStatusEx(memory))
@@ -182,7 +169,6 @@ public static class SystemMonitorService
             NetworkInterface.GetIsNetworkAvailable())
         {
             CpuAvailable = cpuAvailable,
-            NetworkTraffic = PerformanceTelemetryService.CollectNetworkRate(),
             AdditionalDrives = CollectAdditionalDrives(systemRoot),
             PhysicalDiskActivity = PerformanceTelemetryService.CollectPhysicalDiskActivity(),
             GpuActivity = GpuTelemetryService.Collect(),
@@ -252,26 +238,24 @@ public static class SystemMonitorService
         };
     }
 
-    private static void EnsureCpuCounter()
+    private static bool TryCollectCpuUsage(out double value)
     {
-        // Dashboard can be refreshed manually while its timer is running.
-        // Guard initialization with the same lock used for NextValue().
-        lock (CpuLock)
+        value=0;
+        if(!OperatingSystem.IsWindows())return false;
+        lock(CpuLock)
         {
-            if (_cpuInitTried) return;
-            _cpuInitTried = true;
-            try
-            {
-                _cpu = new PerformanceCounter("Processor", "% Processor Time", "_Total", readOnly: true);
-                _ = _cpu.NextValue();
-            }
-            catch
-            {
-                _cpu?.Dispose();
-                _cpu = null;
-            }
+            if(!GetSystemTimes(out var idle,out var kernel,out var user))return false;
+            var result=CpuTracker.Update(ToUInt64(idle),ToUInt64(kernel),ToUInt64(user));
+            if(!result.HasValue)return false;
+            value=result.Value;return true;
         }
     }
+    private static ulong ToUInt64(System.Runtime.InteropServices.ComTypes.FILETIME t)=>
+        ((ulong)(uint)t.dwHighDateTime<<32)|(uint)t.dwLowDateTime;
+    [DllImport("kernel32.dll",SetLastError=true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetSystemTimes(out System.Runtime.InteropServices.ComTypes.FILETIME idle,
+        out System.Runtime.InteropServices.ComTypes.FILETIME kernel,out System.Runtime.InteropServices.ComTypes.FILETIME user);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
     private sealed class MemoryStatusEx

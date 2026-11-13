@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private bool _copyFeedbackActive;
     private HwndSource? _windowSource;
+    private NetworkMonitorWindow? _networkWindow;
 
     private const int WmXButtonDown = 0x020B;
     private const int XButton1 = 0x0001; // Mouse 4 — назад
@@ -220,6 +221,14 @@ public partial class MainWindow : Window
             dialog.ShowDialog();
             e.Cancel = dialog.Choice == DialogChoice.Primary;
         }
+    }
+
+    private void OnOpenNetworkMonitor(object sender, RoutedEventArgs e)
+    {
+        if(_networkWindow is {IsVisible:true}){_networkWindow.Activate();return;}
+        _networkWindow=new NetworkMonitorWindow{Owner=this};
+        _networkWindow.Closed+=(_,_)=>_networkWindow=null;
+        _networkWindow.Show();
     }
 
     private async void OnCopyReport(object sender, RoutedEventArgs e)
