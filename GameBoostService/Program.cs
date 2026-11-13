@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -151,5 +152,4 @@ internal static class ServiceInstaller
         return process?.ExitCode ?? 1;
     }
 
-    private static int RunSc(string command, string[] arguments) => RunSc(command, arguments.AsEnumerable().ToArray());
 }
