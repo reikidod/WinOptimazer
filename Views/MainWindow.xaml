@@ -1025,9 +1025,15 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                         <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource AccentBrush}" Margin="0,0,4,0" />
-                                        <TextBlock Text="CPU" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,10,0" />
+                                        <TextBlock Text="CPU" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
                                         <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource BrandGradientBrush}" Margin="0,0,4,0" />
-                                        <TextBlock Text="RAM" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        <TextBlock Text="RAM" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
+                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource TextSecondaryBrush}" Margin="0,0,4,0" />
+                                        <TextBlock Text="GPU" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
+                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource AccentBrush}" Opacity="0.65" Margin="0,0,4,0" />
+                                        <TextBlock Text="Диск" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
+                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource BrandGradientBrush}" Opacity="0.65" Margin="0,0,4,0" />
+                                        <TextBlock Text="Сеть" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" />
                                     </StackPanel>
                                 </Grid>
                                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
@@ -1038,15 +1044,24 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Width="9" Height="52" Margin="1,0" ToolTip="{Binding TooltipText}">
+                                                <Grid Width="16" Height="52" Margin="1,0" ToolTip="{Binding TooltipText}">
                                                     <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom"
                                                                 HorizontalAlignment="Center">
-                                                        <Border Width="3" Height="{Binding CpuBarHeight}"
+                                                        <Border Width="2" Height="{Binding CpuBarHeight}"
                                                                 Background="{DynamicResource AccentBrush}" Opacity="{Binding CpuBarOpacity}" CornerRadius="1"
                                                                 Margin="0,0,1,0" />
-                                                        <Border Width="3" Height="{Binding MemoryBarHeight}"
-                                                                Background="{DynamicResource BrandGradientBrush}" CornerRadius="1" />
+                                                        <Border Width="2" Height="{Binding MemoryBarHeight}"
+                                                                Background="{DynamicResource BrandGradientBrush}" CornerRadius="1"
+                                                                Margin="0,0,1,0" />
+                                                        <Border Width="2" Height="{Binding GpuBarHeight}"
+                                                                Background="{DynamicResource TextSecondaryBrush}" Opacity="{Binding GpuBarOpacity}" CornerRadius="1"
+                                                                Margin="0,0,1,0" />
+                                                        <Border Width="2" Height="{Binding DiskBarHeight}"
+                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding DiskBarOpacity}" CornerRadius="1"
+                                                                Margin="0,0,1,0" />
+                                                        <Border Width="2" Height="{Binding NetworkBarHeight}"
+                                                                Background="{DynamicResource BrandGradientBrush}" Opacity="{Binding NetworkBarOpacity}" CornerRadius="1" />
                                                     </StackPanel>
                                                 </Grid>
                                             </DataTemplate>
