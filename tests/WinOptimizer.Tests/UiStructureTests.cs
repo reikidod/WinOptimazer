@@ -186,6 +186,41 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void Optimization_KeepsEverydayActionsVisibleAndAdvancedToolsCollapsed()
+    {
+        var document = LoadView("Views/MainWindow.xaml");
+        var expanders = Elements(document, "Expander").ToList();
+        var advancedPanel = Assert.Single(expanders, element =>
+            Attribute(element, "Header") == "Дополнительные настройки (для опытных)");
+
+        Assert.Equal("False", Attribute(advancedPanel, "IsExpanded"));
+
+        foreach (var label in new[]
+        {
+            "Импорт профиля",
+            "Экспорт профиля",
+            "Сбросить выбор",
+            "Создать точку восстановления"
+        })
+        {
+            var button = Assert.Single(Elements(document, "Button"), element =>
+                Attribute(element, "Content") == label);
+            Assert.Contains(button.Ancestors(), ancestor =>
+                ancestor.Name.LocalName == "Expander" &&
+                Attribute(ancestor, "Header") == "Профили и восстановление");
+            Assert.Contains(button.Ancestors(), ancestor =>
+                ancestor.Name.LocalName == "Expander" &&
+                ReferenceEquals(ancestor, advancedPanel));
+        }
+
+        var applyButton = Assert.Single(Elements(document, "Button"), element =>
+            Attribute(element, "Content") == "Применить");
+        Assert.DoesNotContain(applyButton.Ancestors(), ancestor =>
+            ancestor.Name.LocalName == "Expander" &&
+            ReferenceEquals(ancestor, advancedPanel));
+    }
+
+    [Fact]
     public void WindowsTaskScheduler_AndNestedDetails_StartCollapsed()
     {
         var document = LoadView("Views/MainWindowPages.xaml");
