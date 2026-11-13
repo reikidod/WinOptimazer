@@ -178,7 +178,7 @@ public sealed class GamesViewModel : ObservableObject
     public ICommand RefreshGameBoostStatusCommand { get; }
 
     public string GameBoostStatus { get => _boostStatus; private set => SetField(ref _boostStatus, value); }
-    public bool GameBoostInstalled { get => _gameBoostInstalled; private set { if (SetField(ref _gameBoostInstalled, value)) OnPropertyChanged(nameof(GameBoostNotInstalled)); } }
+    public bool GameBoostInstalled { get => _gameBoostInstalled; private set { if (SetField(ref _gameBoostInstalled, value)) OnPropertyChanged(nameof(GameBoostNeedsInstall)); } }
     public bool GameBoostRunning { get => _gameBoostRunning; private set { if (SetField(ref _gameBoostRunning, value)) OnPropertyChanged(nameof(GameBoostNeedsInstall)); } }
     public bool GameBoostNeedsInstall => !GameBoostInstalled || !GameBoostRunning;
     public bool GameBoostActive { get => _gameBoostActive; private set => SetField(ref _gameBoostActive, value); }
