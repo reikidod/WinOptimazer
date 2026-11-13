@@ -173,14 +173,14 @@ public sealed class UiStructureTests
         var document = LoadView("Views/MainWindow.xaml");
         var expanders = Elements(document, "Expander").ToList();
         var tweakPanel = Assert.Single(expanders, element =>
-            Attribute(element, "Header") == "Список сложных твиков");
+            Attribute(element, "Header") == "Дополнительные настройки (для опытных)");
         var categoryFilters = Assert.Single(expanders, element =>
             Attribute(element, "Header") == "Фильтры категорий");
 
         Assert.Equal("False", Attribute(tweakPanel, "IsExpanded"));
         Assert.Contains(categoryFilters.Ancestors(), ancestor =>
             ancestor.Name.LocalName == "Expander" &&
-            Attribute(ancestor, "Header") == "Список сложных твиков");
+            Attribute(ancestor, "Header") == "Дополнительные настройки (для опытных)");
         Assert.DoesNotContain(expanders, element =>
             Attribute(element, "Header") == "Фильтры сложных твиков");
     }
