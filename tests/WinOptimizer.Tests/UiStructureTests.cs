@@ -468,11 +468,21 @@ public sealed class CpuUsageTrackerRegressionTests
     [Fact] public void CpuLoadUsesSystemTimeDeltas(){var t=new CpuUsageTracker();t.Update(100,200,100);Assert.Equal(80d,t.Update(120,260,140));}
     [Fact] public void CounterResetIsUnavailable(){var t=new CpuUsageTracker();t.Update(100,200,100);Assert.Null(t.Update(90,220,120));}
     [Fact]
-    public void GpuCardsShowWindowsDetectedDriverMetadata()
+    public void GpuTelemetry_ExposesWindowsDetectedDriverMetadata()
     {
-        var service=File.ReadAllText(Path.Combine(UiStructureTests.RepositoryRoot(),"Services/GpuTelemetryService.cs"));
-        var view=UiStructureTests.LoadView("Views/MainWindow.xaml");
-        Assert.Contains("Win32_VideoController",service);
-        Assert.Contains("DriverInfoText",view.ToString());
+        var service = File.ReadAllText(Path.Combine(
+            UiStructureTests.RepositoryRoot(), "Services/GpuTelemetryService.cs"));
+
+        Assert.Contains("Win32_VideoController", service);
+
+        var snapshot = new GpuAdapterActivitySnapshot(0, null, DateTime.UtcNow)
+        {
+            AdapterName = "Test graphics adapter",
+            DriverVersion = "31.0.15.1234",
+            DriverStatus = "OK",
+        };
+
+        Assert.Equal("Test graphics adapter", snapshot.DisplayName);
+        Assert.Equal("Драйвер Windows 31.0.15.1234 · OK", snapshot.DriverInfoText);
     }
 }
