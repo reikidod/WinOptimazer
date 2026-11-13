@@ -29,19 +29,56 @@ internal static class ServiceInstaller
 
     public static int Install()
     {
-        RunSc("stop");
-        RunSc("delete");
-        var binPath = $"\\"{Executable}\\"";
-        var create = RunSc("create", $"binPath= \"{Executable}\"", "start= auto", "obj= LocalSystem", "DisplayName= \"WinOptimizer Game Boost\"");
-        if (create != 0) return create;
+        var exists = RunSc("query") == 0;
+        if (exists)
+        {
+            RunSc("stop");
+            if (!WaitForStopped()) return 2;
+            if (RunSc("config", $"binPath= \"{Executable}\"", "start= auto", "obj= LocalSystem",
+                    "DisplayName= \"WinOptimizer Game Boost\"") != 0)
+                return 3;
+        }
+        else if (RunSc("create", $"binPath= \"{Executable}\"", "start= auto", "obj= LocalSystem",
+                     "DisplayName= \"WinOptimizer Game Boost\"") != 0)
+        {
+            return 4;
+        }
+
         RunSc("description", "\"Автоматическое повышение производительности игр с восстановлением настроек\"");
         return RunSc("start");
     }
 
     public static int Uninstall()
     {
+        if (RunSc("query") != 0) return 0;
         RunSc("stop");
+        if (!WaitForStopped()) return 5;
         return RunSc("delete");
+    }
+
+    private static bool WaitForStopped()
+    {
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            try
+            {
+                using var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = Path.Combine(Environment.SystemDirectory, "sc.exe"),
+                    Arguments = $"query {ServiceName}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true
+                });
+                var output = process?.StandardOutput.ReadToEnd() ?? "";
+                process?.WaitForExit(3000);
+                if (output.Contains("STOPPED", StringComparison.OrdinalIgnoreCase)) return true;
+                if (process?.ExitCode != 0) return false;
+            }
+            catch { return false; }
+            Thread.Sleep(500);
+        }
+        return false;
     }
 
     private static int RunSc(params string[] args)
@@ -56,5 +93,4 @@ internal static class ServiceInstaller
         process?.WaitForExit(15000);
         return process?.ExitCode ?? 1;
     }
-
 }
