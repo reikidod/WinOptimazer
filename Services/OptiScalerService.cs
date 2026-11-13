@@ -230,23 +230,55 @@ public sealed class OptiScalerService : IOptiScalerService
 
     public void SetHighPerformanceGpu(string gameExePath, bool enable)
     {
-        // HKCU\Software\Microsoft\DirectX\UserGpuPreferences
-        // path=GpuPreference=2; (high perf) or 1 (power save) / delete
-        using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(
-            @"Software\Microsoft\DirectX\UserGpuPreferences", writable: true)
-            ?? throw new InvalidOperationException("Не удалось открыть UserGpuPreferences.");
+        if (string.IsNullOrWhiteSpace(gameExePath))
+            throw new ArgumentException("Не указан путь к исполняемому файлу игры.", nameof(gameExePath));
+
+        var normalizedPath = Path.GetFullPath(gameExePath);
+        if (!string.Equals(Path.GetExtension(normalizedPath), ".exe", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("Для настройки GPU требуется путь к EXE-файлу игры.", nameof(gameExePath));
+        if (enable && !File.Exists(normalizedPath))
+            throw new FileNotFoundException("Исполняемый файл игры не найден.", normalizedPath);
+
+        const string preferencesPath = @"Software\Microsoft\DirectX\UserGpuPreferences";
         if (enable)
-            key.SetValue(gameExePath, "GpuPreference=2;");
-        else
-            key.DeleteValue(gameExePath, throwOnMissingValue: false);
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(preferencesPath, writable: true)
+                ?? throw new InvalidOperationException("Не удалось открыть настройки графики текущего пользователя.");
+            key.SetValue(normalizedPath, "GpuPreference=2;", Microsoft.Win32.RegistryValueKind.String);
+            key.Flush();
+
+            if (!string.Equals(key.GetValue(normalizedPath) as string, "GpuPreference=2;", StringComparison.Ordinal))
+                throw new InvalidOperationException("Windows не подтвердила сохранение режима высокой производительности GPU.");
+            return;
+        }
+
+        // Режим по умолчанию в Windows означает отсутствие пользовательского переопределения.
+        // Не создаём пустой раздел реестра и не считаем отсутствие значения ошибкой.
+        using var existingKey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(preferencesPath, writable: true);
+        if (existingKey is null)
+            return;
+
+        existingKey.DeleteValue(normalizedPath, throwOnMissingValue: false);
+        existingKey.Flush();
+        if (existingKey.GetValue(normalizedPath) is not null)
+            throw new InvalidOperationException("Не удалось сбросить пользовательское переопределение GPU.");
     }
 
     public bool HasHighPerformanceGpu(string gameExePath)
     {
+        if (string.IsNullOrWhiteSpace(gameExePath))
+            return false;
+
+        string normalizedPath;
+        try { normalizedPath = Path.GetFullPath(gameExePath); }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        { return false; }
+
         using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
             @"Software\Microsoft\DirectX\UserGpuPreferences");
-        var v = key?.GetValue(gameExePath) as string;
-        return v is not null && v.Contains("GpuPreference=2", StringComparison.Ordinal);
+        var value = key?.GetValue(normalizedPath) as string;
+        return value is not null &&
+               value.Contains("GpuPreference=2", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void FlattenOnce(string dir)
