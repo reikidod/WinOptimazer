@@ -96,6 +96,7 @@ internal sealed class GameBoostWorker : BackgroundService
                 await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(paths, new JsonSerializerOptions { WriteIndented = true }));
                 File.Move(temp, ConfigPath, true);
                 _games = paths.Select(Path.GetFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                if (_games.Count == 0 && _sessionActive) await RestoreSessionAsync();
             }
             finally { _gate.Release(); }
             return new(true, $"Профилей игр: {paths.Length}", _games.Order().ToArray(), _sessionActive);
