@@ -70,14 +70,49 @@ public sealed class GameBoostClient
                 WindowStyle = ProcessWindowStyle.Hidden,
                 WorkingDirectory = Path.GetDirectoryName(_serviceExecutable)!
             });
-            if (process is null) return (false, "Не удалось запустить установщик службы.");
-            await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
-            return process.ExitCode == 0 ? (true, "Операция со службой выполнена.")
-                : (false, $"Установщик службы завершился с кодом {process.ExitCode}.");
+            if (process is null)
+                return (false, "Не удалось запустить установщик службы.");
+
+            try
+            {
+                await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(45));
+            }
+            catch (TimeoutException)
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                return (false, "Установка службы превысила 45 секунд. Проверьте журнал установки.");
+            }
+
+            if (process.ExitCode == 0)
+                return (true, "Служба успешно установлена и её состояние RUNNING подтверждено.");
+
+            var details = ReadInstallerLogTail();
+            var reason = process.ExitCode == 5
+                ? "Windows отказала в доступе. Проверьте запрос UAC и права администратора."
+                : $"Установщик службы завершился с кодом {process.ExitCode}.";
+            return (false, string.IsNullOrWhiteSpace(details) ? reason : reason + Environment.NewLine + details);
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
-        { return (false, "Установка отменена в окне контроля учётных записей Windows."); }
-        catch (Exception ex) { return (false, ex.Message); }
+        {
+            return (false, "Установка отменена в окне контроля учётных записей Windows.");
+        }
+        catch (Exception ex)
+        {
+            return (false, "Не удалось запустить установщик службы: " + ex.Message);
+        }
+    }
+
+    private static string ReadInstallerLogTail()
+    {
+        try
+        {
+            var path = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "WinOptimizer", "GameBoost", "install.log");
+            if (!File.Exists(path)) return "";
+            return string.Join(Environment.NewLine, File.ReadLines(path).TakeLast(8));
+        }
+        catch { return ""; }
     }
 
     private static async Task<PipeResponse?> SendAsync(PipeRequest request)
