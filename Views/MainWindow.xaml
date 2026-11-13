@@ -1367,6 +1367,9 @@
                                     <Button Content="Установить службу" Style="{StaticResource AccentButton}" Margin="0,0,8,0"
                                             Visibility="{Binding Games.GameBoostNeedsInstall, Converter={StaticResource BoolToVis}}"
                                             Command="{Binding Games.InstallGameBoostServiceCommand}" />
+                                    <Button Content="Обновить службу" Margin="0,0,8,0"
+                                            Visibility="{Binding Games.GameBoostRunning, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding Games.InstallGameBoostServiceCommand}" />
                                     <Button Content="Удалить службу" Margin="0,0,8,0"
                                             Visibility="{Binding Games.GameBoostInstalled, Converter={StaticResource BoolToVis}}"
                                             Command="{Binding Games.RemoveGameBoostServiceCommand}" />
