@@ -92,6 +92,7 @@ public sealed class GamesViewModel : ObservableObject
     private readonly GameBoostClient _gameBoost = new();
     private string _boostStatus = "Проверяю состояние службы…";
     private bool _gameBoostInstalled;
+    private bool _gameBoostRunning;
     private bool _gameBoostActive;
     private int _configuredGameCount;
 
@@ -178,7 +179,8 @@ public sealed class GamesViewModel : ObservableObject
 
     public string GameBoostStatus { get => _boostStatus; private set => SetField(ref _boostStatus, value); }
     public bool GameBoostInstalled { get => _gameBoostInstalled; private set { if (SetField(ref _gameBoostInstalled, value)) OnPropertyChanged(nameof(GameBoostNotInstalled)); } }
-    public bool GameBoostNotInstalled => !GameBoostInstalled;
+    public bool GameBoostRunning { get => _gameBoostRunning; private set { if (SetField(ref _gameBoostRunning, value)) OnPropertyChanged(nameof(GameBoostNeedsInstall)); } }
+    public bool GameBoostNeedsInstall => !GameBoostInstalled || !GameBoostRunning;
     public bool GameBoostActive { get => _gameBoostActive; private set => SetField(ref _gameBoostActive, value); }
     public int ConfiguredGameCount { get => _configuredGameCount; private set => SetField(ref _configuredGameCount, value); }
 
@@ -186,6 +188,7 @@ public sealed class GamesViewModel : ObservableObject
     {
         var status = await _gameBoost.GetStatusAsync();
         GameBoostInstalled = status.IsInstalled;
+        GameBoostRunning = status.IsRunning;
         GameBoostActive = status.IsActive;
         ConfiguredGameCount = status.ConfiguredGames;
         GameBoostStatus = status.Message;
