@@ -59,32 +59,31 @@
             </Setter>
         </Style>
 
-        <!-- Язычок «›» у левого края: показать скрытую панель (виден только пока панель скрыта) -->
-        <Style x:Key="SidebarHandleButton" TargetType="Button">
-            <Setter Property="Visibility" Value="Collapsed" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="20" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bg" Background="{DynamicResource BgSidebarBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,1,1"
-                                CornerRadius="0,12,12,0">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
-                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+
+
+        <!-- Навигация: компактная рейка с иконками или полная панель с подписями. -->
+        <Style x:Key="SidebarNavigationButton" TargetType="RadioButton" BasedOn="{StaticResource NavButton}">
+            <Setter Property="Width" Value="54" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSidebarVisible}" Value="False">
-                    <Setter Property="Visibility" Value="Visible" />
+                <DataTrigger Binding="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                    <Setter Property="Width" Value="208" />
+                    <Setter Property="Padding" Value="12,0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Left" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="SidebarNavigationIcon" TargetType="Viewbox">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Margin" Value="0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                    <Setter Property="Margin" Value="0,0,12,0" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -96,7 +95,7 @@
 
     <Grid x:Name="RootGrid" ClipToBounds="True">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Name="SidebarColumn" Width="84" />
+            <ColumnDefinition x:Name="SidebarColumn" Width="240" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -135,7 +134,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,22">
+                <StackPanel HorizontalAlignment="Stretch" Margin="0,0,0,22">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
                         <Border Width="42" Height="42" Margin="0" CornerRadius="12" ToolTip="{Binding VersionLabel}"
                                 Background="{DynamicResource BgCardBrush}"
@@ -151,47 +150,47 @@
                                 </Viewbox>
                             </Grid>
                         </Border>
-                        <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Visibility="Collapsed" />
+                        <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
                     </StackPanel>
-                    <TextBlock Text="Оптимизация Windows 10/11" Style="{StaticResource SecondaryText}" FontSize="12" Margin="2,0,0,0" Visibility="Collapsed" />
+                    <TextBlock Text="Оптимизация Windows 10/11" Style="{StaticResource SecondaryText}" FontSize="12" Margin="2,0,0,0" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1">
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsDashboardPage, Mode=TwoWay}"
                                  AutomationProperties.Name="Главная панель"
-                                 ToolTip="Главная" Width="54" Height="48" Padding="0" HorizontalContentAlignment="Center">
+                                 ToolTip="Главная">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z M9 21v-7h6v7" />
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Главная" VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <TextBlock Text="Главная" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsTweaksPage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowTweaksTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Твики»"
-                                 ToolTip="Оптимизация" Width="54" Height="48" Padding="0" HorizontalContentAlignment="Center">
+                                 ToolTip="Оптимизация">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Оптимизация" VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <TextBlock Text="Оптимизация" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="HiddenPages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="HiddenPages"
                                  IsChecked="{Binding IsDebloatPage, Mode=TwoWay}"
                                  Visibility="Collapsed"
                                  AutomationProperties.Name="Страница «Лишние приложения»">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -200,27 +199,27 @@
                             <TextBlock Text="Удаление программ" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsApplicationsGroupPage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowApplicationsGroup, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Приложения»"
-                                 ToolTip="Приложения" Width="54" Height="48" Padding="0" HorizontalContentAlignment="Center">
+                                 ToolTip="Приложения">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Приложения" VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <TextBlock Text="Приложения" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="HiddenPages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="HiddenPages"
                                  IsChecked="{Binding IsStorePage, Mode=TwoWay}"
                                  Visibility="Collapsed"
                                  AutomationProperties.Name="Страница «MS Store»">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
@@ -229,73 +228,73 @@
                             <TextBlock Text="Microsoft Store" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsGamesPage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowGamesTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Игры»"
-                                 ToolTip="Игры" Width="54" Height="48" Padding="0" HorizontalContentAlignment="Center">
+                                 ToolTip="Игры">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Игры" VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <TextBlock Text="Игры" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsSystemPage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowSystemTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Производительность»"
-                                 ToolTip="Мой ПК" Width="54" Height="48" Padding="0" HorizontalContentAlignment="Center">
+                                 ToolTip="Мой ПК">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Мой ПК" VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <TextBlock Text="Мой ПК" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsMaintenancePage, Mode=TwoWay}"
                                  Visibility="{Binding Settings.ShowMaintenanceTab, Converter={StaticResource BoolToVis}}"
                                  AutomationProperties.Name="Страница «Обслуживание»"
-                                 ToolTip="Обслуживание" Width="54" Height="48" Padding="0" HorizontalContentAlignment="Center">
+                                 ToolTip="Обслуживание">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M15.55 13c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2h7.45zM6.16 6h12.15l-2.76 5H8.53L6.16 6zM7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Обслуживание" VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <TextBlock Text="Обслуживание" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Pages"
+                    <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsSettingsPage, Mode=TwoWay}"
                                  AutomationProperties.Name="Страница «Настройки»"
-                                 ToolTip="Настройки" Width="54" Height="48" Padding="0" HorizontalContentAlignment="Center">
+                                 ToolTip="Настройки">
                         <StackPanel Orientation="Horizontal">
-                            <Viewbox Width="20" Height="20" Margin="0" VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
                                     <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                           Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Настройки" VerticalAlignment="Center" Visibility="Collapsed"/>
+                            <TextBlock Text="Настройки" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
                 </StackPanel>
 
                 <!-- Иконки + версия + обновление -->
                 <StackPanel Grid.Row="2" Margin="0,12,0,0">
-                    <Button Style="{StaticResource SidebarToggleButton}" Content="‹" Margin="0,0,0,6"
+                    <Button Style="{StaticResource SidebarToggleButton}" Content="⇔" Margin="0,0,0,6"
                             Command="{Binding ToggleSidebarCommand}"
-                            ToolTip="Скрыть боковую панель (Ctrl+B)"
-                            AutomationProperties.Name="Скрыть боковую панель" />
+                            ToolTip="Переключить компактный и полный режимы (Ctrl+B)"
+                            AutomationProperties.Name="Переключить режим боковой панели" />
                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="4,0,4,12" Opacity="0.55" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button Width="32" Height="32" Margin="2,0" Padding="0" Cursor="Hand"
@@ -348,7 +347,7 @@
                         </Button>
                     </StackPanel>
                     <TextBlock Text="{Binding VersionLabel}" HorizontalAlignment="Center"
-                               FontSize="11" Margin="0,8,0,2" Visibility="Collapsed"
+                               FontSize="11" Margin="0,8,0,2" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                                Foreground="{DynamicResource TextDimBrush}"
                                ToolTip="{Binding UpdateStatus}" />
                     <Button Content="↻" Width="40" Height="40" HorizontalAlignment="Center"
@@ -375,7 +374,7 @@
                     </Button>
                     <TextBlock Text="{Binding UpdateStatus}" HorizontalAlignment="Center"
                                FontSize="10" TextWrapping="Wrap" TextAlignment="Center"
-                               Margin="4,0,4,0" MaxWidth="160" Visibility="Collapsed"
+                               Margin="4,0,4,0" MaxWidth="200" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"
                                Foreground="{DynamicResource TextDimBrush}" />
                 </StackPanel>
             </Grid>
@@ -1557,11 +1556,5 @@
             </Border>
         </Grid>
 
-        <!-- Язычок показа боковой панели: у левого края, по центру по высоте -->
-        <Button Grid.Column="1" Panel.ZIndex="5" Style="{StaticResource SidebarHandleButton}"
-                HorizontalAlignment="Left" VerticalAlignment="Center" Width="22" Height="72"
-                Content="›" Command="{Binding ToggleSidebarCommand}"
-                ToolTip="Показать боковую панель (Ctrl+B)"
-                AutomationProperties.Name="Показать боковую панель" />
     </Grid>
 </Window>
