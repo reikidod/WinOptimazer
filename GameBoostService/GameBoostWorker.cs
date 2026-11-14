@@ -315,7 +315,9 @@ internal sealed class GameBoostWorker : BackgroundService
                     process.Id, process.StartTime.ToUniversalTime()))
             {
                 var current = process.PriorityClass;
-                if ((int)current == snapshot.AppliedPriority)
+                // AppliedPriority = -1 marks a journal written by the legacy service version.
+                // In that format the process was always changed before the snapshot was stored.
+                if (snapshot.AppliedPriority < 0 || (int)current == snapshot.AppliedPriority)
                     process.PriorityClass = (ProcessPriorityClass)snapshot.OriginalPriority;
             }
         }
@@ -461,6 +463,6 @@ internal sealed class GameBoostWorker : BackgroundService
     private sealed record PipeRequest(string Command, GameProfile[]? Profiles = null);
     private sealed record GameProfile(string Path, bool Enabled, string Mode);
     private sealed record PipeResponse(bool Success, string Message, GameProfile[] Profiles, bool IsActive, int ActiveGameCount);
-    private sealed record ProcessSnapshot(int ProcessId, DateTime StartTimeUtc, int OriginalPriority, int AppliedPriority);
+    private sealed record ProcessSnapshot(int ProcessId, DateTime StartTimeUtc, int OriginalPriority, int AppliedPriority = -1);
     private sealed record RecoveryJournal(string? OriginalPowerScheme, ProcessSnapshot[] Processes);
 }
