@@ -2,16 +2,16 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:WinOptimizer.Views">
 
-    <!-- Site-aligned palette: graphite surfaces, steel-blue interaction accent, restrained red brand identity. -->
-    <Color x:Key="BgWindowColor">#1B1C1F</Color>
-    <Color x:Key="BgSidebarColor">#202225</Color>
-    <Color x:Key="BgCardColor">#2A2C31</Color>
-    <Color x:Key="BgCardHoverColor">#353840</Color>
-    <Color x:Key="BorderColor">#3A3D44</Color>
-    <Color x:Key="BorderHoverColor">#7F8CA3</Color>
-    <Color x:Key="AccentColor">#8AAAD8</Color>
-    <Color x:Key="AccentStrongColor">#4B6CA3</Color>
-    <Color x:Key="TrackOffColor">#3A3D44</Color>
+    <!-- WinOptimizer Image #3 design system: bright Fluent surfaces, cyan identity and accessible contrast. -->
+    <Color x:Key="BgWindowColor">#F6FAFF</Color>
+    <Color x:Key="BgSidebarColor">#FFFFFF</Color>
+    <Color x:Key="BgCardColor">#FFFFFF</Color>
+    <Color x:Key="BgCardHoverColor">#EAF5FF</Color>
+    <Color x:Key="BorderColor">#DCEBFA</Color>
+    <Color x:Key="BorderHoverColor">#72C9F0</Color>
+    <Color x:Key="AccentColor">#00B4F4</Color>
+    <Color x:Key="AccentStrongColor">#0078D4</Color>
+    <Color x:Key="TrackOffColor">#DCEBFA</Color>
 
     <SolidColorBrush x:Key="BgWindowBrush" Color="{StaticResource BgWindowColor}" />
     <SolidColorBrush x:Key="BgSidebarBrush" Color="{StaticResource BgSidebarColor}" />
@@ -22,18 +22,18 @@
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
     <SolidColorBrush x:Key="AccentStrongBrush" Color="{StaticResource AccentStrongColor}" />
     <SolidColorBrush x:Key="TrackOffBrush" Color="{StaticResource TrackOffColor}" />
-    <SolidColorBrush x:Key="BrandRedBrush" Color="#FF5A5F" />
+    <SolidColorBrush x:Key="BrandCyanBrush" Color="#00B4F4" />
     <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#F2F3F5" Offset="0" />
-        <GradientStop Color="#A9B7CC" Offset="0.72" />
+        <GradientStop Color="#1E293B" Offset="0" />
+        <GradientStop Color="#0078D4" Offset="0.72" />
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="BrandActionBrush" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#C0262D" Offset="0" />
-        <GradientStop Color="#FF5A5F" Offset="0.48" />
-        <GradientStop Color="#4B6CA3" Offset="1" />
+        <GradientStop Color="#0078D4" Offset="0" />
+        <GradientStop Color="#00B4F4" Offset="0.48" />
+        <GradientStop Color="#0078D4" Offset="1" />
     </LinearGradientBrush>
 
-    <!-- Фоновые слои повторяют сетку и мягкие свечения официального сайта. -->
+    <!-- Светлая сетка и мягкие голубые свечения в стиле сайта WinOptimizer. -->
     <DrawingBrush x:Key="SiteGridBrush" TileMode="Tile"
                   Viewport="0,0,56,56" ViewportUnits="Absolute"
                   Viewbox="0,0,56,56" ViewboxUnits="Absolute">
@@ -42,28 +42,28 @@
                              Geometry="M0,0 H56 V1 H0 Z M0,0 V56 H1 V0 Z" />
         </DrawingBrush.Drawing>
     </DrawingBrush>
-    <RadialGradientBrush x:Key="SiteRedGlowBrush">
-        <GradientStop Color="#26FF5A5F" Offset="0" />
-        <GradientStop Color="#00FF5A5F" Offset="1" />
+    <RadialGradientBrush x:Key="SiteCyanGlowBrush">
+        <GradientStop Color="#2200B4F4" Offset="0" />
+        <GradientStop Color="#0000B4F4" Offset="1" />
     </RadialGradientBrush>
     <RadialGradientBrush x:Key="SiteBlueGlowBrush">
-        <GradientStop Color="#1F4B6CA3" Offset="0" />
-        <GradientStop Color="#004B6CA3" Offset="1" />
+        <GradientStop Color="#220078D4" Offset="0" />
+        <GradientStop Color="#000078D4" Offset="1" />
     </RadialGradientBrush>
     <LinearGradientBrush x:Key="SiteAccentButtonBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#5A7DB5" Offset="0" />
-        <GradientStop Color="#4B6CA3" Offset="1" />
+        <GradientStop Color="#00A7E8" Offset="0" />
+        <GradientStop Color="#0078D4" Offset="1" />
     </LinearGradientBrush>
 
-    <!-- Контраст текста на карточках (#2A2C31): основной ≈ 12:1, вторичный ≈ 6:1, приглушённый ≈ 4.7:1 -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F3F5" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#C2C6CE" />
-    <SolidColorBrush x:Key="TextDimBrush" Color="#A9AEB9" />
+    <!-- Контраст текста на карточках (#FFFFFF): основной ≈ 12:1, вторичный ≈ 6:1, приглушённый ≈ 4.7:1 -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#475569" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="#64748B" />
 
-    <SolidColorBrush x:Key="SuccessBrush" Color="#7FB38F" />
-    <SolidColorBrush x:Key="WarnBrush" Color="#D2AE6D" />
-    <SolidColorBrush x:Key="DangerBrush" Color="#EE8B8B" />
-    <SolidColorBrush x:Key="NeutralBrush" Color="#9AA0AB" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#10B981" />
+    <SolidColorBrush x:Key="WarnBrush" Color="#D97706" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
+    <SolidColorBrush x:Key="NeutralBrush" Color="#64748B" />
 
     <!-- ===== Кнопки ===== -->
     <Style TargetType="Button">
@@ -165,7 +165,7 @@
         <Setter Property="Effect">
             <Setter.Value>
                 <DropShadowEffect BlurRadius="18" ShadowDepth="2" Direction="270"
-                                  Opacity="0.24" Color="#4B6CA3" />
+                                  Opacity="0.24" Color="#0078D4" />
             </Setter.Value>
         </Setter>
     </Style>
