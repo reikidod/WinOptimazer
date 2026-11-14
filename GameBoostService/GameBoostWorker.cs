@@ -375,13 +375,29 @@ internal sealed class GameBoostWorker : BackgroundService
             if (!File.Exists(JournalPath))
                 return;
 
-            var journal = JsonSerializer.Deserialize<RecoveryJournal>(await File.ReadAllTextAsync(JournalPath));
+            using var document = JsonDocument.Parse(await File.ReadAllTextAsync(JournalPath));
+            var journal = document.RootElement.Deserialize<RecoveryJournal>();
             if (journal is null)
                 return;
 
             _originalPowerScheme = journal.OriginalPowerScheme;
-            foreach (var snapshot in journal.Processes ?? Array.Empty<ProcessSnapshot>())
-                _changedProcesses[snapshot.ProcessId] = snapshot;
+            if (document.RootElement.TryGetProperty("Processes", out var storedProcesses) &&
+                storedProcesses.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var storedProcess in storedProcesses.EnumerateArray())
+                {
+                    var snapshot = storedProcess.Deserialize<ProcessSnapshot>();
+                    if (snapshot is null)
+                        continue;
+
+                    // Older journals did not store AppliedPriority. Restore their original
+                    // value for the same process instance instead of leaving it elevated.
+                    if (!storedProcess.TryGetProperty("AppliedPriority", out _))
+                        snapshot = snapshot with { AppliedPriority = -1 };
+
+                    _changedProcesses[snapshot.ProcessId] = snapshot;
+                }
+            }
 
             await RestoreSessionAsync();
         }
