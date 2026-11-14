@@ -7,7 +7,10 @@
 ; Вручную: ISCC /DMyAppVersion=0.6.0 installer\WinOptimizer.iss
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.6.0"
+  #define MyAppVersion "0.7.7a"
+#endif
+#ifndef MyAppFileVersion
+  #define MyAppFileVersion "0.7.7.0"
 #endif
 #define MyAppName "WinOptimizer"
 #define MyAppPublisher "WinOptimizer Contributors"
@@ -57,7 +60,7 @@ MinVersion=10.0
 AppMutex=Global\WinOptimizer.SingleInstance
 CloseApplications=yes
 RestartApplications=no
-VersionInfoVersion={#MyAppVersion}
+VersionInfoVersion={#MyAppFileVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Setup
 VersionInfoProductName={#MyAppName}
