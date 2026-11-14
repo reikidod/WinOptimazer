@@ -41,6 +41,17 @@ public sealed class AppSettingsTests : IDisposable
     }
 
     [Fact]
+    public void Normalize_RepairsInvalidThemeSyncDeviceId()
+    {
+        var settings = new AppSettings { ThemeSyncDeviceId = "not-a-guid" };
+
+        settings.Normalize();
+
+        Assert.True(Guid.TryParse(settings.ThemeSyncDeviceId, out var deviceId));
+        Assert.NotEqual(Guid.Empty, deviceId);
+    }
+
+    [Fact]
     public void SaveAndLoad_RoundTripsSettingsWithoutTemporaryFiles()
     {
         Directory.CreateDirectory(_directory);
@@ -50,7 +61,8 @@ public sealed class AppSettingsTests : IDisposable
             TransparencyEffectsEnabled = false,
             CardOpacityPercent = 73,
             BackgroundBlurPercent = 22,
-            UpdateChannel = AppSettings.BetaChannel
+            UpdateChannel = AppSettings.BetaChannel,
+            ThemeSyncDeviceId = "90bd0d8e-8c16-4d3d-9f31-9d0f1e4ccfd6"
         };
 
         Assert.True(settings.Save(path));
@@ -60,6 +72,7 @@ public sealed class AppSettingsTests : IDisposable
         Assert.Equal(73, loaded.CardOpacityPercent);
         Assert.Equal(22, loaded.BackgroundBlurPercent);
         Assert.Equal(AppSettings.BetaChannel, loaded.UpdateChannel);
+        Assert.Equal("90bd0d8e-8c16-4d3d-9f31-9d0f1e4ccfd6", loaded.ThemeSyncDeviceId);
         Assert.Equal(new[] { "settings.json" }, Directory.GetFiles(_directory).Select(Path.GetFileName));
     }
 
