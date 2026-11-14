@@ -71,6 +71,16 @@ public sealed class SettingsViewModel : ObservableObject
 {
     private readonly AppSettings _settings;
     private string _status = "";
+    private readonly ThemeSyncService _themeSync = new();
+    private readonly SemaphoreSlim _themeSyncGate = new(1, 1);
+    private CancellationTokenSource? _pairingCancellation;
+    private CancellationTokenSource? _syncCancellation;
+    private string _themeSyncStatus = "Не подключено";
+    private string _themePairingCode = "";
+    private bool _isThemeSyncConnected;
+    private bool _applyingRemoteTheme;
+    private string _lastThemeFingerprint = "";
+    private long _lastThemeUpdatedAt;
 
     public SettingsViewModel() : this(AppSettings.Current) { }
 
@@ -87,6 +97,13 @@ public sealed class SettingsViewModel : ObservableObject
         ResetCommand = new RelayCommand(Reset);
         RefreshCacheSize();
         InitAppearance();
+        ConnectThemeSyncCommand = new RelayCommand(() => _ = StartThemePairingAsync());
+        DisconnectThemeSyncCommand = new RelayCommand(() => _ = DisconnectThemeSyncAsync());
+        if (ReferenceEquals(_settings, AppSettings.Current))
+        {
+            AppSettings.Changed += OnThemeSettingsChanged;
+            InitializeThemeSync();
+        }
         _ = LoadAutostartAsync();
     }
 
@@ -223,6 +240,32 @@ public sealed class SettingsViewModel : ObservableObject
     public ICommand OpenDataFolderCommand { get; }
     public ICommand ClearCacheCommand { get; }
     public ICommand ResetCommand { get; }
+    public ICommand ConnectThemeSyncCommand { get; }
+    public ICommand DisconnectThemeSyncCommand { get; }
+
+    public string ThemeSyncStatus
+    {
+        get => _themeSyncStatus;
+        private set => SetField(ref _themeSyncStatus, value);
+    }
+
+    public string ThemePairingCode
+    {
+        get => _themePairingCode;
+        private set
+        {
+            if (SetField(ref _themePairingCode, value))
+                OnPropertyChanged(nameof(HasThemePairingCode));
+        }
+    }
+
+    public bool HasThemePairingCode => !string.IsNullOrWhiteSpace(ThemePairingCode);
+
+    public bool IsThemeSyncConnected
+    {
+        get => _isThemeSyncConnected;
+        private set => SetField(ref _isThemeSyncConnected, value);
+    }
 
     public bool ShowWelcome
     {
@@ -499,6 +542,276 @@ public sealed class SettingsViewModel : ObservableObject
             Status = "Настройки сброшены к значениям по умолчанию.";
 
     }
+
+    // ---------- Синхронизация темы с сайтом ----------
+
+    private void InitializeThemeSync()
+    {
+        try
+        {
+            var token = ThemeSyncService.ReadDeviceToken();
+            if (string.IsNullOrWhiteSpace(token))
+                return;
+
+            IsThemeSyncConnected = true;
+            ThemeSyncStatus = "Устройство подключено. Проверяем тему сайта…";
+            _lastThemeFingerprint = CurrentThemeFingerprint();
+            StartThemeSyncLoop(token);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось инициализировать синхронизацию темы", ex);
+            ThemeSyncStatus = "Не удалось прочитать защищённый ключ синхронизации.";
+        }
+    }
+
+    private async Task StartThemePairingAsync()
+    {
+        _pairingCancellation?.Cancel();
+        _pairingCancellation?.Dispose();
+        _pairingCancellation = new CancellationTokenSource();
+        var cancellationToken = _pairingCancellation.Token;
+
+        try
+        {
+            ThemeSyncStatus = "Создаём одноразовый код привязки…";
+            if (!Guid.TryParse(_settings.ThemeSyncDeviceId, out var deviceId) || deviceId == Guid.Empty)
+                _settings.ThemeSyncDeviceId = Guid.NewGuid().ToString("D");
+            if (!SaveSettings())
+                return;
+
+            var session = await _themeSync.CreatePairingAsync(
+                _settings.ThemeSyncDeviceId, _settings.ThemeId, _settings.AccentId, cancellationToken);
+
+            ThemePairingCode = session.Code;
+            ThemeSyncStatus = $"Введите код на сайте WinOptimizer. Код действует {Math.Max(1, session.ExpiresIn / 60)} мин.";
+            _ = WaitForPairingAsync(session, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось создать код привязки темы", ex);
+            ThemeSyncStatus = "Не удалось создать код: " + ex.Message;
+        }
+    }
+
+    private async Task WaitForPairingAsync(ThemeSyncService.PairingSession session, CancellationToken cancellationToken)
+    {
+        var expiresAt = DateTimeOffset.UtcNow.AddSeconds(Math.Max(30, session.ExpiresIn));
+        try
+        {
+            while (DateTimeOffset.UtcNow < expiresAt && !cancellationToken.IsCancellationRequested)
+            {
+                var linked = await _themeSync.PollPairingAsync(session, cancellationToken);
+                if (linked is not null)
+                {
+                    IsThemeSyncConnected = true;
+                    ThemePairingCode = "";
+                    _lastThemeFingerprint = CurrentThemeFingerprint();
+
+                    if (linked.Theme is not null)
+                        ApplyRemoteTheme(linked.Theme);
+
+                    ThemeSyncStatus = "Устройство привязано. Синхронизация темы включена.";
+                    StartThemeSyncLoop(linked.DeviceToken);
+                    return;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                ThemePairingCode = "";
+                ThemeSyncStatus = "Срок действия кода истёк. Создайте новый код привязки.";
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Ошибка ожидания подтверждения привязки темы", ex);
+            ThemePairingCode = "";
+            ThemeSyncStatus = "Ошибка привязки: " + ex.Message;
+        }
+    }
+
+    private void StartThemeSyncLoop(string token)
+    {
+        _syncCancellation?.Cancel();
+        _syncCancellation?.Dispose();
+        _syncCancellation = new CancellationTokenSource();
+        _ = ThemeSyncLoopAsync(token, _syncCancellation.Token);
+    }
+
+    private async Task ThemeSyncLoopAsync(string token, CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await _themeSyncGate.WaitAsync(cancellationToken);
+                try
+                {
+                    var remote = await _themeSync.GetThemeAsync(token, cancellationToken);
+                    if (remote.UpdatedAt >= _lastThemeUpdatedAt &&
+                        (remote.UpdatedAt > _lastThemeUpdatedAt ||
+                         !string.Equals(CurrentThemeFingerprint(), remote.Id + "|" + remote.Accent, StringComparison.Ordinal)))
+                    {
+                        ApplyRemoteTheme(remote);
+                    }
+                    _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, remote.UpdatedAt);
+                }
+                finally
+                {
+                    _themeSyncGate.Release();
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                                                   ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Logger.Error("Сервер отклонил токен синхронизации темы", ex);
+                try { ThemeSyncService.RemoveDeviceToken(); } catch (Exception cleanupEx) { Logger.Error("Не удалось удалить недействительный токен темы", cleanupEx); }
+                IsThemeSyncConnected = false;
+                ThemeSyncStatus = "Связь с сайтом истекла или отозвана. Создайте новый код привязки.";
+                break;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Ошибка фоновой синхронизации темы", ex);
+                ThemeSyncStatus = "Временная ошибка синхронизации. Повторная проверка будет выполнена автоматически.";
+                try { await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken); }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
+            }
+        }
+    }
+
+    private void OnThemeSettingsChanged()
+    {
+        if (_applyingRemoteTheme || !IsThemeSyncConnected)
+            return;
+
+        string? token;
+        try { token = ThemeSyncService.ReadDeviceToken(); }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось прочитать ключ синхронизации темы", ex);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(token))
+            return;
+
+        var fingerprint = CurrentThemeFingerprint();
+        if (string.Equals(fingerprint, _lastThemeFingerprint, StringComparison.Ordinal))
+            return;
+
+        _lastThemeFingerprint = fingerprint;
+        _ = PushLocalThemeAsync(token, _settings.ThemeId, _settings.AccentId);
+    }
+
+    private async Task PushLocalThemeAsync(string token, string themeId, string accentId)
+    {
+        try
+        {
+            await _themeSyncGate.WaitAsync();
+            try
+            {
+                var result = await _themeSync.SetThemeAsync(token, themeId, accentId);
+                _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, result.UpdatedAt);
+                ThemeSyncStatus = "Тема приложения синхронизирована с сайтом.";
+            }
+            finally
+            {
+                _themeSyncGate.Release();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось отправить тему приложения на сайт", ex);
+            ThemeSyncStatus = "Не удалось отправить тему на сайт. Повторите смену темы после восстановления соединения.";
+        }
+    }
+
+    private void ApplyRemoteTheme(ThemeSyncService.ThemeSnapshot theme)
+    {
+        if (!ThemeManager.IsKnownTheme(theme.Id) || !ThemeManager.IsKnownAccent(theme.Accent))
+        {
+            ThemeSyncStatus = "Сайт вернул неизвестную тему или акцент. Локальные настройки оставлены без изменений.";
+            return;
+        }
+
+        if (_settings.ThemeId == theme.Id && _settings.AccentId == theme.Accent)
+            return;
+
+        _applyingRemoteTheme = true;
+        try
+        {
+            _settings.ThemeId = theme.Id;
+            _settings.AccentId = theme.Accent;
+            if (!SaveSettings())
+            {
+                ThemeSyncStatus = "Не удалось сохранить тему, полученную с сайта.";
+                return;
+            }
+
+            RefreshSelection();
+            _lastThemeFingerprint = CurrentThemeFingerprint();
+            OnPropertyChanged(nameof(ThemeOptions));
+            OnPropertyChanged(nameof(AccentOptions));
+        }
+        finally
+        {
+            _applyingRemoteTheme = false;
+        }
+    }
+
+    private async Task DisconnectThemeSyncAsync()
+    {
+        string? token;
+        try { token = ThemeSyncService.ReadDeviceToken(); }
+        catch (Exception ex)
+        {
+            ThemeSyncStatus = "Не удалось прочитать токен: " + ex.Message;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            IsThemeSyncConnected = false;
+            ThemeSyncStatus = "Устройство не подключено.";
+            return;
+        }
+
+        try
+        {
+            ThemeSyncStatus = "Отключаем устройство и завершаем веб-сессии…";
+            await _themeSync.RevokeDeviceAsync(token);
+            _syncCancellation?.Cancel();
+            _pairingCancellation?.Cancel();
+            ThemeSyncService.RemoveDeviceToken();
+            IsThemeSyncConnected = false;
+            ThemePairingCode = "";
+            _lastThemeUpdatedAt = 0;
+            ThemeSyncStatus = "Устройство отключено. Для повторного подключения создайте новый код.";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось отключить синхронизацию темы", ex);
+            ThemeSyncStatus = "Не удалось отключить устройство: " + ex.Message;
+        }
+    }
+
+    private string CurrentThemeFingerprint() => _settings.ThemeId + "|" + _settings.AccentId;
 
     // ---------- Кэш ----------
 
