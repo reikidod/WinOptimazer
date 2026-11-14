@@ -17,6 +17,29 @@ public sealed class GameBoostPolicyTests
         ProcessPriorityClass current, bool expected) =>
         Assert.Equal(expected, GameBoostPolicy.ShouldPromotePriority(current));
 
+    [Theory]
+    [InlineData("balanced", ProcessPriorityClass.AboveNormal)]
+    [InlineData("maximum", ProcessPriorityClass.High)]
+    public void PerGameMode_UsesBoundedPriority(string mode, ProcessPriorityClass expected) =>
+        Assert.Equal(expected, GameBoostPolicy.TargetPriority(mode));
+
+    [Theory]
+    [InlineData(ProcessPriorityClass.Normal, ProcessPriorityClass.AboveNormal, true)]
+    [InlineData(ProcessPriorityClass.AboveNormal, ProcessPriorityClass.High, true)]
+    [InlineData(ProcessPriorityClass.High, ProcessPriorityClass.AboveNormal, false)]
+    [InlineData(ProcessPriorityClass.RealTime, ProcessPriorityClass.High, false)]
+    public void PriorityComparison_OnlyRaisesPriorityWhenBelowTarget(
+        ProcessPriorityClass current, ProcessPriorityClass target, bool expected) =>
+        Assert.Equal(expected, GameBoostPolicy.IsPriorityBelow(current, target));
+
+    [Fact]
+    public void Policy_RejectsInvalidModeAndOperatingSystemExecutables()
+    {
+        Assert.False(GameBoostPolicy.IsValidMode("disable-defender"));
+        Assert.True(GameBoostPolicy.IsValidMode(GameBoostPolicy.MaximumMode));
+        Assert.False(GameBoostPolicy.IsSafeExecutablePath(Path.Combine(Environment.SystemDirectory, "cmd.exe")));
+    }
+
     [Fact]
     public void Recovery_RejectsReusedProcessId()
     {
