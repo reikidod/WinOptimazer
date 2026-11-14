@@ -47,12 +47,6 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Content" Value="‹" />
             <Setter Property="ToolTip" Value="Свернуть боковую панель (Ctrl+B)" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
-                    <Setter Property="Content" Value="›" />
-                    <Setter Property="ToolTip" Value="Развернуть боковую панель (Ctrl+B)" />
-                </DataTrigger>
-            </Style.Triggers>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -71,6 +65,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                    <Setter Property="Content" Value="›" />
+                    <Setter Property="ToolTip" Value="Развернуть боковую панель (Ctrl+B)" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
 
