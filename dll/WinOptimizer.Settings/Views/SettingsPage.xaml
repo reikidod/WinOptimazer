@@ -430,7 +430,7 @@
                                         <TextBlock Text="Одноразовый код для сайта" FontSize="11.5"
                                                    Foreground="{DynamicResource TextSecondaryBrush}" />
                                         <TextBlock Text="{Binding Settings.ThemePairingCode}" FontSize="27"
-                                                   FontWeight="Bold" FontFamily="Consolas" LetterSpacing="2"
+                                                   FontWeight="Bold" FontFamily="Consolas"
                                                    Foreground="{DynamicResource AccentBrush}" />
                                     </StackPanel>
                                 </Border>
