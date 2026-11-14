@@ -1381,15 +1381,19 @@
                                                 </WrapPanel>
 
                                                 <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
-                                                        Padding="11,9" CornerRadius="10"
+                                                        Padding="11,10" CornerRadius="10"
                                                         Background="{DynamicResource BgCardHoverBrush}"
                                                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                                     <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="260" />
                                                         </Grid.ColumnDefinitions>
-                                                        <StackPanel VerticalAlignment="Center">
+                                                        <StackPanel Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">
                                                             <CheckBox Content="Включить Game Boost для этой игры"
                                                                       IsChecked="{Binding GameBoostEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                                       FontSize="12.5" FontWeight="SemiBold" />
@@ -1397,13 +1401,27 @@
                                                                        FontSize="10.5" TextWrapping="Wrap"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                                         </StackPanel>
-                                                        <ComboBox Grid.Column="1" Width="230" MinHeight="34"
+                                                        <ComboBox Grid.Row="0" Grid.Column="1" MinHeight="34"
                                                                   VerticalContentAlignment="Center"
                                                                   ItemsSource="{Binding DataContext.Games.GameBoostModeOptions, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                   DisplayMemberPath="Label" SelectedValuePath="Id"
                                                                   SelectedValue="{Binding GameBoostMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                                   IsEnabled="{Binding GameBoostEnabled}"
-                                                                  ToolTip="Выбери уровень производительности для этой игры" />
+                                                                  ToolTip="Выбери приоритет процесса для этой игры" />
+
+                                                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,10,12,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="План питания Windows" FontSize="11.5" FontWeight="SemiBold" />
+                                                            <TextBlock Text="Используется только пока эта игра запущена; исходный план затем восстанавливается."
+                                                                       FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                        </StackPanel>
+                                                        <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" MinHeight="34"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.Games.GameBoostPowerPlanOptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  DisplayMemberPath="Label" SelectedValuePath="Id"
+                                                                  SelectedValue="{Binding GameBoostPowerPlanId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  IsEnabled="{Binding GameBoostEnabled}"
+                                                                  ToolTip="Выбери план питания Windows для этой игры" />
                                                     </Grid>
                                                 </Border>
 
