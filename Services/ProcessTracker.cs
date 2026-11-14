@@ -66,8 +66,11 @@ public sealed class ProcessTracker
                     if (st.CpuTime is { } prev)
                     {
                         var elapsed = (nowUtc - st.CpuAtUtc).TotalSeconds;
-                        st.CpuPercent = elapsed > 0
-                            ? Math.Clamp((cpu - prev).TotalSeconds / elapsed / _cores * 100, 0, 100)
+                        var cpuDelta = cpu - prev;
+                        // Сброс/регрессия счётчика не означает 0 %: считаем замер неизвестным
+                        // и используем текущее значение как новую базу для следующего интервала.
+                        st.CpuPercent = elapsed > 0 && cpuDelta >= TimeSpan.Zero
+                            ? Math.Clamp(cpuDelta.TotalSeconds / elapsed / _cores * 100, 0, 100)
                             : null;
                     }
                     else
