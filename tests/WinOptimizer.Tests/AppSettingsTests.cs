@@ -41,6 +41,51 @@ public sealed class AppSettingsTests : IDisposable
     }
 
     [Fact]
+    public void Normalize_GameBoostProfilesAreCanonicalizedAndDeduplicated()
+    {
+        var settings = new AppSettings
+        {
+            GameBoostGames =
+            [
+                new GameBoostGameSetting { ExecutablePath = Path.Combine(Path.GetTempPath(), "GameA.exe"), Enabled = true, Mode = "maximum" },
+                new GameBoostGameSetting { ExecutablePath = Path.Combine(Path.GetTempPath(), "gamea.exe"), Enabled = false, Mode = "invalid" },
+                new GameBoostGameSetting { ExecutablePath = "relative\\game.exe", Enabled = true, Mode = "maximum" }
+            ]
+        };
+
+        settings.Normalize();
+
+        var profile = Assert.Single(settings.GameBoostGames);
+        Assert.False(profile.Enabled);
+        Assert.Equal("balanced", profile.Mode);
+        Assert.True(Path.IsPathFullyQualified(profile.ExecutablePath));
+    }
+
+    [Fact]
+    public void SaveAndLoad_PreservesPerGameBoostProfiles()
+    {
+        Directory.CreateDirectory(_directory);
+        var path = Path.Combine(_directory, "settings.json");
+        var executable = Path.Combine(_directory, "sample-game.exe");
+        File.WriteAllText(executable, "placeholder");
+        var settings = new AppSettings
+        {
+            GameBoostGames =
+            [
+                new GameBoostGameSetting { ExecutablePath = executable, Enabled = true, Mode = "maximum" }
+            ]
+        };
+
+        Assert.True(settings.Save(path));
+        var loaded = AppSettings.Load(path);
+
+        var profile = Assert.Single(loaded.GameBoostGames);
+        Assert.Equal(executable, profile.ExecutablePath);
+        Assert.True(profile.Enabled);
+        Assert.Equal("maximum", profile.Mode);
+    }
+
+    [Fact]
     public void SaveAndLoad_RoundTripsSettingsWithoutTemporaryFiles()
     {
         Directory.CreateDirectory(_directory);
