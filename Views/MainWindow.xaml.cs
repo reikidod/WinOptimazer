@@ -53,7 +53,7 @@ public partial class MainWindow : Window
 
     public static readonly DependencyProperty SidebarWidthProperty = DependencyProperty.Register(
         nameof(SidebarWidth), typeof(double), typeof(MainWindow),
-        new PropertyMetadata(SidebarFullWidth, (d, e) => ((MainWindow)d).OnSidebarWidthChanged((double)e.NewValue)));
+        new PropertyMetadata(SidebarExpandedWidth, (d, e) => ((MainWindow)d).OnSidebarWidthChanged((double)e.NewValue)));
 
     /// <summary>Ширина боковой панели: 84 — только иконки, 240 — иконки с подписями.</summary>
     public double SidebarWidth
