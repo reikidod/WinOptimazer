@@ -41,6 +41,18 @@ public sealed class AppSettingsTests : IDisposable
     }
 
     [Fact]
+    public void SidebarHidden_DefaultsToVisible_AndIsPersisted()
+    {
+        Assert.False(new AppSettings().SidebarHidden);
+
+        Directory.CreateDirectory(_directory);
+        var path = Path.Combine(_directory, "settings.json");
+        Assert.True(new AppSettings { SidebarHidden = true }.Save(path));
+
+        Assert.True(AppSettings.Load(path).SidebarHidden);
+    }
+
+    [Fact]
     public void Normalize_GameBoostProfilesAreCanonicalizedAndDeduplicated()
     {
         var settings = new AppSettings

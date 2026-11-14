@@ -15,6 +15,9 @@ public sealed class AppSettings
     /// <summary>Скрытые пользователем вкладки боковой панели.</summary>
     public List<string> HiddenTabs { get; set; } = new();
 
+    /// <summary>Боковая панель скрыта пользователем (Ctrl+B или кнопка «‹»); состояние запоминается между запусками.</summary>
+    public bool SidebarHidden { get; set; }
+
     public bool IsTabVisible(string tab) => !HiddenTabs.Contains(tab);
 
     public void SetTabVisible(string tab, bool visible)

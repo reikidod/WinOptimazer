@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Interop;
@@ -40,6 +41,64 @@ public partial class MainWindow : Window
         };
         DataContext = viewModel;
         Loaded += OnLoaded;
+
+        // Запомненное состояние боковой панели применяем сразу, без анимации.
+        SidebarWidth = _viewModel.IsSidebarVisible ? SidebarFullWidth : 0;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        Closed += (_, _) => _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+    }
+
+    private const double SidebarFullWidth = 84;
+
+    public static readonly DependencyProperty SidebarWidthProperty = DependencyProperty.Register(
+        nameof(SidebarWidth), typeof(double), typeof(MainWindow),
+        new PropertyMetadata(SidebarFullWidth, (d, e) => ((MainWindow)d).OnSidebarWidthChanged((double)e.NewValue)));
+
+    /// <summary>Ширина боковой панели: 84 — показана, 0 — скрыта. Анимируется при скрытии/показе.</summary>
+    public double SidebarWidth
+    {
+        get => (double)GetValue(SidebarWidthProperty);
+        set => SetValue(SidebarWidthProperty, value);
+    }
+
+    private void OnSidebarWidthChanged(double width)
+    {
+        SidebarColumn.Width = new GridLength(Math.Max(0, width));
+        // Полностью скрытая панель не должна ловить фокус клавиатуры и отбрасывать тень.
+        SidebarPanel.Visibility = width <= 0.5 ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.IsSidebarVisible))
+        {
+            AnimateSidebar(_viewModel.IsSidebarVisible);
+        }
+    }
+
+    private void AnimateSidebar(bool visible)
+    {
+        var target = visible ? SidebarFullWidth : 0;
+        BeginAnimation(SidebarWidthProperty, null);
+
+        if (!Motion.IsEnabled)
+        {
+            SidebarWidth = target;
+            return;
+        }
+
+        SidebarPanel.Visibility = Visibility.Visible;
+        var animation = new DoubleAnimation(SidebarWidth, target, TimeSpan.FromMilliseconds(220))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+        };
+        animation.Completed += (_, _) =>
+        {
+            // Фиксируем итоговое значение и снимаем анимацию, чтобы она не перекрывала дальнейшие изменения.
+            BeginAnimation(SidebarWidthProperty, null);
+            SidebarWidth = target;
+        };
+        BeginAnimation(SidebarWidthProperty, animation);
     }
 
     /// <summary>Размер окна по умолчанию, но не больше ~92% рабочей области: на ноутбуках с масштабом 125–150% всё помещается и читается.</summary>

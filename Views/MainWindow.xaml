@@ -34,11 +34,69 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Кнопка «‹» в боковой панели: скрыть панель -->
+        <Style x:Key="SidebarToggleButton" TargetType="Button">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="Transparent" CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Язычок «›» у левого края: показать скрытую панель (виден только пока панель скрыта) -->
+        <Style x:Key="SidebarHandleButton" TargetType="Button">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="{DynamicResource BgSidebarBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,1,1"
+                                CornerRadius="0,12,12,0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSidebarVisible}" Value="False">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="B" Modifiers="Control" Command="{Binding ToggleSidebarCommand}" />
+    </Window.InputBindings>
 
     <Grid x:Name="RootGrid" ClipToBounds="True">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="84" />
+            <ColumnDefinition x:Name="SidebarColumn" Width="84" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -66,7 +124,7 @@
         </Grid>
 
         <!-- ============ Боковая панель ============ -->
-        <Border Background="{DynamicResource BgSidebarBrush}" Panel.ZIndex="1">
+        <Border x:Name="SidebarPanel" Background="{DynamicResource BgSidebarBrush}" Panel.ZIndex="1">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="14" ShadowDepth="2" Direction="0" Opacity="0.28" Color="Black" />
             </Border.Effect>
@@ -234,6 +292,10 @@
 
                 <!-- Иконки + версия + обновление -->
                 <StackPanel Grid.Row="2" Margin="0,12,0,0">
+                    <Button Style="{StaticResource SidebarToggleButton}" Content="‹" Margin="0,0,0,6"
+                            Command="{Binding ToggleSidebarCommand}"
+                            ToolTip="Скрыть боковую панель (Ctrl+B)"
+                            AutomationProperties.Name="Скрыть боковую панель" />
                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="4,0,4,12" Opacity="0.55" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button Width="32" Height="32" Margin="2,0" Padding="0" Cursor="Hand"
@@ -1494,5 +1556,12 @@
                 </Grid>
             </Border>
         </Grid>
+
+        <!-- Язычок показа боковой панели: у левого края, по центру по высоте -->
+        <Button Grid.Column="1" Panel.ZIndex="5" Style="{StaticResource SidebarHandleButton}"
+                HorizontalAlignment="Left" VerticalAlignment="Center" Width="22" Height="72"
+                Content="›" Command="{Binding ToggleSidebarCommand}"
+                ToolTip="Показать боковую панель (Ctrl+B)"
+                AutomationProperties.Name="Показать боковую панель" />
     </Grid>
 </Window>

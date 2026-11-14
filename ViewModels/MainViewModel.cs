@@ -98,6 +98,7 @@ public sealed class MainViewModel : ObservableObject
         RefreshDashboardCommand = new AsyncRelayCommand(RefreshDashboardAsync, () => !IsBusy, ReportUnexpected);
         RunDiagnosticsCommand = new AsyncRelayCommand(RunDiagnosticsAsync, () => !IsBusy, ReportUnexpected);
         NavigateCommand = new RelayCommand<string>(Navigate);
+        ToggleSidebarCommand = new RelayCommand(ToggleSidebar);
         RefreshHistoryCommand = new RelayCommand(RefreshRecentOperations);
         RefreshRecentOperations();
         SaveProfileCommand = new RelayCommand(SaveProfile, () => IsTweakStateReady && !IsBusy);
@@ -234,6 +235,7 @@ public sealed class MainViewModel : ObservableObject
     public ICommand RefreshDashboardCommand { get; }
     public ICommand RunDiagnosticsCommand { get; }
     public ICommand NavigateCommand { get; }
+    public ICommand ToggleSidebarCommand { get; }
     public ICommand RefreshHistoryCommand { get; }
     public ICommand SaveProfileCommand { get; }
     public ICommand LoadProfileCommand { get; }
@@ -317,6 +319,23 @@ public sealed class MainViewModel : ObservableObject
     public string AppVersion => _updates.CurrentVersion;
 
     public string VersionLabel => $"v{_updates.DisplayVersion}";
+
+    private bool _isSidebarVisible = !AppSettings.Current.SidebarHidden;
+
+    /// <summary>Показана ли боковая панель. Анимацию ширины выполняет окно.</summary>
+    public bool IsSidebarVisible
+    {
+        get => _isSidebarVisible;
+        private set => SetField(ref _isSidebarVisible, value);
+    }
+
+    private void ToggleSidebar()
+    {
+        IsSidebarVisible = !IsSidebarVisible;
+        var settings = AppSettings.Current;
+        settings.SidebarHidden = !IsSidebarVisible;
+        settings.Save();
+    }
 
     private string _updateStatus = "";
     public string UpdateStatus

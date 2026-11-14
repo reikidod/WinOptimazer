@@ -151,6 +151,29 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void MainShell_SidebarCanBeHiddenAndRestored()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+
+        var column = Assert.Single(Elements(view, "ColumnDefinition"), element =>
+            Attribute(element, "Name") == "SidebarColumn");
+        Assert.Equal("84", Attribute(column, "Width"));
+        Assert.Contains(Elements(view, "Border"), element => Attribute(element, "Name") == "SidebarPanel");
+
+        Assert.Contains(Elements(view, "Button"), element =>
+            Attribute(element, "Content") == "‹" &&
+            Attribute(element, "Command") == "{Binding ToggleSidebarCommand}");
+        Assert.Contains(Elements(view, "Button"), element =>
+            Attribute(element, "Content") == "›" &&
+            Attribute(element, "Command") == "{Binding ToggleSidebarCommand}" &&
+            Attribute(element, "Style") == "{StaticResource SidebarHandleButton}");
+        Assert.Contains(Elements(view, "KeyBinding"), element =>
+            Attribute(element, "Key") == "B" &&
+            Attribute(element, "Modifiers") == "Control" &&
+            Attribute(element, "Command") == "{Binding ToggleSidebarCommand}");
+    }
+
+    [Fact]
     public void SideMouseButtons_AreConnectedToNavigationHistory()
     {
         var codeBehind = File.ReadAllText(Path.Combine(RepositoryRoot(), "Views/MainWindow.xaml.cs"));

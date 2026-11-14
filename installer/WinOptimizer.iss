@@ -7,7 +7,7 @@
 ; Вручную: ISCC /DMyAppVersion=0.6.0 installer\WinOptimizer.iss
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.7.7b"
+  #define MyAppVersion "0.7.7c"
 #endif
 #ifndef MyAppFileVersion
   #define MyAppFileVersion "0.7.7.0"
