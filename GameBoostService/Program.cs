@@ -35,11 +35,17 @@ internal static class ServiceInstaller
     private const int ErrorServiceDoesNotExist = 1060;
     private const int ErrorServiceNotActive = 1062;
     private const int ErrorServiceAlreadyRunning = 1056;
+    private const int ErrorElevationRequired = 10;
+
+    // Restore a predictable service DACL for this application-owned service.
+    // Administrators and LocalSystem can manage/start it; standard users can only query it.
+    private const string DefaultServiceSecurityDescriptor =
+        "D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)";
 
     public static int Install()
     {
         if (!IsAdministrator())
-            return Fail("Установка службы отклонена: процесс не запущен с повышенными правами.", 5);
+            return Fail("Установка службы требует подтверждённого запуска от имени администратора.", ErrorElevationRequired);
 
         var query = RunSc("query");
         var exists = query.ExitCode == 0;
@@ -60,7 +66,8 @@ internal static class ServiceInstaller
 
         var serviceArguments = new[]
         {
-            "binPath=", Executable,
+            // Keep the full executable path quoted in the SCM ImagePath value.
+            "binPath=", $"\\"{Executable}\\"",
             "start=", "auto",
             "obj=", "LocalSystem",
             "DisplayName=", "WinOptimizer Game Boost"
@@ -71,6 +78,10 @@ internal static class ServiceInstaller
         if (configured.ExitCode != 0)
             return Fail(exists ? "Не удалось обновить конфигурацию службы." : "Не удалось зарегистрировать службу в Windows.", configured);
 
+        var security = RunSc("sdset", DefaultServiceSecurityDescriptor);
+        if (security.ExitCode != 0)
+            return Fail("Не удалось восстановить права управления игровой службой. Проверьте install.log.", security);
+
         LogOptionalCommand("description", RunSc("description",
             "Автоматическое повышение производительности игр с восстановлением настроек"));
         LogOptionalCommand("failure actions", RunSc("failure",
@@ -79,7 +90,10 @@ internal static class ServiceInstaller
 
         var start = RunSc("start");
         if (start.ExitCode != 0 && start.ExitCode != ErrorServiceAlreadyRunning)
-            return Fail("Windows отказала в запуске службы.", start);
+        {
+            DiagnoseServiceStartFailure();
+            return Fail("Диспетчер служб Windows отказал в запуске WinOptimizer Game Boost. Это не обязательно связано с UAC; подробности конфигурации и ACL записаны в install.log.", start);
+        }
 
         if (!WaitForState(4))
             return Fail("Команда запуска завершилась, но служба не перешла в состояние RUNNING. Проверьте service.log.", 7);
@@ -91,7 +105,7 @@ internal static class ServiceInstaller
     public static int Uninstall()
     {
         if (!IsAdministrator())
-            return Fail("Удаление службы отклонено: процесс не запущен с повышенными правами.", 5);
+            return Fail("Удаление службы требует подтверждённого запуска от имени администратора.", ErrorElevationRequired);
 
         var query = RunSc("query");
         if (query.ExitCode == ErrorServiceDoesNotExist)
@@ -121,6 +135,20 @@ internal static class ServiceInstaller
 
         WriteLog("Служба успешно удалена.");
         return 0;
+    }
+
+    private static void DiagnoseServiceStartFailure()
+    {
+        var configuration = RunSc("qc");
+        var security = RunSc("sdshow");
+        var directoryAcl = RunIcacls(ServiceDirectory);
+        var executableAcl = RunIcacls(Executable);
+
+        WriteLog("Диагностика отказа запуска службы:");
+        WriteLog($"sc qc: exit={configuration.ExitCode}; {configuration.Output} {configuration.Error}");
+        WriteLog($"sc sdshow: exit={security.ExitCode}; {security.Output} {security.Error}");
+        WriteLog($"icacls service directory: exit={directoryAcl.ExitCode}; {directoryAcl.Output} {directoryAcl.Error}");
+        WriteLog($"icacls service executable: exit={executableAcl.ExitCode}; {executableAcl.Output} {executableAcl.Error}");
     }
 
     private static bool IsAdministrator()
