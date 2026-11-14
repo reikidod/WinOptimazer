@@ -100,7 +100,7 @@
 
 Предварительные функции и изменения для тестирования. Возможны ошибки.
 
-[**Открыть бета-релизы →**](https://github.com/reikidod/WinOptimazer/releases) · [Что нового в Beta 0.7](docs/BETA.md · [План 0.7](docs/ROADMAP-0.7.md))
+[**Открыть бета-релизы →**](https://github.com/reikidod/WinOptimazer/releases) · [Что нового в Beta 0.7](docs/BETA.md) · [План 0.7](docs/ROADMAP-0.7.md)
 
 </td>
 </tr>
