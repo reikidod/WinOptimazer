@@ -150,6 +150,8 @@ public sealed class MsStoreService : IMsStoreService
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                StandardOutputEncoding = ProcessRunner.OemEncoding,
+                StandardErrorEncoding = ProcessRunner.OemEncoding,
                 CreateNoWindow = true,
             });
             if (p is null) return null;
@@ -264,6 +266,8 @@ public sealed class MsStoreService : IMsStoreService
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardOutputEncoding = ProcessRunner.OemEncoding,
+            StandardErrorEncoding = ProcessRunner.OemEncoding,
             CreateNoWindow = true,
         };
         using var p = Process.Start(psi) ?? throw new InvalidOperationException("Не удалось запустить PowerShell.");

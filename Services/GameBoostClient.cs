@@ -69,7 +69,9 @@ public sealed class GameBoostClient
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                StandardOutputEncoding = ProcessRunner.OemEncoding,
+                StandardErrorEncoding = ProcessRunner.OemEncoding
             };
             startInfo.ArgumentList.Add("query");
             startInfo.ArgumentList.Add("WinOptimizerGameBoost");
@@ -90,8 +92,9 @@ public sealed class GameBoostClient
             var output = await outputTask;
             _ = await errorTask;
             var installed = output.Contains("SERVICE_NAME: WinOptimizerGameBoost", StringComparison.OrdinalIgnoreCase);
+            // The "STATE" label is localized ("СОСТОЯНИЕ"); only the "4 RUNNING" pair is stable.
             return (installed, installed && System.Text.RegularExpressions.Regex.IsMatch(
-                output, @"STATE\s*:\s*4\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+                output, @":\s*4\s+RUNNING\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         {
@@ -153,7 +156,7 @@ public sealed class GameBoostClient
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 "WinOptimizer", "GameBoost", "install.log");
             if (!File.Exists(path)) return "";
-            return string.Join(Environment.NewLine, File.ReadLines(path).TakeLast(8));
+            return string.Join(Environment.NewLine, File.ReadLines(path, System.Text.Encoding.UTF8).TakeLast(8));
         }
         catch { return ""; }
     }

@@ -272,7 +272,9 @@ internal static class ServiceInstaller
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            StandardOutputEncoding = GameBoostPolicy.ConsoleEncoding,
+            StandardErrorEncoding = GameBoostPolicy.ConsoleEncoding
         };
         foreach (var argument in arguments)
             startInfo.ArgumentList.Add(argument);
@@ -302,7 +304,9 @@ internal static class ServiceInstaller
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            StandardOutputEncoding = GameBoostPolicy.ConsoleEncoding,
+            StandardErrorEncoding = GameBoostPolicy.ConsoleEncoding
         };
         foreach (var argument in arguments)
             startInfo.ArgumentList.Add(argument);
@@ -329,9 +333,7 @@ internal static class ServiceInstaller
             var query = RunSc("query");
             if (query.ExitCode != 0)
                 return false;
-            if (System.Text.RegularExpressions.Regex.IsMatch(
-                query.Output, $@"STATE\s*:\s*{expectedState}\b",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            if (GameBoostPolicy.ParseServiceState(query.Output) == expectedState)
                 return true;
             Thread.Sleep(500);
         }
@@ -348,7 +350,9 @@ internal static class ServiceInstaller
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                StandardOutputEncoding = GameBoostPolicy.ConsoleEncoding,
+                StandardErrorEncoding = GameBoostPolicy.ConsoleEncoding
             };
             startInfo.ArgumentList.Add(command);
             startInfo.ArgumentList.Add(ServiceName);
@@ -398,7 +402,7 @@ internal static class ServiceInstaller
         try
         {
             Directory.CreateDirectory(DataDirectory);
-            File.AppendAllText(LogPath, $"[{DateTimeOffset.Now:O}] {message}{Environment.NewLine}");
+            File.AppendAllText(LogPath, $"[{DateTimeOffset.Now:O}] {message}{Environment.NewLine}", new System.Text.UTF8Encoding(false));
         }
         catch { /* Ошибка журнала не должна маскировать исходную ошибку установки. */ }
     }

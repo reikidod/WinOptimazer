@@ -74,6 +74,9 @@ public sealed class GameBoostPolicyTests
     [InlineData("SERVICE_NAME: WinOptimizerGameBoost\r\n        STATE              : 4  RUNNING", true)]
     [InlineData("SERVICE_NAME: WinOptimizerGameBoost\r\n        STATE              : 1  STOPPED", false)]
     [InlineData("SERVICE_NAME: WinOptimizerGameBoost\r\n        STATE              : 2  START_PENDING", false)]
+    [InlineData("SERVICE_NAME: WinOptimizerGameBoost\r\n        ТИП                : 10  WIN32_OWN_PROCESS\r\n        СОСТОЯНИЕ          : 4  RUNNING\r\n                                (STOPPABLE, NOT_PAUSABLE, ACCEPTS_SHUTDOWN)", true)]
+    [InlineData("SERVICE_NAME: WinOptimizerGameBoost\r\n        ТИП                : 10  WIN32_OWN_PROCESS\r\n        СОСТОЯНИЕ          : 1  STOPPED", false)]
+    [InlineData("SERVICE_NAME: X\r\n        TYPE               : 10  WIN32_OWN_PROCESS", false)]
     [InlineData("", false)]
     public void ServiceStateParser_OnlyAcceptsRunningState(string output, bool expected) =>
         Assert.Equal(expected, GameBoostPolicy.IsServiceRunning(output));

@@ -522,7 +522,7 @@ public sealed class ZapretService : IZapretService
     {
         try
         {
-            var r = ProcessRunner.Run("sc.exe", $"query {name}", 5_000);
+            var r = ProcessRunner.Run("sc.exe", $"query {name}", 5_000, ProcessRunner.OemEncoding);
             return r.StandardOutput.Contains("RUNNING", StringComparison.OrdinalIgnoreCase);
         }
         catch

@@ -12,8 +12,9 @@ public static class GameBoostPolicy
     private static readonly Regex PowerSchemePattern = new(
         @"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
-    private static readonly Regex RunningStatePattern = new(
-        @"STATE\s*:\s*4\b",
+    // sc.exe localizes the label ("STATE" / "СОСТОЯНИЕ") but never the "<number> <STATE_NAME>" pair.
+    private static readonly Regex ServiceStatePattern = new(
+        @":\s*(?<code>[1-7])\s+(?:STOPPED|START_PENDING|STOP_PENDING|RUNNING|CONTINUE_PENDING|PAUSE_PENDING|PAUSED)\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     public static bool IsValidMode(string? mode) =>
@@ -84,6 +85,34 @@ public static class GameBoostPolicy
         return match.Success ? match.Value : null;
     }
 
-    public static bool IsServiceRunning(string? scQueryOutput) =>
-        !string.IsNullOrWhiteSpace(scQueryOutput) && RunningStatePattern.IsMatch(scQueryOutput);
+    /// <summary>Returns the SERVICE_STATUS code (1 stopped … 4 running) from `sc query` output in any Windows language.</summary>
+    public static int? ParseServiceState(string? scQueryOutput)
+    {
+        if (string.IsNullOrWhiteSpace(scQueryOutput)) return null;
+        var match = ServiceStatePattern.Match(scQueryOutput);
+        return match.Success ? int.Parse(match.Groups["code"].Value, System.Globalization.CultureInfo.InvariantCulture) : null;
+    }
+
+    public static bool IsServiceRunning(string? scQueryOutput) => ParseServiceState(scQueryOutput) == 4;
+
+    /// <summary>Console tools (sc, icacls, powercfg…) print in the OEM code page (866 on Russian Windows), not UTF-8.</summary>
+    public static System.Text.Encoding ConsoleEncoding { get; } = CreateConsoleEncoding();
+
+    private static System.Text.Encoding CreateConsoleEncoding()
+    {
+        try
+        {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            return System.Text.Encoding.GetEncoding(OemCodePage());
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or DllNotFoundException or EntryPointNotFoundException)
+        {
+            return System.Text.Encoding.UTF8;
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", EntryPoint = "GetOEMCP")]
+    private static extern uint GetOemCodePage();
+
+    private static int OemCodePage() => (int)GetOemCodePage();
 }

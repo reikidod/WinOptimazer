@@ -448,7 +448,8 @@ internal sealed class GameBoostWorker : BackgroundService
         {
             using var process = Process.Start(new ProcessStartInfo(
                 Path.Combine(Environment.SystemDirectory, "powercfg.exe"), "/getactivescheme")
-            { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true });
+            { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true,
+                StandardOutputEncoding = GameBoostPolicy.ConsoleEncoding });
             if (process is null)
                 return null;
 

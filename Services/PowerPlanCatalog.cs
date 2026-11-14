@@ -29,7 +29,9 @@ public static class PowerPlanCatalog
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            StandardOutputEncoding = ProcessRunner.OemEncoding,
+            StandardErrorEncoding = ProcessRunner.OemEncoding
         };
         startInfo.ArgumentList.Add("/list");
 

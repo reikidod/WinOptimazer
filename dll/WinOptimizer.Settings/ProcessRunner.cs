@@ -32,7 +32,7 @@ internal static class ProcessRunner
 
     /// <summary>
     /// Запускает консольную утилиту без окна и ждёт завершения. Вызывать не из UI-потока.
-    /// <paramref name="outputEncoding"/> — кодировка вывода утилиты; null — по умолчанию (UTF-8).
+    /// <paramref name="outputEncoding"/> — кодировка вывода утилиты; null — OEM-кодовая страница системы.
     /// </summary>
     public static ProcessResult Run(string fileName, string arguments, int timeoutMs = 15_000, Encoding? outputEncoding = null)
     {
@@ -44,11 +44,10 @@ internal static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        if (outputEncoding is not null)
-        {
-            startInfo.StandardOutputEncoding = outputEncoding;
-            startInfo.StandardErrorEncoding = outputEncoding;
-        }
+        // Консольные утилиты пишут в OEM-кодировке; UTF-8 по умолчанию даёт «кракозябры» на русской Windows.
+        var encoding = outputEncoding ?? OemEncoding;
+        startInfo.StandardOutputEncoding = encoding;
+        startInfo.StandardErrorEncoding = encoding;
 
         using var process = Process.Start(startInfo)
                             ?? throw new InvalidOperationException($"Не удалось запустить {fileName}.");
