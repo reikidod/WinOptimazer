@@ -72,7 +72,13 @@ public sealed class AppSettingsTests : IDisposable
         {
             GameBoostGames =
             [
-                new GameBoostGameSetting { ExecutablePath = executable, Enabled = true, Mode = "maximum" }
+                new GameBoostGameSetting
+                {
+                    ExecutablePath = executable,
+                    Enabled = true,
+                    Mode = "maximum",
+                    PowerPlanId = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
+                }
             ]
         };
 
@@ -83,6 +89,27 @@ public sealed class AppSettingsTests : IDisposable
         Assert.Equal(executable, profile.ExecutablePath);
         Assert.True(profile.Enabled);
         Assert.Equal("maximum", profile.Mode);
+        Assert.Equal("8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", profile.PowerPlanId);
+    }
+
+    [Fact]
+    public void Normalize_RejectsInvalidPerGamePowerPlanGuid()
+    {
+        var settings = new AppSettings
+        {
+            GameBoostGames =
+            [
+                new GameBoostGameSetting
+                {
+                    ExecutablePath = Path.Combine(Path.GetTempPath(), "Sample.exe"),
+                    PowerPlanId = "not-a-guid"
+                }
+            ]
+        };
+
+        settings.Normalize();
+
+        Assert.Equal("", Assert.Single(settings.GameBoostGames).PowerPlanId);
     }
 
     [Fact]
