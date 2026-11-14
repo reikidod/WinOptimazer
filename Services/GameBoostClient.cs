@@ -91,15 +91,26 @@ public sealed class GameBoostClient
 
             var output = await outputTask;
             _ = await errorTask;
-            var installed = output.Contains("SERVICE_NAME: WinOptimizerGameBoost", StringComparison.OrdinalIgnoreCase);
-            // The "STATE" label is localized ("СОСТОЯНИЕ"); only the "4 RUNNING" pair is stable.
-            return (installed, installed && System.Text.RegularExpressions.Regex.IsMatch(
-                output, @":\s*4\s+RUNNING\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+            return ParseServiceQuery(process.ExitCode, output);
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         {
             return (false, false);
         }
+    }
+
+    /// <summary>
+    /// Both labels of `sc query` are localized ("SERVICE_NAME"/"Имя_службы", "STATE"/"Состояние"), so rely on the
+    /// exit code (1060 = no such service) and on the stable "&lt;code&gt; RUNNING" pair.
+    /// </summary>
+    internal static (bool Installed, bool Running) ParseServiceQuery(int exitCode, string? output)
+    {
+        var installed = exitCode == 0 &&
+            !string.IsNullOrEmpty(output) &&
+            output.Contains("WinOptimizerGameBoost", StringComparison.OrdinalIgnoreCase);
+        var running = installed && System.Text.RegularExpressions.Regex.IsMatch(
+            output!, @":\s*4\s+RUNNING\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        return (installed, running);
     }
 
     private async Task<(bool Success, string Message)> RunElevatedAsync(string argument)

@@ -98,4 +98,13 @@ public sealed class GameBoostPolicyTests
             if (File.Exists(path)) File.Delete(path);
         }
     }
+
+    [Theory]
+    [InlineData(0, "Имя_службы: WinOptimizerGameBoost \r\n        Тип                : 10  WIN32_OWN_PROCESS\r\n        Состояние          : 4  RUNNING", true, true)]
+    [InlineData(0, "Имя_службы: WinOptimizerGameBoost \r\n        Состояние          : 1  STOPPED", true, false)]
+    [InlineData(0, "SERVICE_NAME: WinOptimizerGameBoost\r\n        STATE              : 4  RUNNING", true, true)]
+    [InlineData(1060, "[SC] EnumQueryServicesStatus:OpenService: ошибка : 1060", false, false)]
+    [InlineData(0, "", false, false)]
+    public void ClientServiceQuery_WorksOnLocalizedWindows(int exitCode, string output, bool installed, bool running) =>
+        Assert.Equal((installed, running), WinOptimizer.Services.GameBoostClient.ParseServiceQuery(exitCode, output));
 }
