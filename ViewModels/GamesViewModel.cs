@@ -7,6 +7,7 @@ using WinOptimizer.Views;
 namespace WinOptimizer.ViewModels;
 
 public sealed record GameBoostModeOption(string Id, string Label);
+public sealed record GameBoostPowerPlanOption(string Id, string Label);
 
 public sealed class GameItemViewModel : ObservableObject
 {
@@ -15,10 +16,11 @@ public sealed class GameItemViewModel : ObservableObject
     private bool _busy;
     private bool _gameBoostEnabled;
     private string _gameBoostMode;
+    private string _gameBoostPowerPlanId;
     private readonly Action<GameItemViewModel>? _profileChanged;
 
     public GameItemViewModel(DiscoveredGame game, bool optiInstalled, bool highPerf,
-        bool gameBoostEnabled = false, string gameBoostMode = "balanced",
+        bool gameBoostEnabled = false, string gameBoostMode = "balanced", string gameBoostPowerPlanId = "",
         Action<GameItemViewModel>? profileChanged = null)
     {
         Game = game;
@@ -26,6 +28,9 @@ public sealed class GameItemViewModel : ObservableObject
         _highPerfGpu = highPerf;
         _gameBoostEnabled = gameBoostEnabled;
         _gameBoostMode = gameBoostMode == "maximum" ? "maximum" : "balanced";
+        _gameBoostPowerPlanId = Guid.TryParse(gameBoostPowerPlanId, out var powerPlanId) && powerPlanId != Guid.Empty
+            ? powerPlanId.ToString("D")
+            : "";
         _profileChanged = profileChanged;
     }
 
@@ -89,6 +94,18 @@ public sealed class GameItemViewModel : ObservableObject
         ? "Приоритет High + временный системный план «Высокая производительность». Возможен рост энергопотребления и температуры; защита Windows не отключается."
         : "Приоритет Above Normal без смены системного плана питания.";
 
+    /// <summary>Empty means that Game Boost must keep the current Windows power plan.</summary>
+    public string GameBoostPowerPlanId
+    {
+        get => _gameBoostPowerPlanId;
+        set
+        {
+            var normalized = Guid.TryParse(value, out var id) && id != Guid.Empty ? id.ToString("D") : "";
+            if (SetField(ref _gameBoostPowerPlanId, normalized))
+                _profileChanged?.Invoke(this);
+        }
+    }
+
     private OptimizationResult? _result;
 
     /// <summary>Что известно об игре; нужно, чтобы пересчитать настройки при смене целевого FPS.</summary>
@@ -138,6 +155,8 @@ public sealed class GamesViewModel : ObservableObject
     private bool _gameBoostActive;
     private int _configuredGameCount;
     private int _activeGameCount;
+    private IReadOnlyList<GameBoostPowerPlanOption> _gameBoostPowerPlanOptions =
+        [new("", "Не менять текущий план")];
 
     public GamesViewModel(IGameDiscoveryService discovery, IOptiScalerService opti, IDialogService dialogs,
         IHardwareProfileService? hardware = null, IBenchmarkService? benchmarks = null)
@@ -147,6 +166,7 @@ public sealed class GamesViewModel : ObservableObject
         _dialogs = dialogs;
         _hardware = hardware ?? new HardwareProfileService();
         _benchmarks = benchmarks ?? new BenchmarkService();
+        LoadPowerPlanOptions();
         OptimizeCommand = new AsyncRelayCommand<GameItemViewModel>(OptimizeAsync, _ => !IsBusy, Report);
         DetectHardwareCommand = new AsyncRelayCommand(async () =>
         {
@@ -237,6 +257,46 @@ public sealed class GamesViewModel : ObservableObject
         new("maximum", "Максимальная производительность")
     ];
 
+    public IReadOnlyList<GameBoostPowerPlanOption> GameBoostPowerPlanOptions
+    {
+        get => _gameBoostPowerPlanOptions;
+        private set => SetField(ref _gameBoostPowerPlanOptions, value);
+    }
+
+    private void LoadPowerPlanOptions()
+    {
+        try
+        {
+            var options = new List<GameBoostPowerPlanOption>
+            {
+                new("", "Не менять текущий план")
+            };
+
+            var plans = PowerPlanCatalog.GetAvailablePlans();
+            options.AddRange(plans.Select(plan => new GameBoostPowerPlanOption(
+                plan.Id,
+                plan.Name + (plan.IsActive ? " · сейчас активен" : ""))));
+
+            // Retain an explicit unavailable entry for a plan removed from Windows,
+            // rather than silently changing the user's saved preference.
+            foreach (var savedId in _settings.GameBoostGames
+                         .Select(profile => profile.PowerPlanId)
+                         .Where(id => !string.IsNullOrWhiteSpace(id))
+                         .Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (!plans.Any(plan => string.Equals(plan.Id, savedId, StringComparison.OrdinalIgnoreCase)))
+                    options.Add(new GameBoostPowerPlanOption(savedId, "Недоступен в Windows · " + savedId[..8]));
+            }
+
+            GameBoostPowerPlanOptions = options;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Не удалось получить список планов питания Windows", ex);
+            GameBoostStatus = "Не удалось загрузить планы питания: " + ex.Message;
+        }
+    }
+
     private async Task RefreshGameBoostStatusAsync()
     {
         try
@@ -310,6 +370,7 @@ public sealed class GamesViewModel : ObservableObject
 
         saved.Enabled = item.GameBoostEnabled;
         saved.Mode = item.GameBoostMode;
+        saved.PowerPlanId = item.GameBoostPowerPlanId;
 
         if (!_settings.Save())
         {
@@ -331,7 +392,8 @@ public sealed class GamesViewModel : ObservableObject
             var profiles = _settings.GameBoostGames
                 .Select(profile => new GameBoostProfile(
                     profile.ExecutablePath, profile.Enabled,
-                    profile.Mode == "maximum" ? "maximum" : "balanced"))
+                    profile.Mode == "maximum" ? "maximum" : "balanced",
+                    profile.PowerPlanId))
                 .ToArray();
 
             var result = await _gameBoost.ConfigureAsync(profiles);
@@ -447,6 +509,7 @@ public sealed class GamesViewModel : ObservableObject
                     _opti.HasHighPerformanceGpu(g.ExePath),
                     savedProfile?.Enabled ?? false,
                     savedProfile?.Mode ?? "balanced",
+                    savedProfile?.PowerPlanId ?? "",
                     OnGameBoostProfileChanged));
             }
             OnPropertyChanged(nameof(FilteredGames));
