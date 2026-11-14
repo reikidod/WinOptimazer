@@ -98,7 +98,7 @@ public sealed class PerformanceHistoryService
         ArgumentNullException.ThrowIfNull(snapshot);
 
         var gpuValues = snapshot.GpuActivity
-            .Where(item => item.UtilizationPercent is double value && double.IsFinite(value))
+            .Where(item => item.UtilizationPercent is double value && double.IsFinite(value) && value >= 0)
             .Select(item => Math.Clamp(item.UtilizationPercent!.Value, 0d, 100d))
             .ToArray();
         double? gpuPeak = gpuValues.Length == 0 ? null : gpuValues.Max();
@@ -110,7 +110,9 @@ public sealed class PerformanceHistoryService
 
         var point = new PerformanceHistoryPoint(
             capturedAt ?? snapshot.CapturedAt.ToLocalTime(),
-            snapshot.CpuAvailable ? Math.Clamp(snapshot.CpuPercent, 0d, 100d) : null,
+            snapshot.CpuAvailable && double.IsFinite(snapshot.CpuPercent) && snapshot.CpuPercent >= 0
+                ? Math.Clamp(snapshot.CpuPercent, 0d, 100d)
+                : null,
             Math.Clamp((double)snapshot.MemoryLoadPercent, 0d, 100d),
             gpuPeak,
             diskRead,
