@@ -34,7 +34,7 @@ public sealed class GameBoostClient
     {
         var response = await SendAsync(new PipeRequest("configure", profiles.ToArray()));
         return response is null ? (false, "Служба не отвечает. Проверьте её состояние.", false, 0)
-            : (response.Success, response.Message, response.IsActive, response.Profiles.Count(p => p.Enabled));
+            : (response.Success, response.Message, response.IsActive, (response.Profiles ?? Array.Empty<GameBoostProfile>()).Count(p => p.Enabled));
     }
 
     public async Task<GameBoostStatus> GetStatusAsync()
@@ -49,7 +49,8 @@ public sealed class GameBoostClient
         return response is null
             ? new(true, false, false, "Служба запущена, но IPC-канал не отвечает. Обновите службу до текущей версии.", 0, 0, Array.Empty<GameBoostProfile>())
             : new(true, true, response.IsActive, response.Message,
-                response.Profiles.Count(p => p.Enabled), response.ActiveGameCount, response.Profiles);
+                (response.Profiles ?? Array.Empty<GameBoostProfile>()).Count(p => p.Enabled),
+                response.ActiveGameCount, response.Profiles ?? Array.Empty<GameBoostProfile>());
     }
 
     private static async Task<(bool Installed, bool Running)> QueryServiceStateAsync()
@@ -174,5 +175,5 @@ public sealed class GameBoostClient
     }
 
     private sealed record PipeRequest(string Command, GameBoostProfile[]? Profiles = null);
-    private sealed record PipeResponse(bool Success, string Message, GameBoostProfile[] Profiles, bool IsActive, int ActiveGameCount);
+    private sealed record PipeResponse(bool Success, string Message, GameBoostProfile[]? Profiles, bool IsActive, int ActiveGameCount);
 }
