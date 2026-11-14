@@ -470,7 +470,7 @@
                                                  IsIndeterminate="{Binding DashboardSnapshot.CpuProgressIsIndeterminate}"
                                                  Value="{Binding DashboardSnapshot.CpuProgressValue, Mode=OneWay}" />
                                     <TextBlock Text="ДИНАМИКА · ПОСЛЕДНИЕ ЗАМЕРЫ" FontSize="8.5"
-                                               FontWeight="SemiBold" CharacterSpacing="70"
+                                               FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
                                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                                         <ItemsControl ItemsSource="{Binding PerformanceHistory}">
@@ -513,7 +513,7 @@
                                     <ProgressBar Margin="0,10,0,0" Height="5" Maximum="100"
                                                  Value="{Binding DashboardSnapshot.MemoryLoadPercent, Mode=OneWay}" />
                                     <TextBlock Text="ИСПОЛЬЗОВАНИЕ RAM · ИСТОРИЯ" FontSize="8.5"
-                                               FontWeight="SemiBold" CharacterSpacing="45"
+                                               FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
                                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                                         <ItemsControl ItemsSource="{Binding PerformanceHistory}">
@@ -569,7 +569,7 @@
                                                TextWrapping="Wrap" Margin="0,8,0,0"
                                                Visibility="{Binding HasNoGpuActivity, Converter={StaticResource BoolToVis}}" />
                                     <TextBlock Text="АКТИВНОСТЬ GPU · ИСТОРИЯ" FontSize="8.5"
-                                               FontWeight="SemiBold" CharacterSpacing="35"
+                                               FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
                                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                                         <ItemsControl ItemsSource="{Binding PerformanceHistory}">
@@ -619,7 +619,7 @@
                                         <Run Text="{Binding DashboardSnapshot.SystemDrive, Mode=OneWay}" />
                                     </TextBlock>
                                     <TextBlock Text="АКТИВНОСТЬ ДИСКОВ · ИСТОРИЯ" FontSize="8.5"
-                                               FontWeight="SemiBold" CharacterSpacing="25"
+                                               FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
                                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                                         <ItemsControl ItemsSource="{Binding PerformanceHistory}">
