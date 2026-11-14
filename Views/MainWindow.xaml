@@ -1230,8 +1230,10 @@
                                            FontSize="16" FontWeight="SemiBold" Margin="0,4,0,0" />
                                 <TextBlock Text="{Binding Games.GameBoostStatus}" Margin="0,5,0,0"
                                            FontSize="12.5" FontWeight="Medium" TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding Games.ConfiguredGameCount, StringFormat='Настроено игровых профилей: {0}'}"
+                                <TextBlock Text="{Binding Games.ConfiguredGameCount, StringFormat='Включено игровых профилей: {0}'}"
                                            FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                                <TextBlock Text="{Binding Games.ActiveGameCount, StringFormat='Сейчас оптимизируются игры: {0}'}"
+                                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0" />
                             </StackPanel>
                             <Border Grid.Column="1" Background="{DynamicResource BgCardHoverBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
@@ -1251,7 +1253,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Служба сохраняет исходные настройки и возвращает их после выхода из игры."
+                            <TextBlock Text="Служба применяет настройки только к выбранным играм и возвращает исходные значения после выхода. Defender, брандмауэр и UAC остаются включены."
                                        Style="{StaticResource SecondaryText}" FontSize="10.5"
                                        TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0" />
                             <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
@@ -1262,9 +1264,6 @@
                                 <Button Content="Обновить службу" Margin="0,0,6,0"
                                         Visibility="{Binding Games.GameBoostRunning, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding Games.InstallGameBoostServiceCommand}" />
-                                <Button Content="Синхронизировать игры" Margin="0,0,6,0"
-                                        Visibility="{Binding Games.GameBoostInstalled, Converter={StaticResource BoolToVis}}"
-                                        Command="{Binding Games.SyncGameBoostGamesCommand}" />
                                 <Button Content="Удалить" Margin="0,0,6,0"
                                         Visibility="{Binding Games.GameBoostInstalled, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding Games.RemoveGameBoostServiceCommand}" />
@@ -1337,6 +1336,7 @@
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
@@ -1380,7 +1380,34 @@
                                                             CommandParameter="{Binding}" />
                                                 </WrapPanel>
 
-                                                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
+                                                <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
+                                                        Padding="11,9" CornerRadius="10"
+                                                        Background="{DynamicResource BgCardHoverBrush}"
+                                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <CheckBox Content="Включить Game Boost для этой игры"
+                                                                      IsChecked="{Binding GameBoostEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                      FontSize="12.5" FontWeight="SemiBold" />
+                                                            <TextBlock Text="{Binding GameBoostModeDescription}" Margin="0,4,12,0"
+                                                                       FontSize="10.5" TextWrapping="Wrap"
+                                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                        </StackPanel>
+                                                        <ComboBox Grid.Column="1" Width="230" MinHeight="34"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.Games.GameBoostModeOptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  DisplayMemberPath="Label" SelectedValuePath="Id"
+                                                                  SelectedValue="{Binding GameBoostMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  IsEnabled="{Binding GameBoostEnabled}"
+                                                                  ToolTip="Выбери уровень производительности для этой игры" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,12,0,0"
                                                             Visibility="{Binding HasResult, Converter={StaticResource BoolToVis}}">
                                                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,0,0,10" />
                                                     <TextBlock Text="{Binding Result.Headline}" FontSize="13.5" FontWeight="SemiBold"
