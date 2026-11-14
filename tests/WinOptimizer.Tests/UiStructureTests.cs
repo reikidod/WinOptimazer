@@ -170,8 +170,9 @@ public sealed class UiStructureTests
         var document = LoadView("Views/MainWindow.xaml");
 
         Assert.Contains(Elements(document, "Button"), element =>
-            Attribute(element, "Content") == "Проверить обновления" &&
-            Attribute(element, "Command") == "{Binding CheckUpdateCommand}");
+            Attribute(element, "Content") == "↻" &&
+            Attribute(element, "Command") == "{Binding CheckUpdateCommand}" &&
+            Attribute(element, "ToolTip") == "{Binding UpdateStatus}");
 
         Assert.DoesNotContain(Elements(document, "Button"), element =>
             Attribute(element, "Command") == "{Binding DownloadLatestVersionCommand}");
