@@ -19,12 +19,12 @@
             <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="16" />
-            <Setter Property="Padding" Value="18,16" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Padding" Value="18,17" />
             <Setter Property="Margin" Value="0,0,12,10" />
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="20" ShadowDepth="2" Direction="270" Opacity="0.22" Color="Black" />
+                    <DropShadowEffect BlurRadius="24" ShadowDepth="3" Direction="270" Opacity="0.18" Color="Black" />
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
