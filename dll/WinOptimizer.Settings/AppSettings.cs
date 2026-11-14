@@ -182,7 +182,10 @@ public sealed class AppSettings
                 {
                     ExecutablePath = normalizedPath,
                     Enabled = profile.Enabled,
-                    Mode = profile.Mode is "maximum" ? "maximum" : "balanced"
+                    Mode = profile.Mode is "maximum" ? "maximum" : "balanced",
+                    PowerPlanId = Guid.TryParse(profile.PowerPlanId, out var powerPlanId)
+                        ? powerPlanId.ToString("D")
+                        : ""
                 };
             })
             .Where(profile => !string.IsNullOrWhiteSpace(profile.ExecutablePath))
@@ -227,4 +230,6 @@ public sealed class GameBoostGameSetting
     public string ExecutablePath { get; set; } = "";
     public bool Enabled { get; set; }
     public string Mode { get; set; } = "balanced";
+    /// <summary>Windows power scheme GUID. Empty means do not change the active scheme.</summary>
+    public string PowerPlanId { get; set; } = "";
 }
