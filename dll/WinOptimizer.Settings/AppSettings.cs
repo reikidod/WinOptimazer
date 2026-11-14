@@ -30,9 +30,6 @@ public sealed class AppSettings
     /// <summary>Акцентный цвет: «theme» — из темы, иначе blue/red/green/purple/orange/pink.</summary>
     public string AccentId { get; set; } = ThemeManager.ThemeAccent;
 
-    /// <summary>Стабильный идентификатор этой установки Windows для привязки к сайту.</summary>
-    public string ThemeSyncDeviceId { get; set; } = Guid.NewGuid().ToString("D");
-
     /// <summary>Путь к скопированной в папку данных картинке фона; пусто — без фона.</summary>
     public string BackgroundImage { get; set; } = "";
 
@@ -172,8 +169,6 @@ public sealed class AppSettings
         if (!TargetFpsOptions.Contains(GamesTargetFps)) GamesTargetFps = 0;
         if (!ThemeManager.IsKnownTheme(ThemeId)) ThemeId = ThemeManager.DefaultTheme;
         if (!ThemeManager.IsKnownAccent(AccentId)) AccentId = ThemeManager.ThemeAccent;
-        if (!Guid.TryParse(ThemeSyncDeviceId, out var deviceId) || deviceId == Guid.Empty)
-            ThemeSyncDeviceId = Guid.NewGuid().ToString("D");
         BackgroundBlurPercent = Math.Clamp(BackgroundBlurPercent, 0, 100);
         BackgroundDimPercent = Math.Clamp(BackgroundDimPercent, 0, 90);
         CardOpacityPercent = Math.Clamp(CardOpacityPercent, 50, 100);
