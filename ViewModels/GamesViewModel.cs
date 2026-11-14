@@ -78,7 +78,10 @@ public sealed class GameItemViewModel : ObservableObject
         {
             var normalized = value == "maximum" ? "maximum" : "balanced";
             if (SetField(ref _gameBoostMode, normalized))
+            {
+                OnPropertyChanged(nameof(GameBoostModeDescription));
                 _profileChanged?.Invoke(this);
+            }
         }
     }
 
