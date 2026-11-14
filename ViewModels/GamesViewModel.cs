@@ -214,10 +214,18 @@ public sealed class GamesViewModel : ObservableObject
         {
             GameBoostStatus = "Запрашиваю права администратора для установки службы…";
             var result = await _gameBoost.InstallAsync();
-            GameBoostStatus = result.Message;
-            if (!result.Success) _dialogs.Info("Game Boost", result.Message, DialogKind.Warning);
             await RefreshGameBoostStatusAsync();
-            if (result.Success) await SyncGameBoostGamesAsync();
+            if (result.Success)
+            {
+                GameBoostStatus = result.Message;
+                await SyncGameBoostGamesAsync();
+            }
+            else
+            {
+                // Keep the installer diagnostics visible in the panel after refreshing SCM state.
+                GameBoostStatus = result.Message;
+                _dialogs.Info("Game Boost", result.Message, DialogKind.Warning);
+            }
         }
         finally { IsBusy = false; }
     }
