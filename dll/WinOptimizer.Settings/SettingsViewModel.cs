@@ -583,7 +583,7 @@ public sealed class SettingsViewModel : ObservableObject
                 return;
 
             var session = await _themeSync.CreatePairingAsync(
-                _settings.ThemeSyncDeviceId, _settings.ThemeId, _settings.AccentId, cancellationToken);
+                _settings.ThemeSyncDeviceId, cancellationToken);
 
             ThemePairingCode = session.Code;
             ThemeSyncStatus = $"Введите код на сайте WinOptimizer. Код действует {Math.Max(1, session.ExpiresIn / 60)} мин.";
