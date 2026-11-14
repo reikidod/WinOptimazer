@@ -178,6 +178,9 @@ internal static class ServiceInstaller
             }
 
             Directory.CreateDirectory(ServiceDirectory);
+            if (!RepairServiceDirectoryPermissions())
+                return false;
+
             var copiedFiles = 0;
             foreach (var source in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.TopDirectoryOnly))
             {
@@ -207,26 +210,8 @@ internal static class ServiceInstaller
                 return false;
             }
 
-            var acl = RunIcacls(
-                ServiceDirectory, "/inheritance:r", "/grant:r",
-                "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F", "/T", "/C");
-            if (acl.ExitCode != 0)
-            {
-                WriteLog($"Первичная настройка ACL завершилась с кодом {acl.ExitCode}: {acl.Output} {acl.Error}");
-
-                // Повторная попытка без флагов наследования для систем, где icacls
-                // не принимает комбинацию /inheritance:r и object/container inheritance.
-                var fallback = RunIcacls(
-                    ServiceDirectory, "/grant:r",
-                    "*S-1-5-18:F", "*S-1-5-32-544:F", "/T", "/C");
-                if (fallback.ExitCode != 0)
-                {
-                    WriteLog($"Повторная настройка ACL завершилась с кодом {fallback.ExitCode}: {fallback.Output} {fallback.Error}");
-                    return false;
-                }
-            }
-
-            WriteLog($"Payload службы подготовлен: скопировано файлов={copiedFiles}; ACL подтверждены.");
+            // New files inherit the repaired ACL from ServiceDirectory.
+            WriteLog($"Payload службы подготовлен: скопировано файлов={copiedFiles}; ACL унаследованы от защищённого каталога.");
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
@@ -234,6 +219,79 @@ internal static class ServiceInstaller
             WriteLog("Ошибка подготовки файлов службы: " + ex);
             return false;
         }
+    }
+
+    private static bool RepairServiceDirectoryPermissions()
+    {
+        // A previous install may have left files owned by another account or with
+        // explicit deny ACLs. Take ownership, remove stale explicit ACLs, then grant
+        // SYSTEM and Administrators full control before attempting File.Copy.
+        var takeOwnership = RunTakeOwn("/F", ServiceDirectory, "/R", "/D", "Y");
+        if (takeOwnership.ExitCode != 0)
+            WriteLog($"takeown завершился с кодом {takeOwnership.ExitCode}: {takeOwnership.Output} {takeOwnership.Error}");
+
+        var reset = RunIcacls(ServiceDirectory, "/reset", "/T", "/C", "/Q");
+        if (reset.ExitCode != 0)
+        {
+            WriteLog($"Сброс старых ACL каталога завершился с кодом {reset.ExitCode}: {reset.Output} {reset.Error}");
+            return false;
+        }
+
+        var grant = RunIcacls(
+            ServiceDirectory, "/grant:r",
+            "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F",
+            "/T", "/C");
+        if (grant.ExitCode != 0)
+        {
+            WriteLog($"Выдача прав SYSTEM/Administrators завершилась с кодом {grant.ExitCode}: {grant.Output} {grant.Error}");
+            return false;
+        }
+
+        // Verify that the destination DLL can be opened for replacement before copying.
+        var probePath = Path.Combine(ServiceDirectory, ".winoptimizer-write-test");
+        try
+        {
+            using (new FileStream(probePath, FileMode.Create, FileAccess.Write, FileShare.None)) { }
+            File.Delete(probePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            WriteLog("Проверка записи в каталог службы не пройдена после восстановления ACL: " + ex);
+            return false;
+        }
+
+        WriteLog("Владелец/ACL каталога службы восстановлены; SYSTEM и Administrators имеют полный доступ.");
+        return true;
+    }
+
+    private static (int ExitCode, string Output, string Error) RunTakeOwn(params string[] arguments)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = Path.Combine(Environment.SystemDirectory, "takeown.exe"),
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        foreach (var argument in arguments)
+            startInfo.ArgumentList.Add(argument);
+
+        using var process = Process.Start(startInfo);
+        if (process is null)
+            return (-1, "", "Не удалось запустить takeown.exe.");
+
+        var stdout = process.StandardOutput.ReadToEndAsync();
+        var stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(30000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { }
+            return (-1, "", "takeown.exe превысил лимит времени.");
+        }
+
+        var result = (process.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
+        WriteLog($"takeown: exit={result.ExitCode}; stdout={result.Item2}; stderr={result.Item3}");
+        return result;
     }
 
     private static (int ExitCode, string Output, string Error) RunIcacls(params string[] arguments)
