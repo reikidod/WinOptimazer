@@ -83,8 +83,8 @@ public sealed class GameItemViewModel : ObservableObject
     }
 
     public string GameBoostModeDescription => GameBoostMode == "maximum"
-        ? "Высокий приоритет процесса + план питания «Высокая производительность» во время игры."
-        : "Повышенный приоритет процесса без смены системного плана питания.";
+        ? "Приоритет High + временный системный план «Высокая производительность». Возможен рост энергопотребления и температуры; защита Windows не отключается."
+        : "Приоритет Above Normal без смены системного плана питания.";
 
     private OptimizationResult? _result;
 
