@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace WinOptimizer.Services;
 
-public sealed record GameBoostProfile(string Path, bool Enabled, string Mode);
+public sealed record GameBoostProfile(string Path, bool Enabled, string Mode, string PowerPlanId = "");
 public sealed record GameBoostStatus(
     bool IsInstalled, bool IsRunning, bool IsActive, string Message,
     int ConfiguredGames, int ActiveGameCount, IReadOnlyList<GameBoostProfile> Profiles);
@@ -35,8 +35,8 @@ public sealed class GameBoostClient
         var response = await SendAsync(new PipeRequest("configure", profiles.ToArray()));
         if (response is null)
             return (false, "Служба не отвечает. Проверьте её состояние.", false, 0);
-        if (response.ProtocolVersion < 2)
-            return (false, "Установленная служба устарела. Нажмите «Обновить службу», чтобы включить профили отдельных игр.", false, 0);
+        if (response.ProtocolVersion < 3)
+            return (false, "Установленная служба устарела. Нажмите «Обновить службу», чтобы включить выбор плана питания для каждой игры.", false, 0);
         return (response.Success, response.Message, response.IsActive,
             (response.Profiles ?? Array.Empty<GameBoostProfile>()).Count(p => p.Enabled));
     }
@@ -52,7 +52,7 @@ public sealed class GameBoostClient
         var response = await SendAsync(new PipeRequest("status"));
         if (response is null || response.ProtocolVersion < 2 || response.Profiles is null)
             return new(true, false, false,
-                "Служба установлена, но её версия устарела. Нажмите «Обновить службу» для перехода на профили отдельных игр.",
+                "Служба установлена, но её версия устарела. Нажмите «Обновить службу» для выбора плана питания в профилях игр.",
                 0, 0, Array.Empty<GameBoostProfile>());
 
         return new(true, true, response.IsActive, response.Message,
