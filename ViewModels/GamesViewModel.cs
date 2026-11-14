@@ -6,17 +6,27 @@ using WinOptimizer.Views;
 
 namespace WinOptimizer.ViewModels;
 
+public sealed record GameBoostModeOption(string Id, string Label);
+
 public sealed class GameItemViewModel : ObservableObject
 {
     private bool _optiInstalled;
     private bool _highPerfGpu;
     private bool _busy;
+    private bool _gameBoostEnabled;
+    private string _gameBoostMode;
+    private readonly Action<GameItemViewModel>? _profileChanged;
 
-    public GameItemViewModel(DiscoveredGame game, bool optiInstalled, bool highPerf)
+    public GameItemViewModel(DiscoveredGame game, bool optiInstalled, bool highPerf,
+        bool gameBoostEnabled = false, string gameBoostMode = "balanced",
+        Action<GameItemViewModel>? profileChanged = null)
     {
         Game = game;
         _optiInstalled = optiInstalled;
         _highPerfGpu = highPerf;
+        _gameBoostEnabled = gameBoostEnabled;
+        _gameBoostMode = gameBoostMode == "maximum" ? "maximum" : "balanced";
+        _profileChanged = profileChanged;
     }
 
     public DiscoveredGame Game { get; }
@@ -48,6 +58,33 @@ public sealed class GameItemViewModel : ObservableObject
         get => _busy;
         set => SetField(ref _busy, value);
     }
+
+    /// <summary>Включает или исключает именно эту игру из списка, отслеживаемого службой.</summary>
+    public bool GameBoostEnabled
+    {
+        get => _gameBoostEnabled;
+        set
+        {
+            if (SetField(ref _gameBoostEnabled, value))
+                _profileChanged?.Invoke(this);
+        }
+    }
+
+    /// <summary>balanced — AboveNormal; maximum — High + временный план High Performance.</summary>
+    public string GameBoostMode
+    {
+        get => _gameBoostMode;
+        set
+        {
+            var normalized = value == "maximum" ? "maximum" : "balanced";
+            if (SetField(ref _gameBoostMode, normalized))
+                _profileChanged?.Invoke(this);
+        }
+    }
+
+    public string GameBoostModeDescription => GameBoostMode == "maximum"
+        ? "Высокий приоритет процесса + план питания «Высокая производительность» во время игры."
+        : "Повышенный приоритет процесса без смены системного плана питания.";
 
     private OptimizationResult? _result;
 
@@ -86,6 +123,8 @@ public sealed class GamesViewModel : ObservableObject
     private bool _busy;
     private readonly IHardwareProfileService _hardware;
     private readonly IBenchmarkService _benchmarks;
+    private readonly AppSettings _settings = AppSettings.Current;
+    private readonly SemaphoreSlim _profileSyncGate = new(1, 1);
     private HardwareProfile? _profile;
     private HardwareScores? _scores;
     private string _hardwareSummary = "";
@@ -95,6 +134,7 @@ public sealed class GamesViewModel : ObservableObject
     private bool _gameBoostRunning;
     private bool _gameBoostActive;
     private int _configuredGameCount;
+    private int _activeGameCount;
 
     public GamesViewModel(IGameDiscoveryService discovery, IOptiScalerService opti, IDialogService dialogs,
         IHardwareProfileService? hardware = null, IBenchmarkService? benchmarks = null)
@@ -120,7 +160,7 @@ public sealed class GamesViewModel : ObservableObject
         DownloadOptiCommand = new AsyncRelayCommand(DownloadOptiAsync, () => !IsBusy, Report);
         InstallGameBoostServiceCommand = new AsyncRelayCommand(InstallGameBoostServiceAsync, () => !IsBusy, Report);
         RemoveGameBoostServiceCommand = new AsyncRelayCommand(RemoveGameBoostServiceAsync, () => !IsBusy, Report);
-        SyncGameBoostGamesCommand = new AsyncRelayCommand(SyncGameBoostGamesAsync, () => !IsBusy && GameBoostInstalled, Report);
+        SyncGameBoostGamesCommand = new AsyncRelayCommand(SyncGameBoostGamesAsync, () => !IsBusy && GameBoostInstalled && GameBoostRunning, Report);
         RefreshGameBoostStatusCommand = new AsyncRelayCommand(RefreshGameBoostStatusAsync, () => !IsBusy, Report);
         _ = RefreshGameBoostStatusAsync();
     }
@@ -185,6 +225,14 @@ public sealed class GamesViewModel : ObservableObject
     public bool GameBoostNeedsInstall => !GameBoostInstalled || !GameBoostRunning;
     public bool GameBoostActive { get => _gameBoostActive; private set => SetField(ref _gameBoostActive, value); }
     public int ConfiguredGameCount { get => _configuredGameCount; private set => SetField(ref _configuredGameCount, value); }
+    public int ActiveGameCount { get => _activeGameCount; private set => SetField(ref _activeGameCount, value); }
+    public int EnabledGameCount => Games.Count(game => game.GameBoostEnabled);
+
+    public IReadOnlyList<GameBoostModeOption> GameBoostModeOptions { get; } =
+    [
+        new("balanced", "Сбалансированный"),
+        new("maximum", "Максимальная производительность")
+    ];
 
     private async Task RefreshGameBoostStatusAsync()
     {
@@ -196,12 +244,14 @@ public sealed class GamesViewModel : ObservableObject
             GameBoostRunning = status.IsRunning;
             GameBoostActive = status.IsActive;
             ConfiguredGameCount = status.ConfiguredGames;
+            ActiveGameCount = status.ActiveGameCount;
             GameBoostStatus = status.Message;
         }
         catch (Exception ex)
         {
             GameBoostRunning = false;
             GameBoostActive = false;
+            ActiveGameCount = 0;
             GameBoostStatus = "Не удалось проверить службу: " + ex.Message;
             Logger.Error("Game Boost status check failed", ex);
         }
@@ -244,12 +294,59 @@ public sealed class GamesViewModel : ObservableObject
         finally { IsBusy = false; }
     }
 
+    private void OnGameBoostProfileChanged(GameItemViewModel item)
+    {
+        var saved = _settings.GameBoostGames.FirstOrDefault(profile =>
+            string.Equals(profile.ExecutablePath, item.Path, StringComparison.OrdinalIgnoreCase));
+
+        if (saved is null)
+        {
+            saved = new GameBoostGameSetting { ExecutablePath = Path.GetFullPath(item.Path) };
+            _settings.GameBoostGames.Add(saved);
+        }
+
+        saved.Enabled = item.GameBoostEnabled;
+        saved.Mode = item.GameBoostMode;
+
+        if (!_settings.Save())
+        {
+            GameBoostStatus = "Не удалось сохранить игровой профиль. Изменения пока не отправлены службе.";
+            return;
+        }
+
+        OnPropertyChanged(nameof(EnabledGameCount));
+        ConfiguredGameCount = _settings.GameBoostGames.Count(profile => profile.Enabled);
+        if (GameBoostInstalled && GameBoostRunning)
+            _ = SyncGameBoostGamesAsync();
+    }
+
     private async Task SyncGameBoostGamesAsync()
     {
-        var result = await _gameBoost.ConfigureAsync(Games.Select(g => g.Path));
-        GameBoostStatus = result.Message;
-        if (result.Success) { ConfiguredGameCount = result.Count; GameBoostActive = result.Active; }
-        else _dialogs.Info("Game Boost", result.Message, DialogKind.Warning);
+        await _profileSyncGate.WaitAsync();
+        try
+        {
+            var profiles = _settings.GameBoostGames
+                .Select(profile => new GameBoostProfile(
+                    profile.ExecutablePath, profile.Enabled,
+                    profile.Mode == "maximum" ? "maximum" : "balanced"))
+                .ToArray();
+
+            var result = await _gameBoost.ConfigureAsync(profiles);
+            GameBoostStatus = result.Message;
+            if (result.Success)
+            {
+                ConfiguredGameCount = result.Count;
+                GameBoostActive = result.Active;
+            }
+            else
+            {
+                _dialogs.Info("Game Boost", result.Message, DialogKind.Warning);
+            }
+        }
+        finally
+        {
+            _profileSyncGate.Release();
+        }
     }
 
     public string HardwareSummary
@@ -339,14 +436,20 @@ public sealed class GamesViewModel : ObservableObject
             foreach (var g in found)
             {
                 var dir = Path.GetDirectoryName(g.ExePath) ?? g.InstallDir;
+                var savedProfile = _settings.GameBoostGames.FirstOrDefault(profile =>
+                    string.Equals(profile.ExecutablePath, g.ExePath, StringComparison.OrdinalIgnoreCase));
                 Games.Add(new GameItemViewModel(
                     g,
                     _opti.IsInstalled(dir),
-                    _opti.HasHighPerformanceGpu(g.ExePath)));
+                    _opti.HasHighPerformanceGpu(g.ExePath),
+                    savedProfile?.Enabled ?? false,
+                    savedProfile?.Mode ?? "balanced",
+                    OnGameBoostProfileChanged));
             }
             OnPropertyChanged(nameof(FilteredGames));
             OnPropertyChanged(nameof(HasGames));
             OnPropertyChanged(nameof(GameCountText));
+            OnPropertyChanged(nameof(EnabledGameCount));
             if (GameBoostInstalled && GameBoostRunning) await SyncGameBoostGamesAsync();
             else if (GameBoostInstalled) GameBoostStatus = "Служба остановлена. Нажмите «Установить службу» для восстановления.";
             Status = Games.Count == 0
