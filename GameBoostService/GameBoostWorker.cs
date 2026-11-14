@@ -76,7 +76,9 @@ internal sealed class GameBoostWorker : BackgroundService
                 {
                     var legacyPath = entry.GetString();
                     if (GameBoostPolicy.IsSafeExecutablePath(legacyPath))
-                        profiles.Add(new GameProfile(Path.GetFullPath(legacyPath!), true, GameBoostPolicy.BalancedMode));
+                        // The legacy service auto-enabled every discovered game. Migrate those entries
+                        // as disabled so users must explicitly choose the games they want to optimize.
+                        profiles.Add(new GameProfile(Path.GetFullPath(legacyPath!), false, GameBoostPolicy.BalancedMode));
                     continue;
                 }
 
@@ -221,33 +223,44 @@ internal sealed class GameBoostWorker : BackgroundService
                 var currentPriority = process.PriorityClass;
                 var targetPriority = GameBoostPolicy.TargetPriority(profile.Mode);
 
-                if (_changedProcesses.TryGetValue(process.Id, out var snapshot))
+                if (_changedProcesses.TryGetValue(process.Id, out var snapshot) &&
+                    GameBoostPolicy.IsSameProcessInstance(snapshot.ProcessId, snapshot.StartTimeUtc, process.Id, startTime))
                 {
-                    if (!GameBoostPolicy.IsSameProcessInstance(
-                            snapshot.ProcessId, snapshot.StartTimeUtc, process.Id, startTime))
-                    {
-                        _changedProcesses.Remove(process.Id);
-                        snapshot = null!;
-                    }
-
                     // Only adjust a priority we previously changed; do not fight the game or another tool
                     // if it has independently changed the process priority since our last scan.
-                    if (snapshot is not null && (int)currentPriority == snapshot.AppliedPriority &&
-                        currentPriority != targetPriority)
+                    if ((int)currentPriority == snapshot.AppliedPriority && currentPriority != targetPriority)
                     {
                         process.PriorityClass = targetPriority;
                         _changedProcesses[process.Id] = snapshot with { AppliedPriority = (int)targetPriority };
                         changedJournal = true;
                     }
                 }
-                else if (GameBoostPolicy.IsPriorityBelow(currentPriority, targetPriority))
+                else
                 {
-                    var snapshotToRestore = new ProcessSnapshot(
-                        process.Id, startTime, (int)currentPriority, (int)targetPriority);
-                    _changedProcesses[process.Id] = snapshotToRestore;
-                    await SaveJournalAsync();
-                    process.PriorityClass = targetPriority;
-                    changedJournal = false;
+                    if (_changedProcesses.ContainsKey(process.Id))
+                    {
+                        _changedProcesses.Remove(process.Id);
+                        changedJournal = true;
+                    }
+
+                    if (GameBoostPolicy.IsPriorityBelow(currentPriority, targetPriority))
+                    {
+                        var snapshotToRestore = new ProcessSnapshot(
+                            process.Id, startTime, (int)currentPriority, (int)targetPriority);
+                        _changedProcesses[process.Id] = snapshotToRestore;
+                        await SaveJournalAsync();
+                        try
+                        {
+                            process.PriorityClass = targetPriority;
+                            changedJournal = false;
+                        }
+                        catch
+                        {
+                            _changedProcesses.Remove(process.Id);
+                            await SaveJournalAsync();
+                            throw;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
