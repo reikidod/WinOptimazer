@@ -193,7 +193,7 @@ internal sealed class GameBoostWorker : BackgroundService
 
     private PipeResponse BuildResponse(bool success, string message) =>
         new(success, message, _profiles.Values.OrderBy(p => p.Path, StringComparer.OrdinalIgnoreCase).ToArray(),
-            _sessionActive, _activeGameCount);
+            _sessionActive, _activeGameCount, ProtocolVersion: 2);
 
     private async Task ScanProcessesAsync(CancellationToken token)
     {
@@ -509,7 +509,7 @@ internal sealed class GameBoostWorker : BackgroundService
 
     private sealed record PipeRequest(string Command, GameProfile[]? Profiles = null);
     private sealed record GameProfile(string Path, bool Enabled, string Mode);
-    private sealed record PipeResponse(bool Success, string Message, GameProfile[] Profiles, bool IsActive, int ActiveGameCount);
+    private sealed record PipeResponse(bool Success, string Message, GameProfile[] Profiles, bool IsActive, int ActiveGameCount, int ProtocolVersion);
     private sealed record ProcessSnapshot(int ProcessId, DateTime StartTimeUtc, int OriginalPriority, int AppliedPriority = -1);
     private sealed record RecoveryJournal(string? OriginalPowerScheme, ProcessSnapshot[] Processes);
 }
