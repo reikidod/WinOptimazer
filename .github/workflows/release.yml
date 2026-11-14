@@ -49,6 +49,14 @@ jobs:
           $letter = $parts.Groups['letter'].Value
           $semverVersion = if ($letter) { "$numericVersion-$letter" } else { $numericVersion }
           $fileVersion = "$numericVersion.0"
+          # Для beta требуется точное release-сообщение с номером версии из CHANGELOG.
+          if ($env:GITHUB_REF_NAME -eq 'beta') {
+            $expectedSubject = "release: WinOptimizer $v beta"
+            $actualSubject = git log -1 --pretty=%s
+            if ($actualSubject -ne $expectedSubject) {
+              throw "Ожидалось сообщение '$expectedSubject', получено '$actualSubject'"
+            }
+          }
           # main — стабильный канал, beta — бета-канал (релиз помечается prerelease и тегом -beta)
           $channel = if ($env:GITHUB_REF_NAME -eq 'beta') { 'beta' } else { 'stable' }
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
