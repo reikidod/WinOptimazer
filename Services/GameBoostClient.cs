@@ -33,8 +33,12 @@ public sealed class GameBoostClient
     public async Task<(bool Success, string Message, bool Active, int Count)> ConfigureAsync(IEnumerable<GameBoostProfile> profiles)
     {
         var response = await SendAsync(new PipeRequest("configure", profiles.ToArray()));
-        return response is null ? (false, "Служба не отвечает. Проверьте её состояние.", false, 0)
-            : (response.Success, response.Message, response.IsActive, (response.Profiles ?? Array.Empty<GameBoostProfile>()).Count(p => p.Enabled));
+        if (response is null)
+            return (false, "Служба не отвечает. Проверьте её состояние.", false, 0);
+        if (response.ProtocolVersion < 2)
+            return (false, "Установленная служба устарела. Нажмите «Обновить службу», чтобы включить профили отдельных игр.", false, 0);
+        return (response.Success, response.Message, response.IsActive,
+            (response.Profiles ?? Array.Empty<GameBoostProfile>()).Count(p => p.Enabled));
     }
 
     public async Task<GameBoostStatus> GetStatusAsync()
@@ -46,11 +50,13 @@ public sealed class GameBoostClient
             return new(true, false, false, "Служба установлена, но остановлена. Её можно восстановить кнопкой запуска.", 0, 0, Array.Empty<GameBoostProfile>());
 
         var response = await SendAsync(new PipeRequest("status"));
-        return response is null
-            ? new(true, false, false, "Служба запущена, но IPC-канал не отвечает. Обновите службу до текущей версии.", 0, 0, Array.Empty<GameBoostProfile>())
-            : new(true, true, response.IsActive, response.Message,
-                (response.Profiles ?? Array.Empty<GameBoostProfile>()).Count(p => p.Enabled),
-                response.ActiveGameCount, response.Profiles ?? Array.Empty<GameBoostProfile>());
+        if (response is null || response.ProtocolVersion < 2 || response.Profiles is null)
+            return new(true, false, false,
+                "Служба установлена, но её версия устарела. Нажмите «Обновить службу» для перехода на профили отдельных игр.",
+                0, 0, Array.Empty<GameBoostProfile>());
+
+        return new(true, true, response.IsActive, response.Message,
+            response.Profiles.Count(p => p.Enabled), response.ActiveGameCount, response.Profiles);
     }
 
     private static async Task<(bool Installed, bool Running)> QueryServiceStateAsync()
@@ -175,5 +181,5 @@ public sealed class GameBoostClient
     }
 
     private sealed record PipeRequest(string Command, GameBoostProfile[]? Profiles = null);
-    private sealed record PipeResponse(bool Success, string Message, GameBoostProfile[]? Profiles, bool IsActive, int ActiveGameCount);
+    private sealed record PipeResponse(bool Success, string Message, GameBoostProfile[]? Profiles, bool IsActive, int ActiveGameCount, int ProtocolVersion);
 }
