@@ -75,7 +75,7 @@ public sealed class GameItemViewModel : ObservableObject
         }
     }
 
-    /// <summary>balanced — AboveNormal; maximum — High + временный план High Performance.</summary>
+    /// <summary>balanced — AboveNormal; maximum — High. The power plan is selected independently per game.</summary>
     public string GameBoostMode
     {
         get => _gameBoostMode;
