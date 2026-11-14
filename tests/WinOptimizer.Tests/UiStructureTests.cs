@@ -166,8 +166,19 @@ public sealed class UiStructureTests
         Assert.Contains(Elements(view, "Border"), element => Attribute(element, "Name") == "SidebarPanel");
 
         Assert.Contains(Elements(view, "Button"), element =>
-            Attribute(element, "Content") == "⇔" &&
+            Attribute(element, "Style") == "{StaticResource SidebarToggleButton}" &&
             Attribute(element, "Command") == "{Binding ToggleSidebarCommand}");
+
+        var toggleStyle = Assert.Single(Elements(view, "Style"), element =>
+            Attribute(element, "Key") == "SidebarToggleButton");
+        Assert.Contains(Elements(toggleStyle, "Setter"), element =>
+            Attribute(element, "Property") == "Content" &&
+            Attribute(element, "Value") == "‹");
+        Assert.Contains(Elements(toggleStyle, "DataTrigger"), element =>
+            Attribute(element, "Value") == "False" &&
+            Elements(element, "Setter").Any(setter =>
+                Attribute(setter, "Property") == "Content" &&
+                Attribute(setter, "Value") == "›"));
         Assert.Contains(Elements(view, "KeyBinding"), element =>
             Attribute(element, "Key") == "B" &&
             Attribute(element, "Modifiers") == "Control" &&
