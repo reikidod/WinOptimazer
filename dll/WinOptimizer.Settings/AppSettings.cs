@@ -72,6 +72,9 @@ public sealed class AppSettings
     /// <summary>Целевой FPS для подбора настроек игр: 0 — по частоте монитора.</summary>
     public int GamesTargetFps { get; set; }
 
+    /// <summary>Персональные настройки Game Boost для каждой найденной игры.</summary>
+    public List<GameBoostGameSetting> GameBoostGames { get; set; } = new();
+
     /// <summary>Плавные анимации интерфейса (дополнительно к системной настройке Windows).</summary>
     public bool Animations { get; set; } = true;
 
@@ -167,6 +170,25 @@ public sealed class AppSettings
         if (!ScaleOptions.Contains(UiScalePercent)) UiScalePercent = 100;
         HiddenTabs = (HiddenTabs ?? new()).Where(HideableTabs.Contains).Distinct().ToList();
         if (!TargetFpsOptions.Contains(GamesTargetFps)) GamesTargetFps = 0;
+        GameBoostGames = (GameBoostGames ?? new List<GameBoostGameSetting>())
+            .Where(profile => profile is not null && !string.IsNullOrWhiteSpace(profile.ExecutablePath) &&
+                              Path.IsPathFullyQualified(profile.ExecutablePath))
+            .Select(profile =>
+            {
+                string normalizedPath;
+                try { normalizedPath = Path.GetFullPath(profile.ExecutablePath); }
+                catch { normalizedPath = ""; }
+                return new GameBoostGameSetting
+                {
+                    ExecutablePath = normalizedPath,
+                    Enabled = profile.Enabled,
+                    Mode = profile.Mode is "maximum" ? "maximum" : "balanced"
+                };
+            })
+            .Where(profile => !string.IsNullOrWhiteSpace(profile.ExecutablePath))
+            .GroupBy(profile => profile.ExecutablePath, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.Last())
+            .ToList();
         if (!ThemeManager.IsKnownTheme(ThemeId)) ThemeId = ThemeManager.DefaultTheme;
         if (!ThemeManager.IsKnownAccent(AccentId)) AccentId = ThemeManager.ThemeAccent;
         BackgroundBlurPercent = Math.Clamp(BackgroundBlurPercent, 0, 100);
@@ -195,4 +217,14 @@ public sealed class AppSettings
         CardOpacityPercent = 88;
         TransparencyEffectsEnabled = true;
     }
+}
+
+/// <summary>
+/// Per-game Game Boost preference. The service receives only executable paths, enabled state and a safe priority/power profile.
+/// </summary>
+public sealed class GameBoostGameSetting
+{
+    public string ExecutablePath { get; set; } = "";
+    public bool Enabled { get; set; }
+    public string Mode { get; set; } = "balanced";
 }
