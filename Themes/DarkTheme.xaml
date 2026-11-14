@@ -23,6 +23,8 @@
     <SolidColorBrush x:Key="AccentStrongBrush" Color="{StaticResource AccentStrongColor}" />
     <SolidColorBrush x:Key="TrackOffBrush" Color="{StaticResource TrackOffColor}" />
     <SolidColorBrush x:Key="BrandCyanBrush" Color="#00B4F4" />
+    <!-- Compatibility alias for existing XAML resources that still request the former key. -->
+    <SolidColorBrush x:Key="BrandRedBrush" Color="#00B4F4" />
     <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#1E293B" Offset="0" />
         <GradientStop Color="#0078D4" Offset="0.72" />
@@ -43,6 +45,10 @@
         </DrawingBrush.Drawing>
     </DrawingBrush>
     <RadialGradientBrush x:Key="SiteCyanGlowBrush">
+        <GradientStop Color="#2200B4F4" Offset="0" />
+        <GradientStop Color="#0000B4F4" Offset="1" />
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="SiteRedGlowBrush">
         <GradientStop Color="#2200B4F4" Offset="0" />
         <GradientStop Color="#0000B4F4" Offset="1" />
     </RadialGradientBrush>
