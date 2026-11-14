@@ -468,13 +468,15 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
                             <!-- CPU -->
-                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0"
-                                    MinHeight="194" Padding="15,14">
+                            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,12"
+                                    MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -503,7 +505,7 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                    <Grid Width="6" Height="50" Margin="0,0,3,0" ToolTip="{Binding TooltipText}">
                                                         <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
                                                         <Border Height="{Binding CpuBarHeight}" VerticalAlignment="Bottom"
                                                                 Background="{DynamicResource AccentBrush}" Opacity="{Binding CpuBarOpacity}"
@@ -517,8 +519,8 @@
                             </Border>
 
                             <!-- RAM -->
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="3,0"
-                                    MinHeight="194" Padding="15,14">
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="6,0,0,12"
+                                    MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -546,7 +548,7 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                    <Grid Width="6" Height="50" Margin="0,0,3,0" ToolTip="{Binding TooltipText}">
                                                         <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
                                                         <Border Height="{Binding MemoryBarHeight}" VerticalAlignment="Bottom"
                                                                 Background="{DynamicResource BrandGradientBrush}" CornerRadius="2" />
@@ -559,8 +561,8 @@
                             </Border>
 
                             <!-- GPU -->
-                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="3,0"
-                                    MinHeight="194" Padding="15,14">
+                            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0"
+                                    MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -602,7 +604,7 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                    <Grid Width="6" Height="50" Margin="0,0,3,0" ToolTip="{Binding TooltipText}">
                                                         <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
                                                         <Border Height="{Binding GpuBarHeight}" VerticalAlignment="Bottom"
                                                                 Background="{DynamicResource TextSecondaryBrush}"
@@ -616,8 +618,8 @@
                             </Border>
 
                             <!-- Системный диск -->
-                            <Border Grid.Column="3" Style="{StaticResource DashboardCard}" Margin="6,0,0,0"
-                                    MinHeight="194" Padding="15,14">
+                            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="6,0,0,0"
+                                    MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -652,7 +654,7 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                    <Grid Width="6" Height="50" Margin="0,0,3,0" ToolTip="{Binding TooltipText}">
                                                         <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
                                                         <Border Height="{Binding DiskBarHeight}" VerticalAlignment="Bottom"
                                                                 Background="{DynamicResource AccentBrush}" Opacity="{Binding DiskBarOpacity}"
