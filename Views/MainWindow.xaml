@@ -439,57 +439,205 @@
                             </Grid>
                         </Border>
 
-                        <!-- Живые показатели -->
+                        <!-- Живые показатели: карточки с локальной историей и мини-графиками -->
                         <Grid Margin="0,0,0,18">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0" MinHeight="142">
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="ПРОЦЕССОР" FontSize="10" FontWeight="Bold"
-                                               Foreground="{DynamicResource TextDimBrush}" />
+
+                            <!-- CPU -->
+                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0"
+                                    MinHeight="194" Padding="15,14">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="ПРОЦЕССОР" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextDimBrush}" />
+                                        <Border Grid.Column="1" Width="8" Height="8" CornerRadius="4"
+                                                Background="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                                    </Grid>
                                     <TextBlock Text="{Binding DashboardSnapshot.CpuSummary, TargetNullValue='…'}"
-                                               FontSize="29" FontWeight="SemiBold" Margin="0,10,0,0" />
+                                               FontSize="31" FontWeight="SemiBold" Margin="0,8,0,0" />
                                     <TextBlock Text="{Binding DashboardSnapshot.CpuLoadSubtitle}"
-                                               Style="{StaticResource SecondaryText}" FontSize="11" />
-                                    <ProgressBar Margin="0,12,0,0" Maximum="100"
+                                               Style="{StaticResource SecondaryText}" FontSize="10.5" />
+                                    <ProgressBar Margin="0,10,0,0" Height="5" Maximum="100"
                                                  IsIndeterminate="{Binding DashboardSnapshot.CpuProgressIsIndeterminate}"
                                                  Value="{Binding DashboardSnapshot.CpuProgressValue, Mode=OneWay}" />
-                                    <TextBlock Text="{Binding DashboardSnapshot.CpuProgressDescription}"
-                                               Style="{StaticResource SecondaryText}" FontSize="10.5" Margin="0,6,0,0" />
+                                    <TextBlock Text="ДИНАМИКА · ПОСЛЕДНИЕ ЗАМЕРЫ" FontSize="8.5"
+                                               FontWeight="SemiBold" CharacterSpacing="70"
+                                               Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding PerformanceHistory}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                        <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
+                                                        <Border Height="{Binding CpuBarHeight}" VerticalAlignment="Bottom"
+                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding CpuBarOpacity}"
+                                                                CornerRadius="2" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="3,0" MinHeight="142">
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="ОПЕРАТИВНАЯ ПАМЯТЬ" FontSize="10" FontWeight="Bold"
-                                               Foreground="{DynamicResource TextDimBrush}" />
+
+                            <!-- RAM -->
+                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="3,0"
+                                    MinHeight="194" Padding="15,14">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="ОПЕРАТИВНАЯ ПАМЯТЬ" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextDimBrush}" />
+                                        <Border Grid.Column="1" Width="8" Height="8" CornerRadius="4"
+                                                Background="{DynamicResource BrandGradientBrush}" VerticalAlignment="Center" />
+                                    </Grid>
                                     <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadValue, TargetNullValue='…'}"
-                                               FontSize="29" FontWeight="SemiBold" Margin="0,10,0,0" />
+                                               FontSize="31" FontWeight="SemiBold" Margin="0,8,0,0" />
                                     <TextBlock Text="{Binding DashboardSnapshot.MemoryUsageSubtitle}"
-                                               Style="{StaticResource SecondaryText}" FontSize="11" />
-                                    <ProgressBar Margin="0,12,0,0" Maximum="100"
+                                               Style="{StaticResource SecondaryText}" FontSize="10.5" />
+                                    <ProgressBar Margin="0,10,0,0" Height="5" Maximum="100"
                                                  Value="{Binding DashboardSnapshot.MemoryLoadPercent, Mode=OneWay}" />
-                                    <TextBlock Text="Текущая загрузка памяти"
-                                               Style="{StaticResource SecondaryText}" FontSize="10.5" Margin="0,6,0,0" />
+                                    <TextBlock Text="ИСПОЛЬЗОВАНИЕ RAM · ИСТОРИЯ" FontSize="8.5"
+                                               FontWeight="SemiBold" CharacterSpacing="45"
+                                               Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding PerformanceHistory}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                        <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
+                                                        <Border Height="{Binding MemoryBarHeight}" VerticalAlignment="Bottom"
+                                                                Background="{DynamicResource BrandGradientBrush}" CornerRadius="2" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
                                 </StackPanel>
                             </Border>
-                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="6,0,0,0" MinHeight="142">
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="СИСТЕМНЫЙ ДИСК" FontSize="10" FontWeight="Bold"
-                                               Foreground="{DynamicResource TextDimBrush}" />
+
+                            <!-- GPU -->
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="3,0"
+                                    MinHeight="194" Padding="15,14">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="ВИДЕОКАРТА" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextDimBrush}" />
+                                        <Border Grid.Column="1" Width="8" Height="8" CornerRadius="4"
+                                                Background="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding GpuActivity}" Margin="0,7,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding UtilizationText}" FontSize="27"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding DisplayName}" FontSize="10.5"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayName}" />
+                                                    <ProgressBar Height="5" Margin="0,8,0,0" Maximum="100"
+                                                                 IsIndeterminate="{Binding IsWarmingUp}"
+                                                                 Value="{Binding UtilizationPercent}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="Данные GPU недоступны на этом устройстве"
+                                               Style="{StaticResource SecondaryText}" FontSize="10.5"
+                                               TextWrapping="Wrap" Margin="0,8,0,0"
+                                               Visibility="{Binding HasNoGpuActivity, Converter={StaticResource BoolToVis}}" />
+                                    <TextBlock Text="АКТИВНОСТЬ GPU · ИСТОРИЯ" FontSize="8.5"
+                                               FontWeight="SemiBold" CharacterSpacing="35"
+                                               Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding PerformanceHistory}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                        <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
+                                                        <Border Height="{Binding GpuBarHeight}" VerticalAlignment="Bottom"
+                                                                Background="{DynamicResource TextSecondaryBrush}"
+                                                                Opacity="{Binding GpuBarOpacity}" CornerRadius="2" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Системный диск -->
+                            <Border Grid.Column="3" Style="{StaticResource DashboardCard}" Margin="6,0,0,0"
+                                    MinHeight="194" Padding="15,14">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="СИСТЕМНЫЙ ДИСК" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextDimBrush}" />
+                                        <Border Grid.Column="1" Width="8" Height="8" CornerRadius="4"
+                                                Background="{DynamicResource AccentBrush}" Opacity="0.7"
+                                                VerticalAlignment="Center" />
+                                    </Grid>
                                     <TextBlock Text="{Binding DashboardSnapshot.DiskFreeText, TargetNullValue='…'}"
-                                               FontSize="29" FontWeight="SemiBold" Margin="0,10,0,0" />
-                                    <TextBlock Text="свободно" Style="{StaticResource SecondaryText}" FontSize="11" />
-                                    <ProgressBar Margin="0,12,0,0" Maximum="100"
+                                               FontSize="27" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                    <TextBlock Text="свободно" Style="{StaticResource SecondaryText}" FontSize="10.5" />
+                                    <ProgressBar Margin="0,10,0,0" Height="5" Maximum="100"
                                                  Value="{Binding DashboardSnapshot.DiskFreePercent, Mode=OneWay}" />
-                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="10.5" Margin="0,6,0,0">
+                                    <TextBlock Style="{StaticResource SecondaryText}" FontSize="10"
+                                               Margin="0,5,0,0" TextTrimming="CharacterEllipsis">
                                         <Run Text="из " />
                                         <Run Text="{Binding DashboardSnapshot.DiskTotalText, Mode=OneWay}" />
                                         <Run Text=" · " />
                                         <Run Text="{Binding DashboardSnapshot.SystemDrive, Mode=OneWay}" />
                                     </TextBlock>
+                                    <TextBlock Text="АКТИВНОСТЬ ДИСКОВ · ИСТОРИЯ" FontSize="8.5"
+                                               FontWeight="SemiBold" CharacterSpacing="25"
+                                               Foreground="{DynamicResource TextDimBrush}" Margin="0,13,0,5" />
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding PerformanceHistory}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Width="4" Height="38" Margin="0,0,2,0" ToolTip="{Binding TooltipText}">
+                                                        <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
+                                                        <Border Height="{Binding DiskBarHeight}" VerticalAlignment="Bottom"
+                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding DiskBarOpacity}"
+                                                                CornerRadius="2" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
                                 </StackPanel>
                             </Border>
                         </Grid>
