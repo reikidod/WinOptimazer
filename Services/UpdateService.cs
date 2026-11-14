@@ -402,7 +402,7 @@ public sealed class UpdateService : IUpdateService
         // в сборке (0.7.7-a-beta), не принимая канал beta за буквенный патч.
         var match = Regex.Match(
             tag,
-            @"^(?<numeric>\d+(?:\.\d+){1,3})(?:-?(?<patch>[a-z]))?(?:-beta)?$",
+            @"^(?<numeric>\d+(?:\.\d+){1,3})(?:-?(?<patch>[a-z]))?(?:-(?:beta|dev|stable))?$",
             RegexOptions.IgnoreCase);
         return match.Success
             ? match.Groups["numeric"].Value + match.Groups["patch"].Value.ToLowerInvariant()
