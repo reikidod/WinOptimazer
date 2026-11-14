@@ -30,7 +30,7 @@ public sealed class ThemeSyncService
     public bool IsConnected => !string.IsNullOrWhiteSpace(ThemeSyncCredentialStore.Read());
 
     public async Task<PairingSession> CreatePairingAsync(
-        string deviceId, string themeId, string accentId, CancellationToken cancellationToken = default)
+        string deviceId, CancellationToken cancellationToken = default)
     {
         var pollSecret = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
         using var response = await Http.PostAsJsonAsync("v1/pairings", new
