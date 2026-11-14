@@ -18,22 +18,6 @@ public sealed class GameBoostClient
         _serviceExecutable = Path.Combine(AppContext.BaseDirectory, "GameBoostService", "WinOptimizer.GameBoostService.exe");
     }
 
-    public bool IsInstalled
-    {
-        get
-        {
-            try
-            {
-                using var p = Process.Start(new ProcessStartInfo("sc.exe", "query WinOptimizerGameBoost")
-                    { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true });
-                var output = p?.StandardOutput.ReadToEnd() ?? "";
-                p?.WaitForExit(3000);
-                return output.Contains("SERVICE_NAME: WinOptimizerGameBoost", StringComparison.OrdinalIgnoreCase);
-            }
-            catch { return false; }
-        }
-    }
-
     public async Task<(bool Success, string Message)> InstallAsync()
     {
         if (!File.Exists(_serviceExecutable))
@@ -52,11 +36,56 @@ public sealed class GameBoostClient
 
     public async Task<GameBoostStatus> GetStatusAsync()
     {
-        var installed = IsInstalled;
-        if (!installed) return new(false, false, false, "Служба не установлена", 0);
+        var state = await QueryServiceStateAsync();
+        if (!state.Installed)
+            return new(false, false, false, "Служба не установлена", 0);
+        if (!state.Running)
+            return new(true, false, false, "Служба установлена, но остановлена. Её можно восстановить кнопкой запуска.", 0);
+
         var response = await SendAsync(new PipeRequest("status"));
-        return response is null ? new(true, false, false, "Служба установлена, но не отвечает", 0)
+        return response is null
+            ? new(true, false, false, "Служба запущена, но IPC-канал не отвечает. Проверьте журнал службы.", 0)
             : new(true, true, response.IsActive, response.Message, response.ConfiguredGames.Length);
+    }
+
+    private static async Task<(bool Installed, bool Running)> QueryServiceStateAsync()
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Path.Combine(Environment.SystemDirectory, "sc.exe"),
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+            startInfo.ArgumentList.Add("query");
+            startInfo.ArgumentList.Add("WinOptimizerGameBoost");
+
+            using var process = Process.Start(startInfo);
+            if (process is null)
+                return (false, false);
+
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+            try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(3)); }
+            catch (TimeoutException)
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                return (false, false);
+            }
+
+            var output = await outputTask;
+            _ = await errorTask;
+            var installed = output.Contains("SERVICE_NAME: WinOptimizerGameBoost", StringComparison.OrdinalIgnoreCase);
+            return (installed, installed && System.Text.RegularExpressions.Regex.IsMatch(
+                output, @"STATE\s*:\s*4\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
+        {
+            return (false, false);
+        }
     }
 
     private async Task<(bool Success, string Message)> RunElevatedAsync(string argument)

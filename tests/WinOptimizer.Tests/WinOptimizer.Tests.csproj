@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\WinOptimizer.csproj" />
+    <ProjectReference Include="..\..\GameBoostService\WinOptimizer.GameBoostService.csproj" />
   </ItemGroup>
 
 </Project>

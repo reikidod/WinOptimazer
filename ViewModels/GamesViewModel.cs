@@ -126,6 +126,8 @@ public sealed class GamesViewModel : ObservableObject
     }
 
     public ObservableCollection<GameItemViewModel> Games { get; } = new();
+    public bool HasGames => Games.Count > 0;
+    public string GameCountText => Games.Count == 0 ? "Игры ещё не найдены" : $"Найдено игр: {Games.Count}";
 
     public IEnumerable<GameItemViewModel> FilteredGames =>
         string.IsNullOrWhiteSpace(Filter)
@@ -186,12 +188,23 @@ public sealed class GamesViewModel : ObservableObject
 
     private async Task RefreshGameBoostStatusAsync()
     {
-        var status = await _gameBoost.GetStatusAsync();
-        GameBoostInstalled = status.IsInstalled;
-        GameBoostRunning = status.IsRunning;
-        GameBoostActive = status.IsActive;
-        ConfiguredGameCount = status.ConfiguredGames;
-        GameBoostStatus = status.Message;
+        try
+        {
+            GameBoostStatus = "Проверяю состояние службы…";
+            var status = await _gameBoost.GetStatusAsync();
+            GameBoostInstalled = status.IsInstalled;
+            GameBoostRunning = status.IsRunning;
+            GameBoostActive = status.IsActive;
+            ConfiguredGameCount = status.ConfiguredGames;
+            GameBoostStatus = status.Message;
+        }
+        catch (Exception ex)
+        {
+            GameBoostRunning = false;
+            GameBoostActive = false;
+            GameBoostStatus = "Не удалось проверить службу: " + ex.Message;
+            Logger.Error("Game Boost status check failed", ex);
+        }
     }
 
     private async Task InstallGameBoostServiceAsync()
@@ -324,6 +337,8 @@ public sealed class GamesViewModel : ObservableObject
                     _opti.HasHighPerformanceGpu(g.ExePath)));
             }
             OnPropertyChanged(nameof(FilteredGames));
+            OnPropertyChanged(nameof(HasGames));
+            OnPropertyChanged(nameof(GameCountText));
             if (GameBoostInstalled && GameBoostRunning) await SyncGameBoostGamesAsync();
             else if (GameBoostInstalled) GameBoostStatus = "Служба остановлена. Нажмите «Установить службу» для восстановления.";
             Status = Games.Count == 0

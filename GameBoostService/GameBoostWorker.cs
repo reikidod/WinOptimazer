@@ -53,7 +53,9 @@ internal sealed class GameBoostWorker : BackgroundService
             if (File.Exists(ConfigPath))
             {
                 var paths = JsonSerializer.Deserialize<string[]>(File.ReadAllText(ConfigPath)) ?? Array.Empty<string>();
-                _games = paths.Where(IsSafeExecutablePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                _games = paths.Where(GameBoostPolicy.IsSafeExecutablePath)
+                    .Select(Path.GetFullPath)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
             }
         }
         catch (Exception ex) { WriteLog("Configuration load failed: " + ex.Message); }
@@ -93,7 +95,11 @@ internal sealed class GameBoostWorker : BackgroundService
         if (request is null) return new(false, "Некорректный запрос", Array.Empty<string>(), false);
         if (request.Command == "configure")
         {
-            var paths = (request.Paths ?? Array.Empty<string>()).Where(IsSafeExecutablePath).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            var paths = (request.Paths ?? Array.Empty<string>())
+                .Where(GameBoostPolicy.IsSafeExecutablePath)
+                .Select(Path.GetFullPath)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
             await _gate.WaitAsync();
             try
             {
@@ -114,7 +120,12 @@ internal sealed class GameBoostWorker : BackgroundService
 
     private async Task ScanProcessesAsync(CancellationToken token)
     {
-        if (_games.Count == 0) return;
+        if (_games.Count == 0)
+        {
+            if (_sessionActive)
+                await RestoreSessionAsync();
+            return;
+        }
         var running = new List<Process>();
         foreach (var process in Process.GetProcesses())
         {
@@ -141,7 +152,7 @@ internal sealed class GameBoostWorker : BackgroundService
                     var snapshot = new ProcessSnapshot(process.Id, start, (int)original);
                     _changedProcesses[process.Id] = snapshot;
                     await SaveJournalAsync();
-                    if (original is ProcessPriorityClass.Idle or ProcessPriorityClass.BelowNormal or ProcessPriorityClass.Normal)
+                    if (GameBoostPolicy.ShouldPromotePriority(original))
                         process.PriorityClass = ProcessPriorityClass.AboveNormal;
                 }
                 catch (Exception ex) { WriteLog($"Cannot boost PID {SafePid(process)}: {ex.Message}"); }
@@ -176,18 +187,24 @@ internal sealed class GameBoostWorker : BackgroundService
             try
             {
                 using var process = Process.GetProcessById(snapshot.ProcessId);
-                if (process.StartTime.ToUniversalTime() == snapshot.StartTimeUtc)
+                if (GameBoostPolicy.IsSameProcessInstance(
+                        snapshot.ProcessId, snapshot.StartTimeUtc,
+                        process.Id, process.StartTime.ToUniversalTime()))
                     process.PriorityClass = (ProcessPriorityClass)snapshot.OriginalPriority;
             }
             catch { /* process already exited or access denied */ }
         }
         _changedProcesses.Clear();
-        if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
+        var powerPlanRestored = string.IsNullOrWhiteSpace(_originalPowerScheme) ||
             RunPowerCfg("/setactive", _originalPowerScheme);
-        _originalPowerScheme = null;
-        _sessionActive = false;
+        // Keep the original plan in the recovery journal until Windows confirms restoration.
+        if (powerPlanRestored)
+            _originalPowerScheme = null;
+        _sessionActive = !powerPlanRestored;
         await SaveJournalAsync();
-        WriteLog("Game Boost session restored");
+        WriteLog(powerPlanRestored
+            ? "Game Boost session restored"
+            : "Game Boost priorities restored; original power plan remains pending recovery");
     }
 
     private async Task SaveJournalAsync()
@@ -217,31 +234,61 @@ internal sealed class GameBoostWorker : BackgroundService
     {
         try
         {
-            using var p = Process.Start(new ProcessStartInfo("powercfg.exe", "/getactivescheme")
+            using var process = Process.Start(new ProcessStartInfo(
+                Path.Combine(Environment.SystemDirectory, "powercfg.exe"), "/getactivescheme")
             { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true });
-            var output = p?.StandardOutput.ReadToEnd() ?? "";
-            p?.WaitForExit(3000);
-            var match = System.Text.RegularExpressions.Regex.Match(output, @"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}");
-            return match.Success ? match.Value : null;
+            if (process is null)
+                return null;
+
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            if (!process.WaitForExit(3000))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                WriteLog("powercfg.exe /getactivescheme timed out");
+                return null;
+            }
+
+            return GameBoostPolicy.ExtractPowerSchemeGuid(outputTask.GetAwaiter().GetResult());
         }
-        catch { return null; }
+        catch (Exception ex)
+        {
+            WriteLog("Could not read active power plan: " + ex.Message);
+            return null;
+        }
     }
 
-    private static void RunPowerCfg(params string[] args)
+    private static bool RunPowerCfg(params string[] args)
     {
         try
         {
-            using var p = Process.Start(new ProcessStartInfo("powercfg.exe", string.Join(" ", args))
-            { UseShellExecute = false, CreateNoWindow = true });
-            p?.WaitForExit(5000);
-        }
-        catch { }
-    }
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Path.Combine(Environment.SystemDirectory, "powercfg.exe"),
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            foreach (var argument in args)
+                startInfo.ArgumentList.Add(argument);
 
-    private static bool IsSafeExecutablePath(string path) =>
-        !string.IsNullOrWhiteSpace(path) && Path.IsPathFullyQualified(path) &&
-        string.Equals(Path.GetExtension(path), ".exe", StringComparison.OrdinalIgnoreCase) &&
-        !path.StartsWith(@"\\.\", StringComparison.OrdinalIgnoreCase) && File.Exists(path);
+            using var process = Process.Start(startInfo);
+            if (process is null)
+                return false;
+            if (!process.WaitForExit(5000))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                WriteLog("powercfg.exe timed out: " + string.Join(" ", args));
+                return false;
+            }
+            if (process.ExitCode != 0)
+                WriteLog($"powercfg.exe failed ({process.ExitCode}): {string.Join(" ", args)}");
+            return process.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            WriteLog("powercfg.exe failed: " + ex.Message);
+            return false;
+        }
+    }
 
     private static int SafePid(Process p) { try { return p.Id; } catch { return -1; } }
     private static void WriteLog(string message)
