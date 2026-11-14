@@ -137,9 +137,9 @@ public sealed class UiStructureTests
                 Attribute(element, "Visibility")?.Contains("IsSidebarExpanded", StringComparison.Ordinal) == true);
         }
 
-        Assert.Contains(Elements(root, "Style"), element =>
+        Assert.Contains(Elements(view, "Style"), element =>
             Attribute(element, "Key") == "SidebarNavigationButton");
-        Assert.Contains(Elements(root, "Style"), element =>
+        Assert.Contains(Elements(view, "Style"), element =>
             Attribute(element, "Key") == "SidebarNavigationIcon");
         Assert.DoesNotContain(Elements(root, "Button"), element =>
             Attribute(element, "Style") == "{StaticResource SidebarHandleButton}");
