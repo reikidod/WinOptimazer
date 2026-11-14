@@ -116,9 +116,12 @@ public sealed class GameBoostClient
                 return (true, "Служба успешно установлена и её состояние RUNNING подтверждено.");
 
             var details = ReadInstallerLogTail();
-            var reason = process.ExitCode == 5
-                ? "Windows отказала в доступе. Проверьте запрос UAC и права администратора."
-                : $"Установщик службы завершился с кодом {process.ExitCode}.";
+            var reason = process.ExitCode switch
+            {
+                10 => "Установщику не удалось подтвердить права администратора. Повторите установку и разрешите запрос UAC.",
+                5 => "Диспетчер служб Windows отказал в запуске игровой службы (Access denied). Это не обязательно ошибка UAC; проверьте диагностику службы в install.log.",
+                _ => $"Установщик службы завершился с кодом {process.ExitCode}."
+            };
             return (false, string.IsNullOrWhiteSpace(details) ? reason : reason + Environment.NewLine + details);
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
