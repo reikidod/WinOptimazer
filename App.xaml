@@ -9,6 +9,21 @@
                 <ResourceDictionary Source="Themes/DarkTheme.Extras.xaml" />
                 <ResourceDictionary Source="Themes/SharedStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <DrawingImage x:Key="WinOptimizerAppIcon">
+                <DrawingImage.Drawing>
+                    <DrawingGroup>
+                        <GeometryDrawing Brush="#F6FAFF">
+                            <GeometryDrawing.Geometry>
+                                <RectangleGeometry Rect="0,0,256,256" RadiusX="54" RadiusY="54" />
+                            </GeometryDrawing>
+                        </GeometryDrawing>
+                        <GeometryDrawing Brush="#00B4F4"
+                            Geometry="M38,66 L70,66 L94,142 L118,88 L142,142 L166,66 L198,66 L158,190 L132,190 L118,150 L104,190 L78,190 Z" />
+                        <GeometryDrawing Brush="#0078D4"
+                            Geometry="M145,112 L196,61 L196,91 L225,61 L225,101 L196,130 L196,104 L163,137 Z" />
+                    </DrawingGroup>
+                </DrawingImage.Drawing>
+            </DrawingImage>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
