@@ -15,9 +15,9 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AssemblyName>WinOptimizer</AssemblyName>
     <RootNamespace>WinOptimizer</RootNamespace>
-    <Version>0.7.4</Version>
-    <AssemblyVersion>0.7.4.0</AssemblyVersion>
-    <FileVersion>0.7.4.0</FileVersion>
+    <Version>0.7.7-a</Version>
+    <AssemblyVersion>0.7.7.0</AssemblyVersion>
+    <FileVersion>0.7.7.0</FileVersion>
     <!-- Метка канала: CI передаёт stable (ветка main) или beta (ветка beta); локальная сборка — dev. Показывается в приложении: v0.7.x-beta. -->
     <ReleaseChannel Condition="'$(ReleaseChannel)' == ''">dev</ReleaseChannel>
     <InformationalVersion Condition="'$(ReleaseChannel)' != ''">$(Version)-$(ReleaseChannel)</InformationalVersion>
