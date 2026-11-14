@@ -26,8 +26,16 @@ if (-not (Test-Path $runtime)) {
     Write-Host "Downloading .NET 8 Desktop Runtime..."
     Invoke-WebRequest -Uri "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe" -OutFile $runtime
 }
-$ver = ([xml](Get-Content WinOptimizer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-& $iscc "/DMyAppVersion=$ver" "$PWD\installer\WinOptimizer.iss"
+$projectVersion = ([xml](Get-Content WinOptimizer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+$versionMatch = [regex]::Match($projectVersion, '^(?<numeric>\d+\.\d+\.\d+)(?:-(?<letter>[a-z]))?
+if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
+
+Get-ChildItem dist\WinOptimizer-Setup.exe | ForEach-Object { Write-Host "OK: $($_.FullName)" }
+)
+if (-not $versionMatch.Success) { throw "Unsupported project version: $projectVersion" }
+$displayVersion = $versionMatch.Groups["numeric"].Value + $versionMatch.Groups["letter"].Value
+$fileVersion = $versionMatch.Groups["numeric"].Value + ".0"
+& $iscc "/DMyAppVersion=$displayVersion" "/DMyAppFileVersion=$fileVersion" "$PWD\installer\WinOptimizer.iss"
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
 
 Get-ChildItem dist\WinOptimizer-Setup.exe | ForEach-Object { Write-Host "OK: $($_.FullName)" }
