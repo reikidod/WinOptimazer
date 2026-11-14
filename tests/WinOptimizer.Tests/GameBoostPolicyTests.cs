@@ -32,6 +32,18 @@ public sealed class GameBoostPolicyTests
         ProcessPriorityClass current, ProcessPriorityClass target, bool expected) =>
         Assert.Equal(expected, GameBoostPolicy.IsPriorityBelow(current, target));
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    [InlineData("8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c")]
+    [InlineData("not-a-guid")]
+    public void PowerPlanIdValidation_AllowsOnlyEmptyOrGuid(string? powerPlanId)
+    {
+        var expected = string.IsNullOrWhiteSpace(powerPlanId) ||
+                       Guid.TryParse(powerPlanId, out _);
+        Assert.Equal(expected, GameBoostPolicy.IsValidPowerPlanId(powerPlanId));
+    }
+
     [Fact]
     public void Policy_RejectsInvalidModeAndOperatingSystemExecutables()
     {
