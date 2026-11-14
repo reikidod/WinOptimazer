@@ -300,7 +300,7 @@ internal sealed class GameBoostWorker : BackgroundService
         }
         else if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
         {
-            if (RunPowerCfg("/setactive", _originalPowerScheme))
+            if (RestoreOriginalPowerScheme())
             {
                 _originalPowerScheme = null;
                 _highPerformanceSchemeApplied = false;
@@ -344,7 +344,7 @@ internal sealed class GameBoostWorker : BackgroundService
 
         _changedProcesses.Clear();
         var powerPlanRestored = string.IsNullOrWhiteSpace(_originalPowerScheme) ||
-            RunPowerCfg("/setactive", _originalPowerScheme);
+            RestoreOriginalPowerScheme();
 
         if (powerPlanRestored)
         {
@@ -437,6 +437,24 @@ internal sealed class GameBoostWorker : BackgroundService
             WriteLog("Could not read active power plan: " + ex.Message);
             return null;
         }
+    }
+
+    private bool RestoreOriginalPowerScheme()
+    {
+        if (string.IsNullOrWhiteSpace(_originalPowerScheme))
+            return true;
+
+        var currentScheme = ReadActivePowerScheme();
+        if (!string.IsNullOrWhiteSpace(currentScheme) &&
+            !string.Equals(currentScheme, HighPerformanceScheme, StringComparison.OrdinalIgnoreCase))
+        {
+            // The user or another utility changed the power plan while the game was running.
+            // Respect that new choice instead of restoring over it.
+            WriteLog("Power scheme changed outside Game Boost; preserving the user's current selection.");
+            return true;
+        }
+
+        return RunPowerCfg("/setactive", _originalPowerScheme);
     }
 
     private static bool RunPowerCfg(params string[] args)
