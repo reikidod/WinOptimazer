@@ -1411,7 +1411,7 @@
 
                                                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,10,12,0" VerticalAlignment="Center">
                                                             <TextBlock Text="План питания Windows" FontSize="11.5" FontWeight="SemiBold" />
-                                                            <TextBlock Text="Используется только пока эта игра запущена; исходный план затем восстанавливается."
+                                                            <TextBlock Text="При нескольких запущенных играх действует выбор последней запущенной; после выхода план возвращается."
                                                                        FontSize="10" TextWrapping="Wrap" Margin="0,3,0,0"
                                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                                         </StackPanel>
