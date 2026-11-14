@@ -131,7 +131,7 @@ public sealed class UpdateService : IUpdateService
                     continue;
 
                 var version = NormalizeVersion(tag);
-                if (!Regex.IsMatch(version, @"^\d+(\.\d+){1,3}$"))
+                if (!Regex.IsMatch(version, @"^\d+(?:\.\d+){1,3}[a-z]?$", RegexOptions.IgnoreCase))
                     continue;
 
                 if (best is null || CompareVersions(bestVersion!, version) < 0)
@@ -397,23 +397,40 @@ public sealed class UpdateService : IUpdateService
         tag = tag.Trim();
         if (tag.StartsWith("v", StringComparison.OrdinalIgnoreCase))
             tag = tag[1..];
-        var m = Regex.Match(tag, @"\d+(\.\d+){0,3}");
-        return m.Success ? m.Value : tag;
+
+        // Поддерживаем буквенные patch-релизы (0.7.7a) и их SemVer-метку
+        // в сборке (0.7.7-a-beta), не принимая канал beta за буквенный патч.
+        var match = Regex.Match(
+            tag,
+            @"^(?<numeric>\d+(?:\.\d+){1,3})(?:-?(?<patch>[a-z]))?(?:-beta)?$",
+            RegexOptions.IgnoreCase);
+        return match.Success
+            ? match.Groups["numeric"].Value + match.Groups["patch"].Value.ToLowerInvariant()
+            : tag;
     }
 
     internal static int CompareVersions(string a, string b)
     {
-        static int[] Parts(string v) =>
-            v.Split('.').Select(p => int.TryParse(p, out var n) ? n : 0).ToArray();
-        var pa = Parts(a);
-        var pb = Parts(b);
-        var len = Math.Max(pa.Length, pb.Length);
-        for (var i = 0; i < len; i++)
+        static (int[] Parts, string Patch) Parse(string value)
         {
-            var xa = i < pa.Length ? pa[i] : 0;
-            var xb = i < pb.Length ? pb[i] : 0;
-            if (xa != xb) return xa.CompareTo(xb);
+            var match = Regex.Match(value, @"^(?<numeric>\d+(?:\.\d+){1,3})(?<patch>[a-z]?)$", RegexOptions.IgnoreCase);
+            var numeric = match.Success ? match.Groups["numeric"].Value : value;
+            var patch = match.Success ? match.Groups["patch"].Value.ToLowerInvariant() : string.Empty;
+            var parts = numeric.Split('.').Select(part => int.TryParse(part, out var number) ? number : 0).ToArray();
+            return (parts, patch);
         }
-        return 0;
+
+        var left = Parse(a);
+        var right = Parse(b);
+        var length = Math.Max(left.Parts.Length, right.Parts.Length);
+        for (var index = 0; index < length; index++)
+        {
+            var x = index < left.Parts.Length ? left.Parts[index] : 0;
+            var y = index < right.Parts.Length ? right.Parts[index] : 0;
+            if (x != y) return x.CompareTo(y);
+        }
+
+        // Буквенный патч новее базовой версии; a < b < c и т. д.
+        return string.CompareOrdinal(left.Patch, right.Patch);
     }
 }
