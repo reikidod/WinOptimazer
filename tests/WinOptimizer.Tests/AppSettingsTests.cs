@@ -41,15 +41,20 @@ public sealed class AppSettingsTests : IDisposable
     }
 
     [Fact]
-    public void SidebarHidden_DefaultsToVisible_AndIsPersisted()
+    public void SidebarModes_DefaultToExpanded_AndPersistBothStates()
     {
         Assert.False(new AppSettings().SidebarHidden);
+        Assert.True(new AppSettings().SidebarExpanded);
 
         Directory.CreateDirectory(_directory);
         var path = Path.Combine(_directory, "settings.json");
         Assert.True(new AppSettings { SidebarHidden = true }.Save(path));
 
-        Assert.True(AppSettings.Load(path).SidebarHidden);
+        var loadedCompact = AppSettings.Load(path);
+        Assert.True(loadedCompact.SidebarHidden);
+
+        Assert.True(new AppSettings { SidebarExpanded = false }.Save(path));
+        Assert.False(AppSettings.Load(path).SidebarExpanded);
     }
 
     [Fact]
