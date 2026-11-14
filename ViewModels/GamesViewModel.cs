@@ -91,8 +91,8 @@ public sealed class GameItemViewModel : ObservableObject
     }
 
     public string GameBoostModeDescription => GameBoostMode == "maximum"
-        ? "Приоритет High + временный системный план «Высокая производительность». Возможен рост энергопотребления и температуры; защита Windows не отключается."
-        : "Приоритет Above Normal без смены системного плана питания.";
+        ? "Приоритет High. План питания задаётся отдельно ниже; системная защита Windows остаётся включена."
+        : "Приоритет Above Normal. План питания задаётся отдельно ниже.";
 
     /// <summary>Empty means that Game Boost must keep the current Windows power plan.</summary>
     public string GameBoostPowerPlanId
