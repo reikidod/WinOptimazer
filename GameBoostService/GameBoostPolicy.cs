@@ -20,6 +20,10 @@ public static class GameBoostPolicy
         string.Equals(mode, BalancedMode, StringComparison.OrdinalIgnoreCase) ||
         string.Equals(mode, MaximumMode, StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>Empty means keep the user's current power plan; otherwise only a GUID is accepted.</summary>
+    public static bool IsValidPowerPlanId(string? powerPlanId) =>
+        string.IsNullOrWhiteSpace(powerPlanId) || Guid.TryParse(powerPlanId, out _);
+
     public static ProcessPriorityClass TargetPriority(string? mode) =>
         string.Equals(mode, MaximumMode, StringComparison.OrdinalIgnoreCase)
             ? ProcessPriorityClass.High
