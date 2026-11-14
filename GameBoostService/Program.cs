@@ -67,7 +67,7 @@ internal static class ServiceInstaller
         var serviceArguments = new[]
         {
             // Keep the full executable path quoted in the SCM ImagePath value.
-            "binPath=", $"\\"{Executable}\\"",
+            "binPath=", $"\"{Executable}\"",
             "start=", "auto",
             "obj=", "LocalSystem",
             "DisplayName=", "WinOptimizer Game Boost"
