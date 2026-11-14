@@ -1281,6 +1281,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Border Style="{StaticResource BorderCard}" Margin="0,0,12,12" Padding="12">
+                        <StackPanel>
                         <WrapPanel VerticalAlignment="Center">
                             <Button Content="Определить железо" Margin="0,0,8,0"
                                     ToolTip="Определить процессор, видеокарту и экран и сравнить их с тестами комплектующих"
@@ -1299,6 +1300,7 @@
                         <TextBlock Text="{Binding Games.HardwareSummary}" TextWrapping="Wrap" FontSize="11.5"
                                    Margin="0,9,0,0" Foreground="{DynamicResource TextSecondaryBrush}"
                                    Visibility="{Binding Games.HasHardware, Converter={StaticResource BoolToVis}}" />
+                        </StackPanel>
                     </Border>
 
                     <ScrollViewer Grid.Row="1" Style="{StaticResource OverlayScroll}"
