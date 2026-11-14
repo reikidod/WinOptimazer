@@ -113,6 +113,8 @@ public class UpdateDownloadSafetyTests
         Assert.Equal("0.7.7a", UpdateService.NormalizeVersion("v0.7.7a-beta"));
         Assert.Equal("0.7.7a", UpdateService.NormalizeVersion("0.7.7-a-beta"));
         Assert.Equal("0.7.7", UpdateService.NormalizeVersion("0.7.7-beta"));
+        Assert.Equal("0.7.7a", UpdateService.NormalizeVersion("0.7.7-a-dev"));
+        Assert.Equal("0.7.7", UpdateService.NormalizeVersion("0.7.7-stable"));
     }
 
     [Fact]
