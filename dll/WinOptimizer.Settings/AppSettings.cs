@@ -18,6 +18,9 @@ public sealed class AppSettings
     /// <summary>Боковая панель скрыта пользователем (Ctrl+B или кнопка «‹»); состояние запоминается между запусками.</summary>
     public bool SidebarHidden { get; set; }
 
+    /// <summary>Развёрнутая боковая панель с подписями; false — компактный режим только с иконками.</summary>
+    public bool SidebarExpanded { get; set; } = true;
+
     public bool IsTabVisible(string tab) => !HiddenTabs.Contains(tab);
 
     public void SetTabVisible(string tab, bool visible)
