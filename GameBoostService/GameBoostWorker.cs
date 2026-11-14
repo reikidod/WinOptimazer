@@ -22,6 +22,7 @@ internal sealed class GameBoostWorker : BackgroundService
     private readonly Dictionary<int, ProcessSnapshot> _changedProcesses = new();
     private string? _originalPowerScheme;
     private bool _sessionActive;
+    private bool _powerPlanOverrideDetected;
     private string? _appliedPowerScheme;
     private int _activeGameCount;
 
@@ -305,21 +306,28 @@ internal sealed class GameBoostWorker : BackgroundService
 
         if (!string.IsNullOrWhiteSpace(requestedPowerScheme))
         {
-            if (ApplyRequestedPowerScheme(requestedPowerScheme, ref changedJournal))
+            if (!_powerPlanOverrideDetected &&
+                ApplyRequestedPowerScheme(requestedPowerScheme, ref changedJournal))
                 WriteLog($"Power scheme selected by active game: {requestedPowerScheme} ({latestPlanOwner})");
         }
-        else if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
+        else
         {
-            if (RestoreOriginalPowerScheme())
+            if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
             {
-                _originalPowerScheme = null;
-                _appliedPowerScheme = null;
-                changedJournal = true;
+                if (RestoreOriginalPowerScheme())
+                {
+                    _originalPowerScheme = null;
+                    _appliedPowerScheme = null;
+                    changedJournal = true;
+                }
+                else
+                {
+                    WriteLog("Original power scheme restoration failed; it will be retried.");
+                }
             }
-            else
-            {
-                WriteLog("Original power scheme restoration failed; it will be retried.");
-            }
+
+            // A user-selected override is scoped to the current set of running Game Boost games.
+            _powerPlanOverrideDetected = false;
         }
 
         _activeGameCount = activeGamePaths.Count;
@@ -481,6 +489,7 @@ internal sealed class GameBoostWorker : BackgroundService
                 WriteLog("Power plan changed outside Game Boost; preserving the user's current selection.");
                 _originalPowerScheme = null;
                 _appliedPowerScheme = null;
+                _powerPlanOverrideDetected = true;
                 changedJournal = true;
                 return false;
             }
