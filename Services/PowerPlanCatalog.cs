@@ -59,7 +59,7 @@ public static class PowerPlanCatalog
             return Array.Empty<PowerPlanInfo>();
 
         var plans = new Dictionary<string, PowerPlanInfo>(StringComparer.OrdinalIgnoreCase);
-        foreach (var line in output.Split(new[] { '\\r', '\\n' }, StringSplitOptions.RemoveEmptyEntries))
+        foreach (var line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
         {
             var match = GuidPattern.Match(line);
             if (!match.Success || !Guid.TryParse(match.Value, out var guid))
@@ -67,7 +67,7 @@ public static class PowerPlanCatalog
 
             var id = guid.ToString("D");
             var tail = line[(match.Index + match.Length)..].Trim();
-            var nameMatch = Regex.Match(tail, @"\\((?<name>[^)]*)\\)");
+            var nameMatch = Regex.Match(tail, @"\((?<name>[^)]*)\)");
             var parsedName = nameMatch.Success ? nameMatch.Groups["name"].Value.Trim() : "";
             var name = KnownNames.TryGetValue(id, out var knownName)
                 ? knownName
