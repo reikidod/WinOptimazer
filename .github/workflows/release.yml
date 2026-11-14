@@ -65,11 +65,14 @@ jobs:
           "CHANNEL=$channel" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Версия релиза: $v (SemVer $semverVersion), канал: $channel"
 
-      - name: Restore
+      - name: Restore application and tests
         shell: pwsh
         run: |
+          # Keep the same restore order as the verified Application CI workflow.
+          dotnet restore WinOptimizer.csproj
+          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить зависимости приложения' }
           dotnet restore tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj
-          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить NuGet-зависимости' }
+          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить зависимости тестов' }
 
       - name: Build application
         shell: pwsh
