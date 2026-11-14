@@ -92,6 +92,45 @@ public class UpdateDownloadSafetyTests
     }
 
     [Fact]
+    public void PickRelease_BetaRecognizesLetteredPatchAsNewer()
+    {
+        using var document = System.Text.Json.JsonDocument.Parse("""
+            [
+              { "tag_name": "v0.7.7-beta", "prerelease": true, "draft": false },
+              { "tag_name": "v0.7.7a-beta", "prerelease": true, "draft": false },
+              { "tag_name": "v0.7.6-beta", "prerelease": true, "draft": false }
+            ]
+            """);
+
+        var release = UpdateService.PickRelease(document.RootElement, beta: true);
+
+        Assert.Equal("v0.7.7a-beta", release?.GetProperty("tag_name").GetString());
+    }
+
+    [Fact]
+    public void NormalizeVersion_ParsesLetteredPatchAndBuildChannel()
+    {
+        Assert.Equal("0.7.7a", UpdateService.NormalizeVersion("v0.7.7a-beta"));
+        Assert.Equal("0.7.7a", UpdateService.NormalizeVersion("0.7.7-a-beta"));
+        Assert.Equal("0.7.7", UpdateService.NormalizeVersion("0.7.7-beta"));
+    }
+
+    [Fact]
+    public void CompareVersions_LetteredPatchIsNewerThanBaseVersion()
+    {
+        Assert.True(UpdateService.CompareVersions("0.7.7a", "0.7.7") > 0);
+        Assert.True(UpdateService.CompareVersions("0.7.7b", "0.7.7a") > 0);
+        Assert.True(UpdateService.CompareVersions("0.7.7", "0.7.7a") < 0);
+    }
+
+    [Fact]
+    public void IsUpdate_OffersLetteredPatchForSameNumericVersion()
+    {
+        Assert.True(UpdateService.IsUpdate(
+            "0.7.7", AppSettings.BetaChannel, "0.7.7a", AppSettings.BetaChannel, betaSelected: true));
+    }
+
+    [Fact]
     public void IsUpdate_DoesNotOfferTheSameInstalledVersionAgain()
     {
         Assert.False(UpdateService.IsUpdate(
