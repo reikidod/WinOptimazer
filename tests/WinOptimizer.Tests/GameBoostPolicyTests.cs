@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Xunit;
 using WinOptimizer.GameBoostService;
 
 namespace WinOptimizer.Tests;
