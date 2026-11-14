@@ -35,23 +35,37 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Кнопка «‹» в боковой панели: скрыть панель -->
+        <!-- Компактная кнопка управления панелью: направление показывает следующее действие. -->
         <Style x:Key="SidebarToggleButton" TargetType="Button">
-            <Setter Property="Width" Value="40" />
-            <Setter Property="Height" Value="28" />
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontSize" Value="24" />
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Content" Value="‹" />
+            <Setter Property="ToolTip" Value="Свернуть боковую панель (Ctrl+B)" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                    <Setter Property="Content" Value="›" />
+                    <Setter Property="ToolTip" Value="Развернуть боковую панель (Ctrl+B)" />
+                </DataTrigger>
+            </Style.Triggers>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bg" Background="Transparent" CornerRadius="10">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="10">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bg" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bg" Property="Opacity" Value="0.72" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -135,24 +149,38 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel HorizontalAlignment="Stretch" Margin="0,0,0,22">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
-                        <Border Width="42" Height="42" Margin="0" CornerRadius="12" ToolTip="{Binding VersionLabel}"
-                                Background="{DynamicResource BgCardBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                            <Grid>
-                                <Viewbox Width="30" Height="30" Stretch="Uniform">
-                                    <Canvas Width="24" Height="24">
-                                        <Path Data="M2 6 H5.4 L7.8 17 L10.2 6 H13.8 L16.2 17 L18.6 6 H22 L18 20 H14.8 L12 11.6 L9.2 20 H6 Z"
-                                              Fill="{DynamicResource BrandGradientBrush}" />
-                                        <Path Data="M12.8 6 H16 L11.1 20 H7.9 Z"
-                                              Fill="{DynamicResource BrandRedBrush}" />
-                                    </Canvas>
-                                </Viewbox>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
-                    </StackPanel>
-                    <TextBlock Text="Оптимизация Windows 10/11" Style="{StaticResource SecondaryText}" FontSize="12" Margin="2,0,0,0" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="42" Height="42" Margin="0" CornerRadius="12" ToolTip="{Binding VersionLabel}"
+                                    Background="{DynamicResource BgCardBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <Grid>
+                                    <Viewbox Width="30" Height="30" Stretch="Uniform">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M2 6 H5.4 L7.8 17 L10.2 6 H13.8 L16.2 17 L18.6 6 H22 L18 20 H14.8 L12 11.6 L9.2 20 H6 Z"
+                                                  Fill="{DynamicResource BrandGradientBrush}" />
+                                            <Path Data="M12.8 6 H16 L11.1 20 H7.9 Z"
+                                                  Fill="{DynamicResource BrandRedBrush}" />
+                                        </Canvas>
+                                    </Viewbox>
+                                </Grid>
+                            </Border>
+                            <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       Margin="10,0,0,0"
+                                       Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SidebarToggleButton}"
+                                Command="{Binding ToggleSidebarCommand}"
+                                AutomationProperties.Name="Переключить режим боковой панели"
+                                AutomationProperties.HelpText="Свернуть или развернуть боковую панель. Также доступно сочетание Ctrl+B." />
+                    </Grid>
+                    <TextBlock Text="Оптимизация Windows 10/11" Style="{StaticResource SecondaryText}" FontSize="12"
+                               Margin="2,0,0,0"
+                               Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1">
@@ -291,10 +319,6 @@
 
                 <!-- Иконки + версия + обновление -->
                 <StackPanel Grid.Row="2" Margin="0,12,0,0">
-                    <Button Style="{StaticResource SidebarToggleButton}" Content="⇔" Margin="0,0,0,6"
-                            Command="{Binding ToggleSidebarCommand}"
-                            ToolTip="Переключить компактный и полный режимы (Ctrl+B)"
-                            AutomationProperties.Name="Переключить режим боковой панели" />
                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="4,0,4,12" Opacity="0.55" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button Width="32" Height="32" Margin="2,0" Padding="0" Cursor="Hand"
