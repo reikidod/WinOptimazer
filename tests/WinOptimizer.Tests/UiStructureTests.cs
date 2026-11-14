@@ -113,6 +113,44 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void MainShell_UsesCompactIconOnlyNavigation()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+        var root = Assert.Single(Elements(view, "Grid"), element =>
+            Attribute(element, "Name") == "RootGrid");
+        Assert.Equal("84", Attribute(Elements(root, "ColumnDefinition").First(), "Width"));
+
+        var navigation = Elements(root, "RadioButton")
+            .Where(element => Attribute(element, "ToolTip") is not null)
+            .ToArray();
+        Assert.Equal(7, navigation.Length);
+        Assert.All(navigation, item =>
+        {
+            Assert.Equal("54", Attribute(item, "Width"));
+            Assert.Equal("48", Attribute(item, "Height"));
+            Assert.Equal("Center", Attribute(item, "HorizontalContentAlignment"));
+        });
+
+        foreach (var label in new[] { "Главная", "Оптимизация", "Приложения", "Игры",
+                                      "Мой ПК", "Обслуживание", "Настройки" })
+        {
+            Assert.Contains(Elements(root, "TextBlock"), element =>
+                Attribute(element, "Text") == label &&
+                Attribute(element, "Visibility") == "Collapsed");
+        }
+    }
+
+    [Fact]
+    public void Installer_UsesCompactWizardAndPreservesExistingData()
+    {
+        var installer = File.ReadAllText(Path.Combine(RepositoryRoot(), "installer/WinOptimizer.iss"));
+        Assert.Contains("WizardSizePercent=100", installer);
+        Assert.Contains("Your settings and tweak backups will be preserved.", installer);
+        Assert.Contains("DelTree(DataDir, True, True, True)", installer);
+        Assert.Contains("if DirExists(DataDir)", installer);
+    }
+
+    [Fact]
     public void SideMouseButtons_AreConnectedToNavigationHistory()
     {
         var codeBehind = File.ReadAllText(Path.Combine(RepositoryRoot(), "Views/MainWindow.xaml.cs"));
