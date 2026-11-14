@@ -50,7 +50,7 @@ public sealed class GameBoostClient
             return new(true, false, false, "Служба установлена, но остановлена. Её можно восстановить кнопкой запуска.", 0, 0, Array.Empty<GameBoostProfile>());
 
         var response = await SendAsync(new PipeRequest("status"));
-        if (response is null || response.ProtocolVersion < 2 || response.Profiles is null)
+        if (response is null || response.ProtocolVersion < 3 || response.Profiles is null)
             return new(true, false, false,
                 "Служба установлена, но её версия устарела. Нажмите «Обновить службу» для выбора плана питания в профилях игр.",
                 0, 0, Array.Empty<GameBoostProfile>());
