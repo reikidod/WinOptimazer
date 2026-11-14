@@ -22,7 +22,7 @@ internal sealed class GameBoostWorker : BackgroundService
     private readonly Dictionary<int, ProcessSnapshot> _changedProcesses = new();
     private string? _originalPowerScheme;
     private bool _sessionActive;
-    private bool _highPerformanceSchemeApplied;
+    private string? _appliedPowerScheme;
     private int _activeGameCount;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -87,10 +87,16 @@ internal sealed class GameBoostWorker : BackgroundService
 
                 var profile = entry.Deserialize<GameProfile>();
                 if (profile is null || !GameBoostPolicy.IsSafeExecutablePath(profile.Path) ||
-                    !GameBoostPolicy.IsValidMode(profile.Mode))
+                    !GameBoostPolicy.IsValidMode(profile.Mode) ||
+                    !GameBoostPolicy.IsValidPowerPlanId(profile.PowerPlanId))
                     continue;
 
-                profiles.Add(profile with { Path = Path.GetFullPath(profile.Path), Mode = NormalizeMode(profile.Mode) });
+                profiles.Add(profile with
+                {
+                    Path = Path.GetFullPath(profile.Path),
+                    Mode = NormalizeMode(profile.Mode),
+                    PowerPlanId = NormalizePowerPlanId(profile.PowerPlanId)
+                });
             }
 
             _profiles = profiles
@@ -153,11 +159,13 @@ internal sealed class GameBoostWorker : BackgroundService
             var profiles = (request.Profiles ?? Array.Empty<GameProfile>())
                 .Where(profile => profile is not null &&
                                   GameBoostPolicy.IsSafeExecutablePath(profile.Path) &&
-                                  GameBoostPolicy.IsValidMode(profile.Mode))
+                                  GameBoostPolicy.IsValidMode(profile.Mode) &&
+                                  GameBoostPolicy.IsValidPowerPlanId(profile.PowerPlanId))
                 .Select(profile => profile with
                 {
                     Path = Path.GetFullPath(profile.Path),
-                    Mode = NormalizeMode(profile.Mode)
+                    Mode = NormalizeMode(profile.Mode),
+                    PowerPlanId = NormalizePowerPlanId(profile.PowerPlanId)
                 })
                 .GroupBy(profile => profile.Path, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.Last())
@@ -193,13 +201,15 @@ internal sealed class GameBoostWorker : BackgroundService
 
     private PipeResponse BuildResponse(bool success, string message) =>
         new(success, message, _profiles.Values.OrderBy(p => p.Path, StringComparer.OrdinalIgnoreCase).ToArray(),
-            _sessionActive, _activeGameCount, ProtocolVersion: 2);
+            _sessionActive, _activeGameCount, ProtocolVersion: 3);
 
     private async Task ScanProcessesAsync(CancellationToken token)
     {
         var activeProcessIds = new HashSet<int>();
         var activeGamePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var maximumModeActive = false;
+        var requestedPowerScheme = (string?)null;
+        var latestPlanProcessStart = DateTime.MinValue;
+        var latestPlanOwner = "";
         var changedJournal = false;
 
         foreach (var process in Process.GetProcesses())
@@ -217,9 +227,22 @@ internal sealed class GameBoostWorker : BackgroundService
 
                 activeProcessIds.Add(process.Id);
                 activeGamePaths.Add(profile.Path);
-                maximumModeActive |= string.Equals(profile.Mode, GameBoostPolicy.MaximumMode, StringComparison.OrdinalIgnoreCase);
 
                 var startTime = process.StartTime.ToUniversalTime();
+                var candidatePowerPlan = NormalizePowerPlanId(profile.PowerPlanId);
+                if (startTime > latestPlanProcessStart ||
+                    (startTime == latestPlanProcessStart &&
+                     string.Compare(profile.Path, latestPlanOwner, StringComparison.OrdinalIgnoreCase) > 0))
+                {
+                    // The most recently launched enabled game owns the temporary system-wide
+                    // power plan. An empty selection explicitly means "do not change the plan".
+                    latestPlanProcessStart = startTime;
+                    latestPlanOwner = profile.Path;
+                    requestedPowerScheme = string.IsNullOrWhiteSpace(candidatePowerPlan)
+                        ? null
+                        : candidatePowerPlan;
+                }
+
                 var currentPriority = process.PriorityClass;
                 var targetPriority = GameBoostPolicy.TargetPriority(profile.Mode);
 
@@ -280,30 +303,17 @@ internal sealed class GameBoostWorker : BackgroundService
             changedJournal = true;
         }
 
-        if (maximumModeActive)
+        if (!string.IsNullOrWhiteSpace(requestedPowerScheme))
         {
-            if (string.IsNullOrWhiteSpace(_originalPowerScheme))
-            {
-                _originalPowerScheme = ReadActivePowerScheme();
-                if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
-                    changedJournal = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(_originalPowerScheme) && !_highPerformanceSchemeApplied)
-            {
-                _highPerformanceSchemeApplied =
-                    string.Equals(_originalPowerScheme, HighPerformanceScheme, StringComparison.OrdinalIgnoreCase) ||
-                    RunPowerCfg("/setactive", HighPerformanceScheme);
-                if (!_highPerformanceSchemeApplied)
-                    WriteLog("Could not activate High Performance power scheme; will retry while a maximum-mode game is running.");
-            }
+            if (ApplyRequestedPowerScheme(requestedPowerScheme, ref changedJournal))
+                WriteLog($"Power scheme selected by active game: {requestedPowerScheme} ({latestPlanOwner})");
         }
         else if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
         {
             if (RestoreOriginalPowerScheme())
             {
                 _originalPowerScheme = null;
-                _highPerformanceSchemeApplied = false;
+                _appliedPowerScheme = null;
                 changedJournal = true;
             }
             else
@@ -349,7 +359,7 @@ internal sealed class GameBoostWorker : BackgroundService
         if (powerPlanRestored)
         {
             _originalPowerScheme = null;
-            _highPerformanceSchemeApplied = false;
+            _appliedPowerScheme = null;
         }
 
         _sessionActive = false;
@@ -362,7 +372,7 @@ internal sealed class GameBoostWorker : BackgroundService
 
     private async Task SaveJournalAsync()
     {
-        var journal = new RecoveryJournal(_originalPowerScheme, _changedProcesses.Values.ToArray());
+        var journal = new RecoveryJournal(_originalPowerScheme, _changedProcesses.Values.ToArray(), _appliedPowerScheme);
         var temp = JournalPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(journal));
         File.Move(temp, JournalPath, true);
@@ -381,6 +391,14 @@ internal sealed class GameBoostWorker : BackgroundService
                 return;
 
             _originalPowerScheme = journal.OriginalPowerScheme;
+            _appliedPowerScheme = journal.AppliedPowerScheme;
+            if (_appliedPowerScheme is null && !string.IsNullOrWhiteSpace(_originalPowerScheme))
+            {
+                // Before custom power-plan selection, Game Boost always applied this plan.
+                // Keep old recovery journals compatible during the service update.
+                _appliedPowerScheme = HighPerformanceScheme;
+            }
+
             if (document.RootElement.TryGetProperty("Processes", out var storedProcesses) &&
                 storedProcesses.ValueKind == JsonValueKind.Array)
             {
@@ -412,6 +430,11 @@ internal sealed class GameBoostWorker : BackgroundService
             ? GameBoostPolicy.MaximumMode
             : GameBoostPolicy.BalancedMode;
 
+    private static string NormalizePowerPlanId(string? powerPlanId) =>
+        Guid.TryParse(powerPlanId, out var id) && id != Guid.Empty
+            ? id.ToString("D")
+            : "";
+
     private static string? ReadActivePowerScheme()
     {
         try
@@ -439,18 +462,74 @@ internal sealed class GameBoostWorker : BackgroundService
         }
     }
 
+    private bool ApplyRequestedPowerScheme(string requestedPowerScheme, ref bool changedJournal)
+    {
+        var currentScheme = ReadActivePowerScheme();
+        if (string.IsNullOrWhiteSpace(currentScheme))
+        {
+            WriteLog("Unable to read the current power plan; selected plan will be retried.");
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
+        {
+            var expectedCurrent = _appliedPowerScheme ?? _originalPowerScheme;
+            if (!string.Equals(currentScheme, expectedCurrent, StringComparison.OrdinalIgnoreCase))
+            {
+                // The user or another utility changed the power plan while the game was running.
+                // Stop managing it until the current Game Boost session ends.
+                WriteLog("Power plan changed outside Game Boost; preserving the user's current selection.");
+                _originalPowerScheme = null;
+                _appliedPowerScheme = null;
+                changedJournal = true;
+                return false;
+            }
+        }
+        else
+        {
+            _originalPowerScheme = currentScheme;
+            changedJournal = true;
+        }
+
+        if (string.Equals(currentScheme, requestedPowerScheme, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.Equals(_appliedPowerScheme, requestedPowerScheme, StringComparison.OrdinalIgnoreCase))
+            {
+                _appliedPowerScheme = requestedPowerScheme;
+                changedJournal = true;
+            }
+            return true;
+        }
+
+        if (!RunPowerCfg("/setactive", requestedPowerScheme))
+        {
+            WriteLog($"Could not activate requested power plan {requestedPowerScheme}; will retry while the game is running.");
+            return false;
+        }
+
+        _appliedPowerScheme = requestedPowerScheme;
+        changedJournal = true;
+        return true;
+    }
+
     private bool RestoreOriginalPowerScheme()
     {
         if (string.IsNullOrWhiteSpace(_originalPowerScheme))
             return true;
 
+        // If no scheme was actually applied, there is nothing for the service to undo.
+        if (string.IsNullOrWhiteSpace(_appliedPowerScheme))
+            return true;
+
         var currentScheme = ReadActivePowerScheme();
-        if (!string.IsNullOrWhiteSpace(currentScheme) &&
-            !string.Equals(currentScheme, HighPerformanceScheme, StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(currentScheme))
+            return false;
+
+        if (!string.Equals(currentScheme, _appliedPowerScheme, StringComparison.OrdinalIgnoreCase))
         {
             // The user or another utility changed the power plan while the game was running.
             // Respect that new choice instead of restoring over it.
-            WriteLog("Power scheme changed outside Game Boost; preserving the user's current selection.");
+            WriteLog("Power plan changed outside Game Boost; preserving the user's current selection.");
             return true;
         }
 
@@ -508,8 +587,8 @@ internal sealed class GameBoostWorker : BackgroundService
     }
 
     private sealed record PipeRequest(string Command, GameProfile[]? Profiles = null);
-    private sealed record GameProfile(string Path, bool Enabled, string Mode);
+    private sealed record GameProfile(string Path, bool Enabled, string Mode, string PowerPlanId = "");
     private sealed record PipeResponse(bool Success, string Message, GameProfile[] Profiles, bool IsActive, int ActiveGameCount, int ProtocolVersion);
     private sealed record ProcessSnapshot(int ProcessId, DateTime StartTimeUtc, int OriginalPriority, int AppliedPriority = -1);
-    private sealed record RecoveryJournal(string? OriginalPowerScheme, ProcessSnapshot[] Processes);
+    private sealed record RecoveryJournal(string? OriginalPowerScheme, ProcessSnapshot[] Processes, string? AppliedPowerScheme = null);
 }
