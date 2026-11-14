@@ -43,18 +43,19 @@ public partial class MainWindow : Window
         Loaded += OnLoaded;
 
         // Запомненное состояние боковой панели применяем сразу, без анимации.
-        SidebarWidth = _viewModel.IsSidebarVisible ? SidebarFullWidth : 0;
+        SidebarWidth = _viewModel.IsSidebarExpanded ? SidebarExpandedWidth : SidebarCompactWidth;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += (_, _) => _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
     }
 
-    private const double SidebarFullWidth = 84;
+    private const double SidebarCompactWidth = 84;
+    private const double SidebarExpandedWidth = 240;
 
     public static readonly DependencyProperty SidebarWidthProperty = DependencyProperty.Register(
         nameof(SidebarWidth), typeof(double), typeof(MainWindow),
         new PropertyMetadata(SidebarFullWidth, (d, e) => ((MainWindow)d).OnSidebarWidthChanged((double)e.NewValue)));
 
-    /// <summary>Ширина боковой панели: 84 — показана, 0 — скрыта. Анимируется при скрытии/показе.</summary>
+    /// <summary>Ширина боковой панели: 84 — только иконки, 240 — иконки с подписями.</summary>
     public double SidebarWidth
     {
         get => (double)GetValue(SidebarWidthProperty);
@@ -64,21 +65,19 @@ public partial class MainWindow : Window
     private void OnSidebarWidthChanged(double width)
     {
         SidebarColumn.Width = new GridLength(Math.Max(0, width));
-        // Полностью скрытая панель не должна ловить фокус клавиатуры и отбрасывать тень.
-        SidebarPanel.Visibility = width <= 0.5 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(MainViewModel.IsSidebarVisible))
+        if (e.PropertyName == nameof(MainViewModel.IsSidebarExpanded))
         {
-            AnimateSidebar(_viewModel.IsSidebarVisible);
+            AnimateSidebar(_viewModel.IsSidebarExpanded);
         }
     }
 
-    private void AnimateSidebar(bool visible)
+    private void AnimateSidebar(bool expanded)
     {
-        var target = visible ? SidebarFullWidth : 0;
+        var target = expanded ? SidebarExpandedWidth : SidebarCompactWidth;
         BeginAnimation(SidebarWidthProperty, null);
 
         if (!Motion.IsEnabled)
@@ -87,7 +86,6 @@ public partial class MainWindow : Window
             return;
         }
 
-        SidebarPanel.Visibility = Visibility.Visible;
         var animation = new DoubleAnimation(SidebarWidth, target, TimeSpan.FromMilliseconds(220))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
