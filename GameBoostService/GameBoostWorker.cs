@@ -304,12 +304,8 @@ internal sealed class GameBoostWorker : BackgroundService
             changedJournal = true;
         }
 
-        if (!string.IsNullOrWhiteSpace(requestedPowerScheme))
-        {
-            if (!_powerPlanOverrideDetected &&
-                ApplyRequestedPowerScheme(requestedPowerScheme, ref changedJournal))
-                WriteLog($"Power scheme selected by active game: {requestedPowerScheme} ({latestPlanOwner})");
-        }
+        if (!string.IsNullOrWhiteSpace(requestedPowerScheme) && !_powerPlanOverrideDetected)
+            ApplyRequestedPowerScheme(requestedPowerScheme, ref changedJournal);
         else
         {
             if (!string.IsNullOrWhiteSpace(_originalPowerScheme))
@@ -400,10 +396,13 @@ internal sealed class GameBoostWorker : BackgroundService
 
             _originalPowerScheme = journal.OriginalPowerScheme;
             _appliedPowerScheme = journal.AppliedPowerScheme;
-            if (_appliedPowerScheme is null && !string.IsNullOrWhiteSpace(_originalPowerScheme))
+            if (_appliedPowerScheme is null &&
+                !document.RootElement.TryGetProperty("AppliedPowerScheme", out _) &&
+                !string.IsNullOrWhiteSpace(_originalPowerScheme))
             {
-                // Before custom power-plan selection, Game Boost always applied this plan.
-                // Keep old recovery journals compatible during the service update.
+                // Journals created before custom power-plan selection did not contain this field;
+                // those versions always applied High Performance. New journals may explicitly
+                // contain null when no plan was successfully changed, so do not infer it then.
                 _appliedPowerScheme = HighPerformanceScheme;
             }
 
@@ -506,6 +505,7 @@ internal sealed class GameBoostWorker : BackgroundService
             {
                 _appliedPowerScheme = requestedPowerScheme;
                 changedJournal = true;
+                WriteLog($"Requested power plan was already active: {requestedPowerScheme}");
             }
             return true;
         }
@@ -518,6 +518,7 @@ internal sealed class GameBoostWorker : BackgroundService
 
         _appliedPowerScheme = requestedPowerScheme;
         changedJournal = true;
+        WriteLog($"Applied selected power plan: {requestedPowerScheme}");
         return true;
     }
 
