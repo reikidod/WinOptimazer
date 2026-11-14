@@ -172,7 +172,7 @@ public sealed class UiStructureTests
         Assert.Contains(Elements(document, "Button"), element =>
             Attribute(element, "Content") == "↻" &&
             Attribute(element, "Command") == "{Binding CheckUpdateCommand}" &&
-            Attribute(element, "ToolTip") == "{Binding UpdateStatus}");
+            Attribute(element, "ToolTip") == "{Binding UpdateButtonToolTip}");
 
         Assert.DoesNotContain(Elements(document, "Button"), element =>
             Attribute(element, "Command") == "{Binding DownloadLatestVersionCommand}");

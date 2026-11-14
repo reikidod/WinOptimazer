@@ -322,8 +322,17 @@ public sealed class MainViewModel : ObservableObject
     public string UpdateStatus
     {
         get => _updateStatus;
-        private set => SetField(ref _updateStatus, value);
+        private set
+        {
+            if (SetField(ref _updateStatus, value)) OnPropertyChanged(nameof(UpdateButtonToolTip));
+        }
     }
+
+    private const string UpdateButtonHint = "Проверить обновления и установить их заменой файлов без нового Setup";
+
+    /// <summary>Подсказка кнопки обновления: текущий статус проверки, а до первой проверки — пояснение (пустая подсказка не показывается).</summary>
+    public string UpdateButtonToolTip =>
+        string.IsNullOrWhiteSpace(_updateStatus) ? UpdateButtonHint : $"{_updateStatus}{Environment.NewLine}{UpdateButtonHint}";
 
     private bool _updateAvailable;
     public bool UpdateAvailable

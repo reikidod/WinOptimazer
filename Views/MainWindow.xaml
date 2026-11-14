@@ -294,7 +294,8 @@
                             FontSize="18" Padding="0" Margin="0,0,0,4"
                             Foreground="{DynamicResource AccentBrush}"
                             Command="{Binding CheckUpdateCommand}"
-                            ToolTip="Проверить обновления и установить их заменой файлов без нового Setup">
+                            ToolTip="{Binding UpdateButtonToolTip}"
+                            AutomationProperties.HelpText="Проверить обновления и установить их заменой файлов без нового Setup">
                         <Button.ContextMenu>
                             <ContextMenu Style="{StaticResource DarkContextMenu}">
                                 <MenuItem Style="{StaticResource DarkMenuItem}" Header="Проверить наличие обновлений"
