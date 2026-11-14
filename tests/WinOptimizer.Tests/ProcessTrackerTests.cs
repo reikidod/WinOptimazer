@@ -34,6 +34,19 @@ public class ProcessTrackerTests
     }
 
     [Fact]
+    public void Cpu_CounterRegressionIsUnknownAndNextSampleRecovers()
+    {
+        var tracker = new ProcessTracker(cpuCores: 1);
+        tracker.Update(new[] { Sample(10, "game", 5) }, T0);
+        tracker.Update(new[] { Sample(10, "game", 2) }, T0.AddSeconds(1));
+
+        Assert.Null(tracker.GetActive(5).Single().CpuPercent);
+
+        tracker.Update(new[] { Sample(10, "game", 3) }, T0.AddSeconds(2));
+        Assert.Equal(100d, tracker.GetActive(5).Single().CpuPercent!.Value, 3);
+    }
+
+    [Fact]
     public void FirstSample_ReportsNoExitedProcesses()
     {
         var tracker = new ProcessTracker(4);
