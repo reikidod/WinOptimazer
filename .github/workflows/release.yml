@@ -59,7 +59,8 @@ jobs:
           }
           # main — стабильный канал, beta — бета-канал (релиз помечается prerelease и тегом -beta)
           $channel = if ($env:GITHUB_REF_NAME -eq 'beta') { 'beta' } else { 'stable' }
-          "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          # Не называть VERSION: MSBuild читает env как свойство $(Version), а «0.7.7a» невалидна для NuGet.
+          "RELEASE_VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "SEMVER_VERSION=$semverVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "FILE_VERSION=$fileVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "CHANNEL=$channel" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -108,7 +109,7 @@ jobs:
             choco install innosetup -y --no-progress
             if (-not (Test-Path $iscc)) { throw 'Inno Setup не найден' }
           }
-          & $iscc "/DMyAppVersion=$env:VERSION" "/DMyAppFileVersion=$env:FILE_VERSION" installer\WinOptimizer.iss
+          & $iscc "/DMyAppVersion=$env:RELEASE_VERSION" "/DMyAppFileVersion=$env:FILE_VERSION" installer\WinOptimizer.iss
           if ($LASTEXITCODE -ne 0) { throw 'ISCC завершился с ошибкой' }
           if (-not (Test-Path dist\WinOptimizer-Setup.exe)) { throw 'dist\WinOptimizer-Setup.exe не найден' }
 
@@ -159,7 +160,7 @@ jobs:
           if (-not (Test-Path "$installDir\WinOptimizer.exe")) { throw 'После обновления WinOptimizer.exe отсутствует' }
           $newVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
           Write-Host "Версия после обновления: $newVersion"
-          if ($newVersion -notlike "$env:FILE_VERSION*") { throw "Ожидалась версия $env:VERSION, получена $newVersion" }
+          if ($newVersion -notlike "$env:FILE_VERSION*") { throw "Ожидалась версия $env:RELEASE_VERSION, получена $newVersion" }
 
           $uninstaller = Get-ChildItem $installDir -Filter 'unins*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if ($null -eq $uninstaller) { throw 'После обновления не найден деинсталлятор' }
@@ -201,11 +202,11 @@ jobs:
             git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
           }
           if ($env:CHANNEL -eq 'beta') {
-            $tag = "v$env:VERSION-beta"
+            $tag = "v$env:RELEASE_VERSION-beta"
             $title = "$tag (бета)"
             $releaseArgs = @('--prerelease')
           } else {
-            $tag = "v$env:VERSION"
+            $tag = "v$env:RELEASE_VERSION"
             $title = $tag
             $releaseArgs = @('--latest')
           }
