@@ -11,12 +11,13 @@ public sealed class PerformanceHistoryServiceTests
         IReadOnlyList<GpuAdapterActivitySnapshot>? gpu = null,
         IReadOnlyList<PhysicalDiskActivitySnapshot>? disks = null,
         NetworkTrafficRate? network = null,
-        uint memoryLoad = 50)
+        uint memoryLoad = 50,
+        double cpuPercent = 37.5)
     {
         return new SystemSnapshot(
             "Windows 11",
             8,
-            37.5,
+            cpuPercent,
             memoryLoad,
             16UL * 1024 * 1024 * 1024,
             8UL * 1024 * 1024 * 1024,
@@ -126,5 +127,45 @@ public sealed class PerformanceHistoryServiceTests
         Assert.Equal(2, service.Samples.Count);
         Assert.Equal(first.AddSeconds(2).ToLocalTime(), service.Samples[0].CapturedAt);
         Assert.Equal(first.AddSeconds(4).ToLocalTime(), service.Samples[1].CapturedAt);
+    }
+
+    [Fact]
+    public void Add_RejectsInvalidCpuAndGpuPercentages()
+    {
+        var capturedAt = new DateTime(2026, 11, 14, 10, 30, 0, DateTimeKind.Utc);
+        var snapshot = CreateSnapshot(
+            capturedAt,
+            cpuPercent: double.NaN,
+            gpu:
+            [
+                new GpuAdapterActivitySnapshot(0, double.NaN, capturedAt),
+                new GpuAdapterActivitySnapshot(1, -5, capturedAt),
+            ]);
+
+        var point = new PerformanceHistoryService().Add(snapshot);
+
+        Assert.Null(point.CpuPercent);
+        Assert.Null(point.GpuPercent);
+        Assert.Equal("CPU недоступен", point.CpuValueText);
+        Assert.Equal("GPU н/д", point.GpuValueText);
+    }
+
+    [Fact]
+    public void Add_KeepsHistoryBoundedDuringLongSessions()
+    {
+        const int capacity = 60;
+        const int sampleCount = 10_000;
+        var service = new PerformanceHistoryService(capacity);
+        var first = new DateTime(2026, 11, 14, 10, 0, 0, DateTimeKind.Utc);
+
+        for (var index = 0; index < sampleCount; index++)
+        {
+            var capturedAt = first.AddSeconds(index * 2);
+            service.Add(CreateSnapshot(capturedAt, cpuPercent: index % 101), capturedAt);
+        }
+
+        Assert.Equal(capacity, service.Samples.Count);
+        Assert.Equal(first.AddSeconds((sampleCount - capacity) * 2), service.Samples[0].CapturedAt);
+        Assert.Equal(first.AddSeconds((sampleCount - 1) * 2), service.Samples[^1].CapturedAt);
     }
 }
