@@ -823,7 +823,7 @@
                                           StrokeDashArray="26,26" StrokeDashOffset="26"
                                           local:Motion.ArcProgress="{Binding GaugeProgressValue}">
                                         <Path.Effect>
-                                            <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.18" Color="#8AAAD8" />
+                                            <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.18" Color="#00B4F4" />
                                         </Path.Effect>
                                     </Path>
                                     <TextBlock Canvas.Left="0" Canvas.Top="136" Text="ЛЁГКАЯ" FontSize="9"
