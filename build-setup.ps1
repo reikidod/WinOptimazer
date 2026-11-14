@@ -27,11 +27,7 @@ if (-not (Test-Path $runtime)) {
     Invoke-WebRequest -Uri "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe" -OutFile $runtime
 }
 $projectVersion = ([xml](Get-Content WinOptimizer.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-$versionMatch = [regex]::Match($projectVersion, '^(?<numeric>\d+\.\d+\.\d+)(?:-(?<letter>[a-z]))?
-if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
-
-Get-ChildItem dist\WinOptimizer-Setup.exe | ForEach-Object { Write-Host "OK: $($_.FullName)" }
-)
+$versionMatch = [regex]::Match($projectVersion, '^(?<numeric>\d+\.\d+\.\d+)(?:-(?<letter>[a-z]))?$')
 if (-not $versionMatch.Success) { throw "Unsupported project version: $projectVersion" }
 $displayVersion = $versionMatch.Groups["numeric"].Value + $versionMatch.Groups["letter"].Value
 $fileVersion = $versionMatch.Groups["numeric"].Value + ".0"
