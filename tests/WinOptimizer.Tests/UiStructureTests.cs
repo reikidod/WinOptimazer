@@ -113,31 +113,36 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void MainShell_UsesCompactIconOnlyNavigation()
+    public void MainShell_SupportsCompactAndExpandedSidebarModes()
     {
         var view = LoadView("Views/MainWindow.xaml");
         var root = Assert.Single(Elements(view, "Grid"), element =>
             Attribute(element, "Name") == "RootGrid");
-        Assert.Equal("84", Attribute(Elements(root, "ColumnDefinition").First(), "Width"));
+        var column = Assert.Single(Elements(root, "ColumnDefinition"), element =>
+            Attribute(element, "Name") == "SidebarColumn");
+        Assert.Equal("240", Attribute(column, "Width"));
 
         var navigation = Elements(root, "RadioButton")
             .Where(element => Attribute(element, "ToolTip") is not null)
             .ToArray();
         Assert.Equal(7, navigation.Length);
         Assert.All(navigation, item =>
-        {
-            Assert.Equal("54", Attribute(item, "Width"));
-            Assert.Equal("48", Attribute(item, "Height"));
-            Assert.Equal("Center", Attribute(item, "HorizontalContentAlignment"));
-        });
+            Assert.Equal("{StaticResource SidebarNavigationButton}", Attribute(item, "Style")));
 
         foreach (var label in new[] { "Главная", "Оптимизация", "Приложения", "Игры",
                                       "Мой ПК", "Обслуживание", "Настройки" })
         {
             Assert.Contains(Elements(root, "TextBlock"), element =>
                 Attribute(element, "Text") == label &&
-                Attribute(element, "Visibility") == "Collapsed");
+                Attribute(element, "Visibility")?.Contains("IsSidebarExpanded", StringComparison.Ordinal) == true);
         }
+
+        Assert.Contains(Elements(root, "Style"), element =>
+            Attribute(element, "Key") == "SidebarNavigationButton");
+        Assert.Contains(Elements(root, "Style"), element =>
+            Attribute(element, "Key") == "SidebarNavigationIcon");
+        Assert.DoesNotContain(Elements(root, "Button"), element =>
+            Attribute(element, "Style") == "{StaticResource SidebarHandleButton}");
     }
 
     [Fact]
@@ -151,22 +156,18 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void MainShell_SidebarCanBeHiddenAndRestored()
+    public void MainShell_SidebarModeCanBeToggledAndPersisted()
     {
         var view = LoadView("Views/MainWindow.xaml");
 
         var column = Assert.Single(Elements(view, "ColumnDefinition"), element =>
             Attribute(element, "Name") == "SidebarColumn");
-        Assert.Equal("84", Attribute(column, "Width"));
+        Assert.Equal("240", Attribute(column, "Width"));
         Assert.Contains(Elements(view, "Border"), element => Attribute(element, "Name") == "SidebarPanel");
 
         Assert.Contains(Elements(view, "Button"), element =>
-            Attribute(element, "Content") == "‹" &&
+            Attribute(element, "Content") == "⇔" &&
             Attribute(element, "Command") == "{Binding ToggleSidebarCommand}");
-        Assert.Contains(Elements(view, "Button"), element =>
-            Attribute(element, "Content") == "›" &&
-            Attribute(element, "Command") == "{Binding ToggleSidebarCommand}" &&
-            Attribute(element, "Style") == "{StaticResource SidebarHandleButton}");
         Assert.Contains(Elements(view, "KeyBinding"), element =>
             Attribute(element, "Key") == "B" &&
             Attribute(element, "Modifiers") == "Control" &&
