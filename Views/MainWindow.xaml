@@ -131,7 +131,7 @@
             <!-- Фирменная атмосфера сайта: едва заметная сетка и мягкие красно-синие свечения. -->
             <Rectangle Fill="{DynamicResource SiteGridBrush}" Opacity="0.72" />
             <Ellipse Width="680" Height="680" HorizontalAlignment="Right" VerticalAlignment="Top"
-                     Margin="0,-340,-260,0" Fill="{DynamicResource SiteRedGlowBrush}" Opacity="0.78" />
+                     Margin="0,-340,-260,0" Fill="{DynamicResource SiteCyanGlowBrush}" Opacity="0.78" />
             <Ellipse Width="560" Height="560" HorizontalAlignment="Left" VerticalAlignment="Bottom"
                      Margin="-280,0,0,-280" Fill="{DynamicResource SiteBlueGlowBrush}" Opacity="0.72" />
         </Grid>
@@ -164,7 +164,7 @@
                                             <Path Data="M2 6 H5.4 L7.8 17 L10.2 6 H13.8 L16.2 17 L18.6 6 H22 L18 20 H14.8 L12 11.6 L9.2 20 H6 Z"
                                                   Fill="{DynamicResource BrandGradientBrush}" />
                                             <Path Data="M12.8 6 H16 L11.1 20 H7.9 Z"
-                                                  Fill="{DynamicResource BrandRedBrush}" />
+                                                  Fill="{DynamicResource BrandCyanBrush}" />
                                         </Canvas>
                                     </Viewbox>
                                 </Grid>
