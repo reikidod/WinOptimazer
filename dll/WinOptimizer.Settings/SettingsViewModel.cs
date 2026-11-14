@@ -80,6 +80,7 @@ public sealed class SettingsViewModel : ObservableObject
     private string _themePairingCode = "";
     private bool _isThemeSyncConnected;
     private bool _applyingRemoteTheme;
+    private volatile bool _localThemePushPending;
     private string _lastThemeFingerprint = "";
     private long _lastThemeUpdatedAt;
 
@@ -613,8 +614,13 @@ public sealed class SettingsViewModel : ObservableObject
                     _lastThemeFingerprint = CurrentThemeFingerprint();
 
                     if (linked.Theme is not null)
+                    {
+                        _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, linked.Theme.UpdatedAt);
                         ApplyRemoteTheme(linked.Theme);
+                    }
 
+                    _lastThemeFingerprint = CurrentThemeFingerprint();
+                    _localThemePushPending = false;
                     ThemeSyncStatus = "Устройство привязано. Синхронизация темы включена.";
                     StartThemeSyncLoop(linked.DeviceToken);
                     return;
@@ -657,14 +663,31 @@ public sealed class SettingsViewModel : ObservableObject
                 await _themeSyncGate.WaitAsync(cancellationToken);
                 try
                 {
-                    var remote = await _themeSync.GetThemeAsync(token, cancellationToken);
-                    if (remote.UpdatedAt >= _lastThemeUpdatedAt &&
-                        (remote.UpdatedAt > _lastThemeUpdatedAt ||
-                         !string.Equals(CurrentThemeFingerprint(), remote.Id + "|" + remote.Accent, StringComparison.Ordinal)))
+                    if (_localThemePushPending)
                     {
-                        ApplyRemoteTheme(remote);
+                        var localThemeId = _settings.ThemeId;
+                        var localAccentId = _settings.AccentId;
+                        var localFingerprint = localThemeId + "|" + localAccentId;
+                        var pushed = await _themeSync.SetThemeAsync(token, localThemeId, localAccentId, cancellationToken);
+                        _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, pushed.UpdatedAt);
+                        if (string.Equals(CurrentThemeFingerprint(), localFingerprint, StringComparison.Ordinal))
+                        {
+                            _lastThemeFingerprint = localFingerprint;
+                            _localThemePushPending = false;
+                        }
+                        ThemeSyncStatus = "Локальная тема повторно синхронизирована с сайтом.";
                     }
-                    _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, remote.UpdatedAt);
+                    else
+                    {
+                        var remote = await _themeSync.GetThemeAsync(token, cancellationToken);
+                        if (remote.UpdatedAt >= _lastThemeUpdatedAt &&
+                            (remote.UpdatedAt > _lastThemeUpdatedAt ||
+                             !string.Equals(CurrentThemeFingerprint(), remote.Id + "|" + remote.Accent, StringComparison.Ordinal)))
+                        {
+                            ApplyRemoteTheme(remote);
+                        }
+                        _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, remote.UpdatedAt);
+                    }
                 }
                 finally
                 {
@@ -713,10 +736,10 @@ public sealed class SettingsViewModel : ObservableObject
             return;
 
         var fingerprint = CurrentThemeFingerprint();
-        if (string.Equals(fingerprint, _lastThemeFingerprint, StringComparison.Ordinal))
+        if (string.Equals(fingerprint, _lastThemeFingerprint, StringComparison.Ordinal) && !_localThemePushPending)
             return;
 
-        _lastThemeFingerprint = fingerprint;
+        _localThemePushPending = true;
         _ = PushLocalThemeAsync(token, _settings.ThemeId, _settings.AccentId);
     }
 
@@ -729,6 +752,12 @@ public sealed class SettingsViewModel : ObservableObject
             {
                 var result = await _themeSync.SetThemeAsync(token, themeId, accentId);
                 _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, result.UpdatedAt);
+                var sentFingerprint = themeId + "|" + accentId;
+                if (string.Equals(CurrentThemeFingerprint(), sentFingerprint, StringComparison.Ordinal))
+                {
+                    _lastThemeFingerprint = sentFingerprint;
+                    _localThemePushPending = false;
+                }
                 ThemeSyncStatus = "Тема приложения синхронизирована с сайтом.";
             }
             finally
@@ -767,6 +796,8 @@ public sealed class SettingsViewModel : ObservableObject
 
             RefreshSelection();
             _lastThemeFingerprint = CurrentThemeFingerprint();
+            _lastThemeUpdatedAt = Math.Max(_lastThemeUpdatedAt, theme.UpdatedAt);
+            _localThemePushPending = false;
             OnPropertyChanged(nameof(ThemeOptions));
             OnPropertyChanged(nameof(AccentOptions));
         }
@@ -803,6 +834,8 @@ public sealed class SettingsViewModel : ObservableObject
             IsThemeSyncConnected = false;
             ThemePairingCode = "";
             _lastThemeUpdatedAt = 0;
+            _localThemePushPending = false;
+            _lastThemeFingerprint = CurrentThemeFingerprint();
             ThemeSyncStatus = "Устройство отключено. Для повторного подключения создайте новый код.";
         }
         catch (Exception ex)
