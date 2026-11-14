@@ -320,20 +320,21 @@ public sealed class MainViewModel : ObservableObject
 
     public string VersionLabel => $"v{_updates.DisplayVersion}";
 
-    private bool _isSidebarVisible = !AppSettings.Current.SidebarHidden;
+    private bool _isSidebarExpanded = !AppSettings.Current.SidebarHidden && AppSettings.Current.SidebarExpanded;
 
     /// <summary>Показана ли боковая панель. Анимацию ширины выполняет окно.</summary>
-    public bool IsSidebarVisible
+    public bool IsSidebarExpanded
     {
-        get => _isSidebarVisible;
-        private set => SetField(ref _isSidebarVisible, value);
+        get => _isSidebarExpanded;
+        private set => SetField(ref _isSidebarExpanded, value);
     }
 
     private void ToggleSidebar()
     {
-        IsSidebarVisible = !IsSidebarVisible;
+        IsSidebarExpanded = !IsSidebarExpanded;
         var settings = AppSettings.Current;
-        settings.SidebarHidden = !IsSidebarVisible;
+        settings.SidebarExpanded = IsSidebarExpanded;
+        settings.SidebarHidden = false;
         settings.Save();
     }
 
