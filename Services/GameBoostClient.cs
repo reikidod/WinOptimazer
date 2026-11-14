@@ -5,7 +5,10 @@ using System.Text.Json;
 
 namespace WinOptimizer.Services;
 
-public sealed record GameBoostStatus(bool IsInstalled, bool IsRunning, bool IsActive, string Message, int ConfiguredGames);
+public sealed record GameBoostProfile(string Path, bool Enabled, string Mode);
+public sealed record GameBoostStatus(
+    bool IsInstalled, bool IsRunning, bool IsActive, string Message,
+    int ConfiguredGames, int ActiveGameCount, IReadOnlyList<GameBoostProfile> Profiles);
 
 /// <summary>Безопасный IPC-клиент службы Game Boost. Служба принимает только status/configure.</summary>
 public sealed class GameBoostClient
@@ -27,25 +30,26 @@ public sealed class GameBoostClient
 
     public Task<(bool Success, string Message)> UninstallAsync() => RunElevatedAsync("--uninstall");
 
-    public async Task<(bool Success, string Message, bool Active, int Count)> ConfigureAsync(IEnumerable<string> paths)
+    public async Task<(bool Success, string Message, bool Active, int Count)> ConfigureAsync(IEnumerable<GameBoostProfile> profiles)
     {
-        var response = await SendAsync(new PipeRequest("configure", paths.ToArray()));
+        var response = await SendAsync(new PipeRequest("configure", profiles.ToArray()));
         return response is null ? (false, "Служба не отвечает. Проверьте её состояние.", false, 0)
-            : (response.Success, response.Message, response.IsActive, response.ConfiguredGames.Length);
+            : (response.Success, response.Message, response.IsActive, response.Profiles.Count(p => p.Enabled));
     }
 
     public async Task<GameBoostStatus> GetStatusAsync()
     {
         var state = await QueryServiceStateAsync();
         if (!state.Installed)
-            return new(false, false, false, "Служба не установлена", 0);
+            return new(false, false, false, "Служба не установлена", 0, 0, Array.Empty<GameBoostProfile>());
         if (!state.Running)
-            return new(true, false, false, "Служба установлена, но остановлена. Её можно восстановить кнопкой запуска.", 0);
+            return new(true, false, false, "Служба установлена, но остановлена. Её можно восстановить кнопкой запуска.", 0, 0, Array.Empty<GameBoostProfile>());
 
         var response = await SendAsync(new PipeRequest("status"));
         return response is null
-            ? new(true, false, false, "Служба запущена, но IPC-канал не отвечает. Проверьте журнал службы.", 0)
-            : new(true, true, response.IsActive, response.Message, response.ConfiguredGames.Length);
+            ? new(true, false, false, "Служба запущена, но IPC-канал не отвечает. Обновите службу до текущей версии.", 0, 0, Array.Empty<GameBoostProfile>())
+            : new(true, true, response.IsActive, response.Message,
+                response.Profiles.Count(p => p.Enabled), response.ActiveGameCount, response.Profiles);
     }
 
     private static async Task<(bool Installed, bool Running)> QueryServiceStateAsync()
@@ -169,6 +173,6 @@ public sealed class GameBoostClient
         return null;
     }
 
-    private sealed record PipeRequest(string Command, string[]? Paths = null);
-    private sealed record PipeResponse(bool Success, string Message, string[] ConfiguredGames, bool IsActive);
+    private sealed record PipeRequest(string Command, GameBoostProfile[]? Profiles = null);
+    private sealed record PipeResponse(bool Success, string Message, GameBoostProfile[] Profiles, bool IsActive, int ActiveGameCount);
 }
