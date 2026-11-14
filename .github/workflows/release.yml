@@ -39,7 +39,23 @@ jobs:
           if ($versionMatch.Success) {
             $v = $versionMatch.Groups[1].Value
           } else {
-            $baseMatch = [regex]::Match($base, '^(\d+\.\d+\.\d+)(?:-([a-z]))?
+            $baseMatch = [regex]::Match($base, '^(\d+\.\d+\.\d+)(?:-([a-z]))?$')
+            if (-not $baseMatch.Success) { throw "Не удалось определить версию из CHANGELOG или WinOptimizer.csproj: $base" }
+            $v = $baseMatch.Groups[1].Value + $baseMatch.Groups[2].Value
+          }
+          $parts = [regex]::Match($v, '^(?<numeric>\d+\.\d+\.\d+)(?<letter>[a-z]?)$')
+          if (-not $parts.Success) { throw "Неподдерживаемый номер релиза: $v" }
+          $numericVersion = $parts.Groups['numeric'].Value
+          $letter = $parts.Groups['letter'].Value
+          $semverVersion = if ($letter) { "$numericVersion-$letter" } else { $numericVersion }
+          $fileVersion = "$numericVersion.0"
+          # main — стабильный канал, beta — бета-канал (релиз помечается prerelease и тегом -beta)
+          $channel = if ($env:GITHUB_REF_NAME -eq 'beta') { 'beta' } else { 'stable' }
+          "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "SEMVER_VERSION=$semverVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "FILE_VERSION=$fileVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "CHANNEL=$channel" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Версия релиза: $v (SemVer $semverVersion), канал: $channel"
 
       - name: Restore
         shell: pwsh
@@ -63,7 +79,7 @@ jobs:
         shell: pwsh
         run: |
           dotnet publish WinOptimizer.csproj -c Release -r win-x64 --self-contained false -o publish `
-            -p:Version=$env:SEMVER_VERSION -p:AssemblyVersion="$env:FILE_VERSION" -p:FileVersion="$env:FILE_VERSION" -p:ReleaseChannel=$env:CHANNEL `
+            -p:Version=$env:SEMVER_VERSION -p:AssemblyVersion="$env:FILE_VERSION" -p:FileVersion="$env:FILE_VERSION" `
             -p:PublishReadyToRun=true -p:ReleaseChannel=$env:CHANNEL
           if ($LASTEXITCODE -ne 0) { throw 'dotnet publish завершился с ошибкой' }
           if (-not (Test-Path publish\WinOptimizer.exe)) { throw 'publish\WinOptimizer.exe не найден' }
@@ -133,330 +149,6 @@ jobs:
           $newVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
           Write-Host "Версия после обновления: $newVersion"
           if ($newVersion -notlike "$env:FILE_VERSION*") { throw "Ожидалась версия $env:VERSION, получена $newVersion" }
-
-          $uninstaller = Get-ChildItem $installDir -Filter 'unins*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if ($null -eq $uninstaller) { throw 'После обновления не найден деинсталлятор' }
-          $remove = Start-Process $uninstaller.FullName -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
-          if ($remove.ExitCode -ne 0) { throw "Удаление после обновления завершилось с кодом $($remove.ExitCode)" }
-
-      - name: Smoke test (запуск собранного приложения)
-        shell: pwsh
-        run: |
-          # Распаковываем архив ровно так, как это делает обновление, и запускаем приложение.
-          Expand-Archive WinOptimizer-win-x64.zip -DestinationPath smoke -Force
-          $log = Join-Path $env:ProgramData 'WinOptimizer\log.txt'
-          Remove-Item $log -ErrorAction SilentlyContinue
-          $p = Start-Process (Resolve-Path smoke\WinOptimizer.exe) -PassThru
-          Start-Sleep -Seconds 15
-          $exited = $p.HasExited
-          $text = if (Test-Path $log) { Get-Content $log -Raw -Encoding UTF8 } else { '' }
-          Write-Host "---- log ----"; Write-Host $text
-          if (-not $exited) { Stop-Process -Id $p.Id -Force }
-          if ($exited) { throw "Приложение закрылось сразу после запуска, код $($p.ExitCode)" }
-          if ($text -match 'XamlParseException|TypeInitializationException|Необработанное исключение|Критическая ошибка') {
-            throw 'При запуске в логе есть критические ошибки'
-          }
-
-      - name: Create release
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $changelog = Get-Content CHANGELOG.md -Raw
-          # Номер запуска workflow не совпадает с номером версии в CHANGELOG.
-          # Берём самый новый версионированный раздел; он одинаково подходит для beta и stable.
-          $pattern = '(?ms)^##\s+0\.7\.\d+[^\r\n]*\r?\n(.*?)(?=^##\s|\z)'
-
-          $match = [regex]::Match($changelog, $pattern)
-          if ($match.Success) {
-            $match.Groups[1].Value.Trim() | Set-Content -Path notes.md -Encoding utf8
-          } else {
-            git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
-          }
-          if ($env:CHANNEL -eq 'beta') {
-            $tag = "v$env:VERSION-beta"
-            $title = "$tag (бета)"
-            $releaseArgs = @('--prerelease')
-          } else {
-            $tag = "v$env:VERSION"
-            $title = $tag
-            $releaseArgs = @('--latest')
-          }
-
-          # Beta push-ы могут повторно запускать workflow для уже опубликованной версии.
-          # Не перезаписываем опубликованный релиз и не считаем повторный запуск ошибкой.
-          gh release view $tag *> $null
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "Релиз $tag уже существует. Сборка и проверки выполнены; повторная публикация пропущена."
-            exit 0
-          }
-
-          gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title $title --notes-file notes.md @releaseArgs
-          if ($LASTEXITCODE -ne 0) { throw "Не удалось создать релиз $tag" }
-)
-            if (-not $baseMatch.Success) { throw "Не удалось определить версию из CHANGELOG или WinOptimizer.csproj: $base" }
-            $v = $baseMatch.Groups[1].Value + $baseMatch.Groups[2].Value
-          }
-          $parts = [regex]::Match($v, '^(?<numeric>\d+\.\d+\.\d+)(?<letter>[a-z]?)
-
-      - name: Restore
-        shell: pwsh
-        run: |
-          dotnet restore tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj
-          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить NuGet-зависимости' }
-
-      - name: Build application
-        shell: pwsh
-        run: |
-          dotnet build WinOptimizer.csproj -c Release --no-restore -p:Version=$env:VERSION -p:ReleaseChannel=$env:CHANNEL
-          if ($LASTEXITCODE -ne 0) { throw 'Сборка приложения не прошла' }
-
-      - name: Test
-        shell: pwsh
-        run: |
-          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release --no-restore --nologo
-          if ($LASTEXITCODE -ne 0) { throw 'Тесты не прошли, релиз не публикуется' }
-
-      - name: Publish
-        shell: pwsh
-        run: |
-          dotnet publish WinOptimizer.csproj -c Release -r win-x64 --self-contained false -o publish `
-            -p:Version=$env:VERSION -p:AssemblyVersion="$env:VERSION.0" -p:FileVersion="$env:VERSION.0" `
-            -p:PublishReadyToRun=true -p:ReleaseChannel=$env:CHANNEL
-          if ($LASTEXITCODE -ne 0) { throw 'dotnet publish завершился с ошибкой' }
-          if (-not (Test-Path publish\WinOptimizer.exe)) { throw 'publish\WinOptimizer.exe не найден' }
-          Compress-Archive -Path publish\* -DestinationPath WinOptimizer-win-x64.zip
-
-      - name: Installer (Inno Setup + .NET Desktop Runtime)
-        shell: pwsh
-        run: |
-          # Runtime кладём внутрь установщика: на чистой Windows программа запустится без ручных зависимостей.
-          New-Item -ItemType Directory -Force redist | Out-Null
-          Invoke-WebRequest -Uri 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe' -OutFile redist\windowsdesktop-runtime-win-x64.exe
-          if ((Get-Item redist\windowsdesktop-runtime-win-x64.exe).Length -lt 40MB) { throw 'Runtime скачан некорректно' }
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) {
-            choco install innosetup -y --no-progress
-            if (-not (Test-Path $iscc)) { throw 'Inno Setup не найден' }
-          }
-          & $iscc "/DMyAppVersion=$env:VERSION" installer\WinOptimizer.iss
-          if ($LASTEXITCODE -ne 0) { throw 'ISCC завершился с ошибкой' }
-          if (-not (Test-Path dist\WinOptimizer-Setup.exe)) { throw 'dist\WinOptimizer-Setup.exe не найден' }
-
-      - name: Installer smoke test (тихая установка и удаление)
-        shell: pwsh
-        run: |
-          $dir = Join-Path $env:RUNNER_TEMP 'wo-install'
-          $p = Start-Process dist\WinOptimizer-Setup.exe -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=`"$dir`" /LOG=`"$env:RUNNER_TEMP\setup.log`"" -Wait -PassThru
-          if (Test-Path "$env:RUNNER_TEMP\setup.log") { Get-Content "$env:RUNNER_TEMP\setup.log" -Tail 25 }
-          if ($p.ExitCode -ne 0) { throw "Установщик завершился с кодом $($p.ExitCode)" }
-          if (-not (Test-Path "$dir\WinOptimizer.exe")) { throw 'После установки нет WinOptimizer.exe' }
-          $u = Start-Process "$dir\unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
-          if ($u.ExitCode -ne 0) { throw "Удаление завершилось с кодом $($u.ExitCode)" }
-
-      - name: Upgrade smoke test (предыдущая версия -> текущая)
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Берём последний релиз того же канала. На первом релизе канала тест пропускается.
-          $releases = gh release list --limit 100 --json tagName,isPrerelease | ConvertFrom-Json
-          $previous = $releases | Where-Object {
-            if ($env:CHANNEL -eq 'beta') { $_.isPrerelease -and $_.tagName.EndsWith('-beta') }
-            else { -not $_.isPrerelease }
-          } | Select-Object -First 1
-          if ($null -eq $previous) {
-            Write-Host "Предыдущий релиз канала $env:CHANNEL не найден; upgrade smoke test пропущен."
-            exit 0
-          }
-
-          $previousDir = Join-Path $env:RUNNER_TEMP 'wo-previous-installer'
-          $installDir = Join-Path $env:RUNNER_TEMP 'wo-upgrade'
-          New-Item -ItemType Directory -Force $previousDir | Out-Null
-          gh release download $previous.tagName --pattern 'WinOptimizer-Setup.exe' --dir $previousDir
-          if ($LASTEXITCODE -ne 0) { throw "Не удалось скачать предыдущий установщик $($previous.tagName)" }
-          $oldSetup = Join-Path $previousDir 'WinOptimizer-Setup.exe'
-          if (-not (Test-Path $oldSetup)) { throw 'Предыдущий установщик не найден после скачивания' }
-
-          $old = Start-Process $oldSetup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=$installDir" -Wait -PassThru
-          if ($old.ExitCode -ne 0) { throw "Установка предыдущей версии завершилась с кодом $($old.ExitCode)" }
-          if (-not (Test-Path "$installDir\WinOptimizer.exe")) { throw 'Предыдущая версия не установлена' }
-          $oldVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
-          Write-Host "Установлена предыдущая версия: $oldVersion"
-
-          # Устанавливаем текущую версию поверх предыдущей с тем же AppId и каталогом.
-          $upgrade = Start-Process dist\WinOptimizer-Setup.exe -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=$installDir" -Wait -PassThru
-          if ($upgrade.ExitCode -ne 0) { throw "Обновление завершилось с кодом $($upgrade.ExitCode)" }
-          if (-not (Test-Path "$installDir\WinOptimizer.exe")) { throw 'После обновления WinOptimizer.exe отсутствует' }
-          $newVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
-          Write-Host "Версия после обновления: $newVersion"
-          if ($newVersion -notlike "$env:VERSION*") { throw "Ожидалась версия $env:VERSION, получена $newVersion" }
-
-          $uninstaller = Get-ChildItem $installDir -Filter 'unins*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if ($null -eq $uninstaller) { throw 'После обновления не найден деинсталлятор' }
-          $remove = Start-Process $uninstaller.FullName -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
-          if ($remove.ExitCode -ne 0) { throw "Удаление после обновления завершилось с кодом $($remove.ExitCode)" }
-
-      - name: Smoke test (запуск собранного приложения)
-        shell: pwsh
-        run: |
-          # Распаковываем архив ровно так, как это делает обновление, и запускаем приложение.
-          Expand-Archive WinOptimizer-win-x64.zip -DestinationPath smoke -Force
-          $log = Join-Path $env:ProgramData 'WinOptimizer\log.txt'
-          Remove-Item $log -ErrorAction SilentlyContinue
-          $p = Start-Process (Resolve-Path smoke\WinOptimizer.exe) -PassThru
-          Start-Sleep -Seconds 15
-          $exited = $p.HasExited
-          $text = if (Test-Path $log) { Get-Content $log -Raw -Encoding UTF8 } else { '' }
-          Write-Host "---- log ----"; Write-Host $text
-          if (-not $exited) { Stop-Process -Id $p.Id -Force }
-          if ($exited) { throw "Приложение закрылось сразу после запуска, код $($p.ExitCode)" }
-          if ($text -match 'XamlParseException|TypeInitializationException|Необработанное исключение|Критическая ошибка') {
-            throw 'При запуске в логе есть критические ошибки'
-          }
-
-      - name: Create release
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $changelog = Get-Content CHANGELOG.md -Raw
-          # Номер запуска workflow не совпадает с номером версии в CHANGELOG.
-          # Берём самый новый версионированный раздел; он одинаково подходит для beta и stable.
-          $pattern = '(?ms)^##\s+0\.7\.\d+[^\r\n]*\r?\n(.*?)(?=^##\s|\z)'
-
-          $match = [regex]::Match($changelog, $pattern)
-          if ($match.Success) {
-            $match.Groups[1].Value.Trim() | Set-Content -Path notes.md -Encoding utf8
-          } else {
-            git log -1 --pretty=%B | Out-File -FilePath notes.md -Encoding utf8
-          }
-          if ($env:CHANNEL -eq 'beta') {
-            $tag = "v$env:VERSION-beta"
-            $title = "$tag (бета)"
-            $releaseArgs = @('--prerelease')
-          } else {
-            $tag = "v$env:VERSION"
-            $title = $tag
-            $releaseArgs = @('--latest')
-          }
-
-          # Beta push-ы могут повторно запускать workflow для уже опубликованной версии.
-          # Не перезаписываем опубликованный релиз и не считаем повторный запуск ошибкой.
-          gh release view $tag *> $null
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "Релиз $tag уже существует. Сборка и проверки выполнены; повторная публикация пропущена."
-            exit 0
-          }
-
-          gh release create $tag WinOptimizer-win-x64.zip dist\WinOptimizer-Setup.exe --target ${{ github.sha }} --title $title --notes-file notes.md @releaseArgs
-          if ($LASTEXITCODE -ne 0) { throw "Не удалось создать релиз $tag" }
-)
-          if (-not $parts.Success) { throw "Неподдерживаемый номер релиза: $v" }
-          $numericVersion = $parts.Groups['numeric'].Value
-          $letter = $parts.Groups['letter'].Value
-          $semverVersion = if ($letter) { "$numericVersion-$letter" } else { $numericVersion }
-          $fileVersion = "$numericVersion.0"
-          # main — стабильный канал, beta — бета-канал (релиз помечается prerelease и тегом -beta)
-          $channel = if ($env:GITHUB_REF_NAME -eq 'beta') { 'beta' } else { 'stable' }
-          "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "SEMVER_VERSION=$semverVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "FILE_VERSION=$fileVersion" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "CHANNEL=$channel" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "Версия релиза: $v (SemVer $semverVersion), канал: $channel"
-
-      - name: Restore
-        shell: pwsh
-        run: |
-          dotnet restore tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj
-          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить NuGet-зависимости' }
-
-      - name: Build application
-        shell: pwsh
-        run: |
-          dotnet build WinOptimizer.csproj -c Release --no-restore -p:Version=$env:VERSION -p:ReleaseChannel=$env:CHANNEL
-          if ($LASTEXITCODE -ne 0) { throw 'Сборка приложения не прошла' }
-
-      - name: Test
-        shell: pwsh
-        run: |
-          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj -c Release --no-restore --nologo
-          if ($LASTEXITCODE -ne 0) { throw 'Тесты не прошли, релиз не публикуется' }
-
-      - name: Publish
-        shell: pwsh
-        run: |
-          dotnet publish WinOptimizer.csproj -c Release -r win-x64 --self-contained false -o publish `
-            -p:Version=$env:VERSION -p:AssemblyVersion="$env:VERSION.0" -p:FileVersion="$env:VERSION.0" `
-            -p:PublishReadyToRun=true -p:ReleaseChannel=$env:CHANNEL
-          if ($LASTEXITCODE -ne 0) { throw 'dotnet publish завершился с ошибкой' }
-          if (-not (Test-Path publish\WinOptimizer.exe)) { throw 'publish\WinOptimizer.exe не найден' }
-          Compress-Archive -Path publish\* -DestinationPath WinOptimizer-win-x64.zip
-
-      - name: Installer (Inno Setup + .NET Desktop Runtime)
-        shell: pwsh
-        run: |
-          # Runtime кладём внутрь установщика: на чистой Windows программа запустится без ручных зависимостей.
-          New-Item -ItemType Directory -Force redist | Out-Null
-          Invoke-WebRequest -Uri 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe' -OutFile redist\windowsdesktop-runtime-win-x64.exe
-          if ((Get-Item redist\windowsdesktop-runtime-win-x64.exe).Length -lt 40MB) { throw 'Runtime скачан некорректно' }
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) {
-            choco install innosetup -y --no-progress
-            if (-not (Test-Path $iscc)) { throw 'Inno Setup не найден' }
-          }
-          & $iscc "/DMyAppVersion=$env:VERSION" installer\WinOptimizer.iss
-          if ($LASTEXITCODE -ne 0) { throw 'ISCC завершился с ошибкой' }
-          if (-not (Test-Path dist\WinOptimizer-Setup.exe)) { throw 'dist\WinOptimizer-Setup.exe не найден' }
-
-      - name: Installer smoke test (тихая установка и удаление)
-        shell: pwsh
-        run: |
-          $dir = Join-Path $env:RUNNER_TEMP 'wo-install'
-          $p = Start-Process dist\WinOptimizer-Setup.exe -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=`"$dir`" /LOG=`"$env:RUNNER_TEMP\setup.log`"" -Wait -PassThru
-          if (Test-Path "$env:RUNNER_TEMP\setup.log") { Get-Content "$env:RUNNER_TEMP\setup.log" -Tail 25 }
-          if ($p.ExitCode -ne 0) { throw "Установщик завершился с кодом $($p.ExitCode)" }
-          if (-not (Test-Path "$dir\WinOptimizer.exe")) { throw 'После установки нет WinOptimizer.exe' }
-          $u = Start-Process "$dir\unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
-          if ($u.ExitCode -ne 0) { throw "Удаление завершилось с кодом $($u.ExitCode)" }
-
-      - name: Upgrade smoke test (предыдущая версия -> текущая)
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Берём последний релиз того же канала. На первом релизе канала тест пропускается.
-          $releases = gh release list --limit 100 --json tagName,isPrerelease | ConvertFrom-Json
-          $previous = $releases | Where-Object {
-            if ($env:CHANNEL -eq 'beta') { $_.isPrerelease -and $_.tagName.EndsWith('-beta') }
-            else { -not $_.isPrerelease }
-          } | Select-Object -First 1
-          if ($null -eq $previous) {
-            Write-Host "Предыдущий релиз канала $env:CHANNEL не найден; upgrade smoke test пропущен."
-            exit 0
-          }
-
-          $previousDir = Join-Path $env:RUNNER_TEMP 'wo-previous-installer'
-          $installDir = Join-Path $env:RUNNER_TEMP 'wo-upgrade'
-          New-Item -ItemType Directory -Force $previousDir | Out-Null
-          gh release download $previous.tagName --pattern 'WinOptimizer-Setup.exe' --dir $previousDir
-          if ($LASTEXITCODE -ne 0) { throw "Не удалось скачать предыдущий установщик $($previous.tagName)" }
-          $oldSetup = Join-Path $previousDir 'WinOptimizer-Setup.exe'
-          if (-not (Test-Path $oldSetup)) { throw 'Предыдущий установщик не найден после скачивания' }
-
-          $old = Start-Process $oldSetup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=$installDir" -Wait -PassThru
-          if ($old.ExitCode -ne 0) { throw "Установка предыдущей версии завершилась с кодом $($old.ExitCode)" }
-          if (-not (Test-Path "$installDir\WinOptimizer.exe")) { throw 'Предыдущая версия не установлена' }
-          $oldVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
-          Write-Host "Установлена предыдущая версия: $oldVersion"
-
-          # Устанавливаем текущую версию поверх предыдущей с тем же AppId и каталогом.
-          $upgrade = Start-Process dist\WinOptimizer-Setup.exe -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NORELAUNCH=1 /DIR=$installDir" -Wait -PassThru
-          if ($upgrade.ExitCode -ne 0) { throw "Обновление завершилось с кодом $($upgrade.ExitCode)" }
-          if (-not (Test-Path "$installDir\WinOptimizer.exe")) { throw 'После обновления WinOptimizer.exe отсутствует' }
-          $newVersion = (Get-Item "$installDir\WinOptimizer.exe").VersionInfo.FileVersion
-          Write-Host "Версия после обновления: $newVersion"
-          if ($newVersion -notlike "$env:VERSION*") { throw "Ожидалась версия $env:VERSION, получена $newVersion" }
 
           $uninstaller = Get-ChildItem $installDir -Filter 'unins*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if ($null -eq $uninstaller) { throw 'После обновления не найден деинсталлятор' }
