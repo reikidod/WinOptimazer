@@ -28,7 +28,7 @@ public static class ThemeManager
     [
         new("dark", "Тёмная", new("#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
             "#F2F3F5", "#C2C6CE", "#A9AEB9", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
-        new("light", "Светлая", new("#F6FAFF", "#FFFFFF", "#FFFFFF", "#EAF5FF", "#DCEBFA", "#72C9F0", "#00B4F4", "#0078D4", "#DCEBFA",
+        new("light", "Светлая", new("#F6FAFF", "#FFFFFF", "#FFFFFF", "#EAF5FF", "#DCEBFA", "#72C9F0", "#009BD8", "#0078D4", "#DCEBFA",
             "#1E293B", "#475569", "#64748B", "#10B981", "#D97706", "#DC2626", "#64748B", IsLight: true)),
         new("redblack", "Красно-чёрная", new("#120C0C", "#1A1010", "#231516", "#2F1B1D", "#43262A", "#A04048", "#FF5A5F", "#C0262D", "#43262A",
             "#F5EDED", "#D0BFBF", "#B09A9A", "#7FB38F", "#D2AE6D", "#FF8A8A", "#A09090")),
