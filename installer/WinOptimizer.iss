@@ -42,13 +42,13 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
 SolidCompression=yes
 ; Современный мастер следует системной светлой/тёмной теме Windows 11.
-; Палитра согласована с сайтом и приложением: графитовый фон, холодный синий акцент и фирменный красный.
+; Палитра согласована со светлой Modern Fluent темой приложения: белый фон, голубые поверхности и циановые акценты.
 WizardStyle=modern dynamic
 WizardSizePercent=100
-WizardImageBackColor=#202225
-WizardImageBackColorDynamicDark=#202225
-WizardSmallImageBackColor=#202225
-WizardSmallImageBackColorDynamicDark=#202225
+WizardImageBackColor=#F6FAFF
+WizardImageBackColorDynamicDark=#17263A
+WizardSmallImageBackColor=#F6FAFF
+WizardSmallImageBackColorDynamicDark=#17263A
 WizardImageFile=wizard-large.bmp,wizard-large@2x.bmp
 WizardSmallImageFile=wizard-small.bmp,wizard-small@2x.bmp
 PrivilegesRequired=admin
