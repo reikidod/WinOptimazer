@@ -419,63 +419,40 @@
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="0,0,6,12" Focusable="False">
                     <StackPanel Margin="0,0,8,12">
-                        <!-- Приветственный блок и основные действия -->
-                        <Border Background="{DynamicResource BgCardBrush}"
-                                BorderBrush="{DynamicResource BorderHoverBrush}" BorderThickness="1"
-                                CornerRadius="20" Padding="24" Margin="0,0,0,18">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="250" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                    <TextBlock Text="WINOPTIMIZER  /  CONTROL CENTER"
-                                               FontSize="10.5" FontWeight="Bold"
-                                               Foreground="{DynamicResource AccentBrush}" />
-                                    <TextBlock Text="Всё под контролем."
-                                               FontSize="30" FontWeight="SemiBold"
-                                               Margin="0,8,0,0" />
-                                    <TextBlock Text="Управляйте производительностью, играми и обслуживанием Windows из одного места."
-                                               Style="{StaticResource SecondaryText}" FontSize="13"
-                                               TextWrapping="Wrap" MaxWidth="620" Margin="0,5,0,0" />
-                                    <TextBlock Text="{Binding DiagnosticSummary}"
-                                               FontSize="12.5" FontWeight="Medium"
-                                               TextWrapping="Wrap" Margin="0,14,0,0" />
-                                    <TextBlock Text="{Binding DiagnosticLastRunText}"
-                                               Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,5,0,0" />
-                                </StackPanel>
-                                <Border Grid.Column="1" Background="{DynamicResource BgCardHoverBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                        CornerRadius="15" Padding="16">
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="СОСТОЯНИЕ СИСТЕМЫ" FontSize="10"
-                                                   FontWeight="Bold" Foreground="{DynamicResource TextDimBrush}" />
-                                        <TextBlock Text="{Binding DashboardStatus}" FontSize="13"
-                                                   FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,7,0,14" />
-                                        <Button Content="Проверить систему" Style="{StaticResource AccentButton}"
-                                                Command="{Binding RunDiagnosticsCommand}" Padding="14,10" />
-                                        <Button Content="Характеристики ПК" Margin="0,8,0,0"
-                                                Command="{Binding NavigateCommand}" CommandParameter="System" />
-                                        <Button Content="Обновить данные" Margin="0,8,0,0"
-                                                Command="{Binding RefreshDashboardCommand}" />
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
-                        </Border>
+                        <!-- Приветствие и основные действия -->
+                        <Grid Margin="0,0,0,18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Добро пожаловать!" FontSize="26" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding DashboardStatus}" Style="{StaticResource SecondaryText}"
+                                           FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0" />
+                                <TextBlock Text="{Binding DiagnosticLastRunText}"
+                                           Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="Характеристики ПК" Margin="0,0,8,0" Padding="14,10"
+                                        Command="{Binding NavigateCommand}" CommandParameter="System" />
+                                <Button Content="Обновить" Margin="0,0,8,0" Padding="14,10"
+                                        Command="{Binding RefreshDashboardCommand}" />
+                                <Button Content="Проверить систему" Style="{StaticResource AccentButton}"
+                                        Command="{Binding RunDiagnosticsCommand}" Padding="18,10" />
+                            </StackPanel>
+                        </Grid>
 
                         <!-- Живые показатели: карточки с локальной историей и мини-графиками -->
                         <Grid Margin="0,0,0,18">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
 
                             <!-- CPU -->
-                            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,12"
+                            <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="5,0"
                                     MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
@@ -519,7 +496,7 @@
                             </Border>
 
                             <!-- RAM -->
-                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="6,0,0,12"
+                            <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="5,0"
                                     MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
@@ -561,7 +538,7 @@
                             </Border>
 
                             <!-- GPU -->
-                            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0"
+                            <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Margin="5,0"
                                     MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
@@ -618,7 +595,7 @@
                             </Border>
 
                             <!-- Системный диск -->
-                            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="6,0,0,0"
+                            <Border Grid.Column="3" Style="{StaticResource DashboardCard}" Margin="5,0"
                                     MinHeight="218" Padding="18,16">
                                 <StackPanel>
                                     <Grid>
@@ -755,6 +732,24 @@
                             </UniformGrid>
                         </Grid>
 
+                        <!-- Рекомендации -->
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,12" Padding="18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Рекомендации" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="Регулярная очистка системы освобождает место на диске и ускоряет работу Windows."
+                                               Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,5,0,0" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Очистить систему" Style="{StaticResource AccentButton}"
+                                        VerticalAlignment="Center" Padding="16,9"
+                                        Command="{Binding NavigateCommand}" CommandParameter="Maintenance" />
+                            </Grid>
+                        </Border>
+
                         <!-- Последние события -->
                         <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8" Padding="18">
                             <Grid>
@@ -853,13 +848,21 @@
                                        TextWrapping="Wrap" LineHeight="19" Margin="0,6,0,0" />
                             <ItemsControl ItemsSource="{Binding OptimizationPresets}" Margin="0,10,0,0">
                                 <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                    <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Button Content="{Binding Title}" Margin="0,0,8,6" Padding="14,7"
+                                        <Button Margin="0,0,8,6" Padding="12,12" HorizontalContentAlignment="Left"
                                                 Command="{Binding DataContext.SelectOptimizationPresetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding Id}" />
+                                                CommandParameter="{Binding Id}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Subtitle}" Style="{StaticResource SecondaryText}"
+                                                           FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,8" />
+                                                <TextBlock Text="Выбрать" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource AccentBrush}" />
+                                            </StackPanel>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
