@@ -22,6 +22,25 @@ public class ThemePaletteTests
     }
 
     [Fact]
+    public void LightTheme_UsesApprovedImageThreePalette()
+    {
+        var palette = ThemeManager.Find("light").Palette;
+
+        Assert.Equal("#F6FAFF", palette.BgWindow);
+        Assert.Equal("#FFFFFF", palette.BgSidebar);
+        Assert.Equal("#FFFFFF", palette.BgCard);
+        Assert.Equal("#EAF5FF", palette.BgCardHover);
+        Assert.Equal("#DCEBFA", palette.Border);
+        Assert.Equal("#72C9F0", palette.BorderHover);
+        Assert.Equal("#00B4F4", palette.Accent);
+        Assert.Equal("#0078D4", palette.AccentStrong);
+        Assert.Equal("#1E293B", palette.TextPrimary);
+        Assert.Equal("#475569", palette.TextSecondary);
+        Assert.Equal("#64748B", palette.TextDim);
+        Assert.True(palette.IsLight);
+    }
+
+    [Fact]
     public void ThemeAndAccentIdentifiers_AreUnique()
     {
         Assert.Equal(
