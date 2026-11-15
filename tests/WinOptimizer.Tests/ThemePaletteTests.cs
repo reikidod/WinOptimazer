@@ -32,7 +32,7 @@ public class ThemePaletteTests
         Assert.Equal("#EAF5FF", palette.BgCardHover);
         Assert.Equal("#DCEBFA", palette.Border);
         Assert.Equal("#72C9F0", palette.BorderHover);
-        Assert.Equal("#00B4F4", palette.Accent);
+        Assert.Equal("#009BD8", palette.Accent);
         Assert.Equal("#0078D4", palette.AccentStrong);
         Assert.Equal("#1E293B", palette.TextPrimary);
         Assert.Equal("#475569", palette.TextSecondary);
