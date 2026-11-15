@@ -1043,7 +1043,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Центр производительности" Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Мой ПК" Style="{StaticResource PageTitle}" />
                         <TextBlock Text="Ресурсы Windows, температуры, накопители и активность процессов" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -1449,7 +1449,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Игровой центр" Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Игры" Style="{StaticResource PageTitle}" />
                         <TextBlock Text="{Binding Games.GameCountText}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                         <TextBlock Text="Профили игр, производительность GPU, подбор настроек и игровые инструменты."
                                    Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,0" />
