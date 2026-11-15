@@ -516,7 +516,7 @@ public sealed class UiStructureTests
         Assert.Contains(Elements(document, "TextBlock"), element =>
             Attribute(element, "Text") == "Мой ПК");
         Assert.Contains(Elements(document, "TextBlock"), element =>
-            Attribute(element, "Text") == "Центр производительности");
+            Attribute(element, "Text") == "Мой ПК");
         Assert.Contains(Elements(document, "ItemsControl"), element =>
             Attribute(element, "ItemsSource") == "{Binding PerformanceHistory}");
         Assert.Contains(Elements(document, "Border"), element =>
