@@ -128,7 +128,7 @@
             <Rectangle x:Name="BackgroundDim" Fill="{DynamicResource BgWindowBrush}"
                        Opacity="0" Visibility="Collapsed" />
 
-            <!-- Фирменная атмосфера сайта: едва заметная сетка и мягкие красно-синие свечения. -->
+            <!-- Фирменная атмосфера сайта: едва заметная сетка и мягкие циановые и синие свечения. -->
             <Rectangle Fill="{DynamicResource SiteGridBrush}" Opacity="0.72" />
             <Ellipse Width="680" Height="680" HorizontalAlignment="Right" VerticalAlignment="Top"
                      Margin="0,-340,-260,0" Fill="{DynamicResource SiteCyanGlowBrush}" Opacity="0.78" />

@@ -49,7 +49,7 @@ public sealed class UiStructureTests
         Assert.Contains(Elements(view, "Rectangle"), element =>
             Attribute(element, "Fill") == "{DynamicResource SiteGridBrush}");
         Assert.Equal(2, Elements(view, "Ellipse").Count(element =>
-            (string?)element.Attribute("Fill") is "{DynamicResource SiteRedGlowBrush}" or
+            (string?)element.Attribute("Fill") is "{DynamicResource SiteCyanGlowBrush}" or
                 "{DynamicResource SiteBlueGlowBrush}"));
 
         Assert.Contains(Elements(theme, "DrawingBrush"), element =>
@@ -435,7 +435,7 @@ public sealed class UiStructureTests
     {
         var view = LoadView("Views/MainWindow.xaml");
         var window = Assert.Single(Elements(view, "Window"));
-        Assert.Equal("pack://application:,,,/Assets/app.ico", Attribute(window, "Icon"));
+        Assert.Equal("{StaticResource WinOptimizerAppIcon}", Attribute(window, "Icon"));
     }
 
     [Fact]

@@ -663,7 +663,7 @@ public class ThemeTests
             CardOpacityPercent = 1, BackgroundImage = @"C:\definitely\missing.png",
         };
         s.Normalize();
-        Assert.Equal("dark", s.ThemeId);
+        Assert.Equal(WinOptimizer.Infrastructure.ThemeManager.DefaultTheme, s.ThemeId);
         Assert.Equal("theme", s.AccentId);
         Assert.Equal(100, s.BackgroundBlurPercent);
         Assert.Equal(0, s.BackgroundDimPercent);
