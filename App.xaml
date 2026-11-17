@@ -12,14 +12,11 @@
             <DrawingImage x:Key="WinOptimizerAppIcon">
                 <DrawingImage.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing Brush="#20272E" Geometry="M54,0 H202 A54,54 0 0 1 256,54 V202 A54,54 0 0 1 202,256 H54 A54,54 0 0 1 0,202 V54 A54,54 0 0 1 54,0 Z" />
-                        <GeometryDrawing Brush="#E7ECEF"
-                            Geometry="M44,70 L70,70 L88,164 L116,100 L144,164 L170,70 L196,70 L160,208 L137,208 L120,155 L103,208 L80,208 Z" />
-                        <GeometryDrawing Brush="#A7C98D">
-                            <GeometryDrawing.Geometry>
-                                <EllipseGeometry Center="202,56" RadiusX="14" RadiusY="14" />
-                            </GeometryDrawing.Geometry>
-                        </GeometryDrawing>
+                        <GeometryDrawing Brush="#202124" Geometry="M0,0 H512 V512 H0 Z" />
+                        <GeometryDrawing Brush="#FFFFFF" Geometry="M407,295 L393,302 385,311 380,322 380,341 386,354 397,364 411,369 423,369 436,364 447,354 453,342 454,326 449,312 439,301 426,295 Z" />
+                        <GeometryDrawing Brush="#FFFFFF" Geometry="M67,176 L63,181 63,190 138,364 143,368 209,367 214,360 213,352 135,178 128,174 72,174 Z" />
+                        <GeometryDrawing Brush="#FFFFFF" Geometry="M430,143 L426,141 370,141 364,144 298,289 294,292 290,292 286,288 260,228 253,220 196,219 187,224 185,228 187,239 238,355 246,367 331,368 337,363 434,158 435,150 Z" />
+                        <GeometryDrawing Brush="#00C58E" Geometry="M412,308 A14,14 0 1 1 411.9,308 Z" />
                     </DrawingGroup>
                 </DrawingImage.Drawing>
             </DrawingImage>
