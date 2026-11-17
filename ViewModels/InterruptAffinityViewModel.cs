@@ -71,6 +71,12 @@ public sealed class InterruptAffinityViewModel : ObservableObject
     private readonly InterruptAffinityService _service = new();
     private string _status = "Выполните сканирование, чтобы увидеть совместимые устройства.";
     private bool _isBusy;
+    private readonly LatencyTestService _latencyTest = new();
+    private LatencyMeasurement? _previousLatencyMeasurement;
+    private string _latencyTestStatus = "Тест ещё не запускался.";
+    private string _latencyTestResult = "Результаты появятся после первого измерения.";
+    private string _latencyTestComparison = "Первый запуск сохранит базовый результат для сравнения.";
+    private bool _isLatencyTestRunning;
     public ObservableCollection<InterruptAffinityDeviceItem> Devices { get; } = new();
     public string Status { get => _status; private set => SetField(ref _status, value); }
     public bool IsBusy { get => _isBusy; private set => SetField(ref _isBusy, value); }
@@ -80,6 +86,11 @@ public sealed class InterruptAffinityViewModel : ObservableObject
     public System.Windows.Input.ICommand ApplyCommand { get; }
     public System.Windows.Input.ICommand RestoreCommand { get; }
     public System.Windows.Input.ICommand RestartDeviceCommand { get; }
+    public System.Windows.Input.ICommand RunLatencyTestCommand { get; }
+    public string LatencyTestStatus { get => _latencyTestStatus; private set => SetField(ref _latencyTestStatus, value); }
+    public string LatencyTestResult { get => _latencyTestResult; private set => SetField(ref _latencyTestResult, value); }
+    public string LatencyTestComparison { get => _latencyTestComparison; private set => SetField(ref _latencyTestComparison, value); }
+    public bool IsLatencyTestRunning { get => _isLatencyTestRunning; private set => SetField(ref _isLatencyTestRunning, value); }
 
     public InterruptAffinityViewModel()
     {
@@ -88,6 +99,46 @@ public sealed class InterruptAffinityViewModel : ObservableObject
         RestoreCommand = new RelayCommand(Restore, () => !IsBusy && IsAdministrator && HasBackup);
         RestartDeviceCommand = new AsyncRelayCommand<InterruptAffinityDeviceItem>(
             RestartDeviceAsync, item => !IsBusy && item is { CanRestart: true } && IsAdministrator);
+        RunLatencyTestCommand = new AsyncRelayCommand(RunLatencyTestAsync, () => !IsLatencyTestRunning);
+    }
+
+    private async Task RunLatencyTestAsync()
+    {
+        if (IsLatencyTestRunning) return;
+        IsLatencyTestRunning = true;
+        LatencyTestStatus = "Измеряю задержку таймера Windows…";
+        System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        try
+        {
+            var result = await _latencyTest.RunAsync(TimeSpan.FromSeconds(5));
+            LatencyTestResult = $"Средняя: {result.AverageMicroseconds:0.0} мкс · медиана: {result.MedianMicroseconds:0.0} мкс · P95: {result.P95Microseconds:0.0} мкс · максимум: {result.MaximumMicroseconds:0.0} мкс · выборок: {result.SampleCount:N0}.";
+            if (_previousLatencyMeasurement is null)
+            {
+                LatencyTestComparison = "Это базовый замер. После изменения настроек запустите тест ещё раз.";
+            }
+            else
+            {
+                var delta = result.P95Microseconds - _previousLatencyMeasurement.P95Microseconds;
+                var direction = Math.Abs(delta) < 100
+                    ? "изменение в пределах 0,1 мс — заметного сдвига нет"
+                    : delta < 0
+                        ? $"P95 ниже на {Math.Abs(delta):0.0} мкс — результат лучше"
+                        : $"P95 выше на {delta:0.0} мкс — результат хуже";
+                LatencyTestComparison = $"Сравнение с предыдущим запуском: P95 {_previousLatencyMeasurement.P95Microseconds:0.0} → {result.P95Microseconds:0.0} мкс. {direction}.";
+            }
+            _previousLatencyMeasurement = result;
+            LatencyTestStatus = $"Готово · {DateTime.Now:HH:mm:ss} · {(result.UsedHighResolutionTimer ? "высокоточный таймер" : "обычный таймер Windows")}";
+        }
+        catch (Exception ex)
+        {
+            LatencyTestStatus = "Тест не выполнен: " + ex.Message;
+            Logger.Error("Не удалось выполнить тест аппаратной задержки", ex);
+        }
+        finally
+        {
+            IsLatencyTestRunning = false;
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     private async Task ScanAsync()

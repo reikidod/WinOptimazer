@@ -288,8 +288,8 @@
                     </RadioButton>
                     <RadioButton Style="{StaticResource SidebarNavigationButton}" GroupName="Pages"
                                  IsChecked="{Binding IsInterruptAffinityPage, Mode=TwoWay}"
-                                 AutomationProperties.Name="Раздел «Прерывания»"
-                                 ToolTip="Управление аппаратными прерываниями">
+                                 AutomationProperties.Name="Раздел «Задержка и прерывания»"
+                                 ToolTip="Аппаратная задержка и распределение прерываний">
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
@@ -297,7 +297,7 @@
                                           Data="M9 2h6v3h3v3h3v8h-3v3h-3v3H9v-3H6v-3H3V8h3V5h3V2zm0 5v10h6V7H9zm-3 3v4h2v-4H6zm10 0v4h2v-4h-2z"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Прерывания" VerticalAlignment="Center"
+                            <TextBlock Text="Задержка и прерывания" VerticalAlignment="Center"
                                        Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
                     </RadioButton>
@@ -1278,7 +1278,7 @@
                 </ScrollViewer>
             </Grid>
 
-            <!-- ============ Управление аппаратными прерываниями ============ -->
+            <!-- ============ Аппаратная задержка и прерывания ============ -->
             <Grid Visibility="{Binding IsInterruptAffinityPage, Converter={StaticResource BoolToVis}}"
                   local:Motion.PageTransition="True" Margin="32,28,16,12">
                 <Grid.RowDefinitions>
@@ -1286,13 +1286,33 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <StackPanel Margin="0,0,16,16">
-                    <TextBlock Text="Управление прерываниями" Style="{StaticResource PageTitle}" />
-                    <TextBlock Text="Распределение аппаратных прерываний по физическим ядрам и перезапуск поддерживаемых устройств"
+                    <TextBlock Text="Аппаратная задержка" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Измерение отзывчивости Windows, настройка распределения прерываний и контроль изменений"
                                Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
                 </StackPanel>
                 <ScrollViewer Grid.Row="1" Style="{StaticResource OverlayScroll}"
                               local:Motion.SmoothScroll="True" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,16,8">
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,6,0,10" Padding="18,16"
+                                DataContext="{Binding InterruptAffinity}">
+                            <StackPanel>
+                                <TextBlock Text="Тест отзывчивости системы" FontSize="16" FontWeight="SemiBold" />
+                                <TextBlock Text="Измеряет опоздание высокоточного таймера относительно расписания Windows. Это практический тест задержки планировщика и пробуждения потока, а не прямое измерение ISR/DPC или задержки ввода." 
+                                           Style="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                <WrapPanel>
+                                    <Button Content="Запустить тест · 5 секунд" Style="{StaticResource AccentButton}"
+                                            Command="{Binding RunLatencyTestCommand}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding LatencyTestStatus}" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                                </WrapPanel>
+                                <TextBlock Text="{Binding LatencyTestResult}" FontSize="13" FontWeight="SemiBold"
+                                           TextWrapping="Wrap" Margin="0,10,0,0" />
+                                <TextBlock Text="{Binding LatencyTestComparison}" Style="{StaticResource SecondaryText}"
+                                           FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                <TextBlock Text="Для сравнения запустите тест до изменения affinity, примените настройки, перезапустите поддерживаемое устройство при необходимости и повторите тест. Сравнивайте при одинаковой нагрузке; первый запуск станет базовым. Результат зависит от фоновых задач, энергоплана и температуры." 
+                                           Style="{StaticResource SecondaryText}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
                                                 <!-- Interrupt Affinity Optimizer -->
                                                 <Border Style="{StaticResource DashboardCard}" Margin="0,6,0,10" Padding="16,14"
                                                         DataContext="{Binding InterruptAffinity}">
@@ -1303,7 +1323,7 @@
                                                                 <ColumnDefinition Width="Auto" />
                                                             </Grid.ColumnDefinitions>
                                                             <StackPanel>
-                                                                <TextBlock Text="Interrupt Affinity Optimizer" FontSize="16" FontWeight="SemiBold" />
+                                                                <TextBlock Text="Распределение прерываний по ядрам" FontSize="16" FontWeight="SemiBold" />
                                                                 <TextBlock Text="Распределение аппаратных прерываний по физическим ядрам процессора" Style="{StaticResource SecondaryText}" Margin="0,3,0,0" />
                                                             </StackPanel>
                                                             <Button Grid.Column="1" Content="Сканировать устройства" Command="{Binding ScanCommand}" />
