@@ -125,12 +125,12 @@ public sealed class UiStructureTests
         var navigation = Elements(root, "RadioButton")
             .Where(element => Attribute(element, "ToolTip") is not null)
             .ToArray();
-        Assert.Equal(7, navigation.Length);
+        Assert.Equal(8, navigation.Length);
         Assert.All(navigation, item =>
             Assert.Equal("{StaticResource SidebarNavigationButton}", Attribute(item, "Style")));
 
         foreach (var label in new[] { "Главная", "Оптимизация", "Приложения", "Игры",
-                                      "Мой ПК", "Обслуживание", "Настройки" })
+                                      "Мой ПК", "Прерывания", "Обслуживание", "Настройки" })
         {
             Assert.Contains(Elements(root, "TextBlock"), element =>
                 Attribute(element, "Text") == label &&
