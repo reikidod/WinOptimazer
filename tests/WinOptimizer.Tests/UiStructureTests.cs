@@ -66,7 +66,7 @@ public sealed class UiStructureTests
         })
         {
             Assert.Contains(Elements(theme, "Color"), element =>
-                Attribute(element, "Key") == key && Attribute(element, "Color") == value);
+                Attribute(element, "Key") == key && element.Value.Trim() == value);
         }
 
         var accentButton = Assert.Single(Elements(theme, "Style"), element =>
