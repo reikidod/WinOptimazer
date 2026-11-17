@@ -19,9 +19,9 @@
             <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="16,14" />
-            <Setter Property="Margin" Value="0,0,12,10" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="18,16" />
+            <Setter Property="Margin" Value="0,0,14,12" />
             <Setter Property="Effect" Value="{x:Null}" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
@@ -128,7 +128,7 @@
         </Grid>
 
         <!-- ============ Боковая панель ============ -->
-        <Border x:Name="SidebarPanel" Background="{DynamicResource BgSidebarBrush}" Panel.ZIndex="1">
+        <Border x:Name="SidebarPanel" Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" Panel.ZIndex="1">
             <Grid Margin="10,20,10,14">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
