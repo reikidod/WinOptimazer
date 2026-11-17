@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Management;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -9,7 +10,10 @@ namespace WinOptimizer.Services;
 
 public sealed record InterruptAffinityDevice(
     string DeviceId, string Name, string Category, int Processor,
-    string Recommendation, string CurrentPolicy, ulong ProcessorMask = 0);
+    string Recommendation, string CurrentPolicy, ulong ProcessorMask = 0,
+    IReadOnlyList<InterruptAffinityCore>? AvailableCores = null, int ProcessorCount = 0);
+
+public sealed record InterruptAffinityCore(int Index, IReadOnlyList<int> LogicalProcessors);
 
 public sealed record InterruptAffinityResult(bool Success, string Message);
 
@@ -105,7 +109,9 @@ public sealed class InterruptAffinityService
                 : $"Физическое {coreLabels} · поток {cpuLabels}";
 
             results.Add(new InterruptAffinityDevice(
-                id, name, category, selectedProcessors[0], recommendation, policy, mask));
+                id, name, category, selectedProcessors[0], recommendation, policy, mask,
+                topology.Cores.Select(core => new InterruptAffinityCore(core.Index, core.LogicalProcessors)).ToArray(),
+                topology.ProcessorCount));
         }
 
         return results.OrderBy(x => x.Category).ThenBy(x => x.Name).ToArray();
@@ -132,6 +138,82 @@ public sealed class InterruptAffinityService
         }
 
         return BitConverter.GetBytes(mask);
+    }
+
+    internal static ulong CreateCoreProcessorMask(
+        IReadOnlyList<InterruptAffinityCore> cores,
+        IReadOnlyCollection<int> selectedCoreIndexes,
+        int processorCount)
+    {
+        if (cores is null || selectedCoreIndexes is null || selectedCoreIndexes.Count == 0)
+            throw new ArgumentException("Выберите хотя бы одно физическое ядро.", nameof(selectedCoreIndexes));
+
+        var selected = new HashSet<int>();
+        var processors = new List<int>();
+        foreach (var coreIndex in selectedCoreIndexes)
+        {
+            var core = cores.FirstOrDefault(item => item.Index == coreIndex)
+                ?? throw new ArgumentOutOfRangeException(nameof(selectedCoreIndexes), "Выбрано неизвестное физическое ядро.");
+            if (selected.Add(coreIndex))
+                processors.AddRange(core.LogicalProcessors);
+        }
+
+        return BitConverter.ToUInt64(CreateProcessorMask(processors.Distinct().ToArray(), processorCount));
+    }
+
+    public static bool CanRestartDevice(InterruptAffinityDevice device) =>
+        device is not null &&
+        device.DeviceId.StartsWith("PCI\\", StringComparison.OrdinalIgnoreCase) &&
+        device.Category is "Графика" or "Сеть";
+
+    public InterruptAffinityResult RestartDevice(InterruptAffinityDevice device)
+    {
+        if (!OperatingSystem.IsWindows())
+            return new(false, "Перезапуск устройств поддерживается только в Windows.");
+        if (!IsAdministrator)
+            return new(false, "Для перезапуска устройства запустите WinOptimizer от имени администратора.");
+        if (device is null || !CanRestartDevice(device))
+            return new(false, "Перезапуск этого устройства заблокирован: USB-контроллеры, накопители и системные устройства не перезапускаются из оптимизатора.");
+        if (Environment.OSVersion.Version.Build < 19041)
+            return new(false, "Команда pnputil /restart-device требует Windows 10 версии 2004 или новее.");
+
+        try
+        {
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "pnputil.exe",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.StartInfo.ArgumentList.Add("/restart-device");
+            process.StartInfo.ArgumentList.Add(device.DeviceId);
+            if (!process.Start())
+                return new(false, "Не удалось запустить PnPUtil.");
+
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            var stderrTask = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(30000))
+            {
+                process.Kill(entireProcessTree: true);
+                return new(false, "Перезапуск устройства превысил лимит 30 секунд. Проверьте состояние устройства.");
+            }
+
+            Task.WaitAll(stdoutTask, stderrTask);
+            var output = string.Join(" ", new[] { stdoutTask.Result, stderrTask.Result }
+                .Where(value => !string.IsNullOrWhiteSpace(value))).Trim();
+            return process.ExitCode == 0
+                ? new(true, $"Команда перезапуска отправлена для «{device.Name}». Проверьте состояние устройства и повторно измерьте DPC/ISR. {output}".Trim())
+                : new(false, $"Windows не смогла перезапустить «{device.Name}» (код {process.ExitCode}). {output}".Trim());
+        }
+        catch (Exception ex)
+        {
+            return new(false, $"Ошибка перезапуска «{device.Name}»: {ex.Message}");
+        }
     }
 
     private static int[] GetRecommendedCoreIndexes(string category, int coreCount)

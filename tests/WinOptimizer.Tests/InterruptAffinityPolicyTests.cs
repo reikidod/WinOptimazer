@@ -49,4 +49,28 @@ public sealed class InterruptAffinityPolicyTests
         Assert.Throws<ArgumentException>(() =>
             InterruptAffinityService.CreateProcessorMask(Array.Empty<int>(), 12));
     }
+
+    [Fact]
+    public void CreateCoreProcessorMask_IncludesAllSmtThreadsForSelectedPhysicalCores()
+    {
+        var cores = new[]
+        {
+            new InterruptAffinityCore(0, new[] { 0, 6 }),
+            new InterruptAffinityCore(1, new[] { 1, 7 }),
+            new InterruptAffinityCore(2, new[] { 2, 8 })
+        };
+
+        var mask = InterruptAffinityService.CreateCoreProcessorMask(cores, new[] { 0, 2 }, 12);
+
+        Assert.Equal((1UL << 0) | (1UL << 6) | (1UL << 2) | (1UL << 8), mask);
+    }
+
+    [Fact]
+    public void CreateCoreProcessorMask_RejectsEmptyPhysicalCoreSelection()
+    {
+        var cores = new[] { new InterruptAffinityCore(0, new[] { 0, 6 }) };
+
+        Assert.Throws<ArgumentException>(() =>
+            InterruptAffinityService.CreateCoreProcessorMask(cores, Array.Empty<int>(), 12));
+    }
 }
