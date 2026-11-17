@@ -41,29 +41,38 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void MainShell_UsesOfficialWebsiteVisualLanguage()
+    public void MainShell_UsesRestrainedGraphiteVisualLanguage()
     {
         var view = LoadView("Views/MainWindow.xaml");
         var theme = LoadView("Themes/DarkTheme.xaml");
 
+        Assert.Equal("{DynamicResource BgWindowBrush}", Attribute(view.Root!, "Background"));
         Assert.Contains(Elements(view, "Rectangle"), element =>
+            Attribute(element, "Name") == "BackgroundDim" &&
+            Attribute(element, "Fill") == "{DynamicResource BgWindowBrush}" &&
+            Attribute(element, "Visibility") == "Collapsed");
+        Assert.DoesNotContain(Elements(view, "Rectangle"), element =>
             Attribute(element, "Fill") == "{DynamicResource SiteGridBrush}");
-        Assert.Equal(2, Elements(view, "Ellipse").Count(element =>
+        Assert.DoesNotContain(Elements(view, "Ellipse"), element =>
             (string?)element.Attribute("Fill") is "{DynamicResource SiteCyanGlowBrush}" or
-                "{DynamicResource SiteBlueGlowBrush}"));
+                "{DynamicResource SiteBlueGlowBrush}");
 
-        Assert.Contains(Elements(theme, "DrawingBrush"), element =>
-            Attribute(element, "Key") == "SiteGridBrush");
-        Assert.Contains(Elements(theme, "RadialGradientBrush"), element =>
-            Attribute(element, "Key") == "SiteRedGlowBrush");
-        Assert.Contains(Elements(theme, "RadialGradientBrush"), element =>
-            Attribute(element, "Key") == "SiteBlueGlowBrush");
-        Assert.Contains(Elements(theme, "Style"), element =>
-            Attribute(element, "Key") == "AccentButton" &&
-            element.Descendants().Any(child =>
-                child.Name.LocalName == "Setter" &&
-                Attribute(child, "Property") == "Background" &&
-                Attribute(child, "Value") == "{DynamicResource SiteAccentButtonBrush}"));
+        foreach (var (key, value) in new[]
+        {
+            ("BgWindowColor", "#171B20"),
+            ("BgSidebarColor", "#1D2329"),
+            ("BgCardColor", "#222930"),
+            ("AccentColor", "#9ABF80")
+        })
+        {
+            Assert.Contains(Elements(theme, "Color"), element =>
+                Attribute(element, "Key") == key && Attribute(element, "Color") == value);
+        }
+
+        var accentButton = Assert.Single(Elements(theme, "Style"), element =>
+            Attribute(element, "Key") == "AccentButton");
+        Assert.DoesNotContain(Elements(accentButton, "Setter"), element =>
+            Attribute(element, "Property") == "Effect");
     }
 
     [Fact]
@@ -71,8 +80,8 @@ public sealed class UiStructureTests
     {
         var document = LoadView("Views/MainWindow.xaml");
         var logoBorder = Assert.Single(Elements(document, "Border"), element =>
-            Attribute(element, "Width") == "42" &&
-            Attribute(element, "Height") == "42" &&
+            Attribute(element, "Width") == "38" &&
+            Attribute(element, "Height") == "38" &&
             element.Descendants().Any(child => child.Name.LocalName == "Viewbox"));
 
         var viewbox = Assert.Single(logoBorder.Descendants(), element =>
@@ -84,7 +93,9 @@ public sealed class UiStructureTests
             element.Name.LocalName == "Canvas");
         Assert.Equal("24", Attribute(canvas, "Width"));
         Assert.Equal("24", Attribute(canvas, "Height"));
-        Assert.Equal(2, canvas.Elements().Count(element => element.Name.LocalName == "Path"));
+        Assert.Single(canvas.Elements(), element => element.Name.LocalName == "Path");
+        var accentDot = Assert.Single(canvas.Elements(), element => element.Name.LocalName == "Ellipse");
+        Assert.Equal("{DynamicResource AccentBrush}", Attribute(accentDot, "Fill"));
         Assert.DoesNotContain(canvas.DescendantsAndSelf(), element =>
             element.Attributes().Any(attribute =>
                 attribute.Name.LocalName == "Margin" &&
