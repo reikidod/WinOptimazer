@@ -130,7 +130,7 @@ public sealed class UiStructureTests
             Assert.Equal("{StaticResource SidebarNavigationButton}", Attribute(item, "Style")));
 
         foreach (var label in new[] { "Главная", "Оптимизация", "Приложения", "Игры",
-                                      "Мой ПК", "Прерывания", "Обслуживание", "Настройки" })
+                                      "Мой ПК", "Задержка и прерывания", "Обслуживание", "Настройки" })
         {
             Assert.Contains(Elements(root, "TextBlock"), element =>
                 Attribute(element, "Text") == label &&
