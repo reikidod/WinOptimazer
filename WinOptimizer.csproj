@@ -12,7 +12,7 @@
     <!-- Оставляем стандартные настройки GC/JIT .NET: concurrent GC уменьшает паузы UI,
          а Tiered PGO помогает оптимизировать горячие участки кода после прогрева. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationIcon>$(IntermediateOutputPath)WinOptimizer.Brand.ico</ApplicationIcon>
     <AssemblyName>WinOptimizer</AssemblyName>
     <RootNamespace>WinOptimizer</RootNamespace>
     <Version>0.7.7-g</Version>
