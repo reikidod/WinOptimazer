@@ -76,6 +76,12 @@
     <InternalsVisibleTo Include="WinOptimizer.Tests" />
   </ItemGroup>
 
+
+  <Target Name="GenerateWinOptimizerBrandIcon" BeforeTargets="CoreCompile">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$encoded = Get-Content -Raw -LiteralPath '$(MSBuildProjectDirectory)\Assets\app.ico.b64'; [IO.File]::WriteAllBytes('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)WinOptimizer.Brand.ico', [Convert]::FromBase64String($encoded.Trim()))&quot;" />
+  </Target>
+
   <Target Name="CopyGameBoostService" AfterTargets="Build">
     <ItemGroup>
       <GameBoostServiceFiles Include="GameBoostService\bin\$(Configuration)\net8.0-windows\win-x64\**\*" />
