@@ -174,7 +174,9 @@ public sealed class InterruptAffinityService
                 if (oldPolicy is not null && oldPolicy is not int)
                     throw new InvalidDataException($"Неизвестный формат DevicePolicy для {device.Name}; изменения отменены.");
 
-                RegistryValueKind? maskKind = oldMask is null\n                    ? null\n                    : existing!.GetValueKind("AssignmentSetOverride");
+                RegistryValueKind? maskKind = oldMask is null
+                    ? null
+                    : existing!.GetValueKind("AssignmentSetOverride");
                 var maskBytes = oldMask as byte[];
                 int? maskDword = oldMask is int dword ? dword : null;
                 long? maskQword = oldMask is long qword ? qword : null;
