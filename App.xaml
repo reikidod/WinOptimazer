@@ -15,8 +15,11 @@
                         <GeometryDrawing Brush="#20272E" Geometry="M54,0 H202 A54,54 0 0 1 256,54 V202 A54,54 0 0 1 202,256 H54 A54,54 0 0 1 0,202 V54 A54,54 0 0 1 54,0 Z" />
                         <GeometryDrawing Brush="#E7ECEF"
                             Geometry="M44,70 L70,70 L88,164 L116,100 L144,164 L170,70 L196,70 L160,208 L137,208 L120,155 L103,208 L80,208 Z" />
-                        <GeometryDrawing Brush="#A7C98D"
-                            Geometry="M188,42 A14,14 0 1 1 216,42 A14,14 0 1 1 188,42 Z" />
+                        <GeometryDrawing Brush="#A7C98D">
+                            <GeometryDrawing.Geometry>
+                                <EllipseGeometry Center="202,56" RadiusX="14" RadiusY="14" />
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
                     </DrawingGroup>
                 </DrawingImage.Drawing>
             </DrawingImage>
