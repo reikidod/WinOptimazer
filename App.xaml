@@ -19,7 +19,7 @@
                             Geometry="M188,42 A14,14 0 1 1 216,42 A14,14 0 1 1 188,42 Z" />
                     </DrawingGroup>
                 </DrawingImage.Drawing>
-            </DrawingImage>rawingImage>
+            </DrawingImage>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
