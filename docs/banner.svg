@@ -35,7 +35,7 @@
     <rect width="150" height="150" rx="36" fill="#202124" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2"/>
     <path d="M20 51 L18 53 18 56 40 106 42 108 61 107 63 105 62 103 39 52 37 51 21 51 Z M126 42 L125 41 108 41 107 42 87 85 86 86 85 86 84 84 76 67 74 64 57 64 55 66 54 67 55 70 70 104 72 108 97 108 99 106 127 46 127 44 Z" fill="#FFFFFF"/>
     <circle cx="122" cy="98" r="11" fill="#FFFFFF"/>
-    <circle cx="122" cy="98" r="7" fill="#00C58E"/>
+    <path d="M122 91 A7 7 0 1 1 121.99 91 Z" fill="#00C58E"/>
   </g>
   <g font-family="Inter, Segoe UI, system-ui, sans-serif">
     <text x="286" y="145" font-size="64" font-weight="800" letter-spacing="-2" fill="#F2F3F5">WinOptimizer</text>
