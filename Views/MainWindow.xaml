@@ -1145,7 +1145,8 @@
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
                                                                 <CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                                          Margin="0,2,14,3" Padding="2"
+                                                                          Style="{StaticResource CoreSelectionCheckBox}"
+                                                                          Margin="0,3,8,5"
                                                                           ToolTip="При выборе физического ядра назначаются все его логические потоки." />
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
@@ -1165,7 +1166,7 @@
                                     <Button Content="Применить выбранные ядра" Style="{StaticResource AccentButton}" Command="{Binding ApplyCommand}" Margin="0,0,8,0" />
                                     <Button Content="Откатить настройки" Command="{Binding RestoreCommand}" />
                                 </WrapPanel>
-                                <TextBlock Text="Перезапуск доступен только для PCI-видеокарты и PCI-сетевого адаптера. USB-контроллеры, накопители и системные устройства заблокированы во избежание потери ввода или доступа к дискам. Даже после перезапуска драйвер может не перечитать affinity до полной перезагрузки Windows. Проверяйте эффект по DPC/ISR; снижение задержек не гарантируется."
+                                <TextBlock Text="Перезапуск доступен для PCI-видеокарты, PCI-сетевого адаптера и USB-устройств. Для USB потребуется отдельное подтверждение: мышь, клавиатура и гарнитура могут временно отключиться. Контроллеры дисков и системные мосты остаются защищёнными. Перезапуск драйвера не гарантирует перечитывание affinity; проверяйте эффект по DPC/ISR."
                                            TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,10,0,0" />
                             </StackPanel>
                         </Border>

@@ -161,10 +161,29 @@ public sealed class InterruptAffinityService
         return BitConverter.ToUInt64(CreateProcessorMask(processors.Distinct().ToArray(), processorCount));
     }
 
-    public static bool CanRestartDevice(InterruptAffinityDevice device) =>
+    public static bool CanRestartDevice(InterruptAffinityDevice device)
+    {
+        if (device is null || string.IsNullOrWhiteSpace(device.DeviceId))
+            return false;
+
+        var isPci = device.DeviceId.StartsWith("PCI\\", StringComparison.OrdinalIgnoreCase);
+        var isUsb = device.DeviceId.StartsWith("USB\\", StringComparison.OrdinalIgnoreCase);
+        if (device.Category is "Графика" or "Сеть")
+            return isPci;
+        if (device.Category == "USB-контроллеры")
+            return isPci || isUsb;
+        if (device.Category == "Аудио")
+            return isUsb;
+
+        // Storage controllers and system bridges remain blocked because restarting
+        // them can interrupt OS/data access or destabilize the PCI device tree.
+        return false;
+    }
+
+    public static bool RequiresRestartConfirmation(InterruptAffinityDevice device) =>
         device is not null &&
-        device.DeviceId.StartsWith("PCI\\", StringComparison.OrdinalIgnoreCase) &&
-        device.Category is "Графика" or "Сеть";
+        (device.Category == "USB-контроллеры" ||
+         device.DeviceId.StartsWith("USB\\", StringComparison.OrdinalIgnoreCase));
 
     public InterruptAffinityResult RestartDevice(InterruptAffinityDevice device)
     {
@@ -173,7 +192,7 @@ public sealed class InterruptAffinityService
         if (!IsAdministrator)
             return new(false, "Для перезапуска устройства запустите WinOptimizer от имени администратора.");
         if (device is null || !CanRestartDevice(device))
-            return new(false, "Перезапуск этого устройства заблокирован: USB-контроллеры, накопители и системные устройства не перезапускаются из оптимизатора.");
+            return new(false, "Перезапуск этого устройства заблокирован: контроллеры дисков и системные мосты остаются защищёнными.");
         if (Environment.OSVersion.Version.Build < 19041)
             return new(false, "Команда pnputil /restart-device требует Windows 10 версии 2004 или новее.");
 

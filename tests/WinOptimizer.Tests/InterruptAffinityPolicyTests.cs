@@ -73,4 +73,37 @@ public sealed class InterruptAffinityPolicyTests
         Assert.Throws<ArgumentException>(() =>
             InterruptAffinityService.CreateCoreProcessorMask(cores, Array.Empty<int>(), 12));
     }
+
+    [Theory]
+    [InlineData("PCI\\\\VEN_10DE&DEV_2188", "Графика", true)]
+    [InlineData("PCI\\\\VEN_10EC&DEV_8168", "Сеть", true)]
+    [InlineData("PCI\\\\VEN_1022&DEV_43BC", "USB-контроллеры", true)]
+    [InlineData("USB\\\\VID_046D&PID_0ACB", "Аудио", true)]
+    [InlineData("PCI\\\\VEN_1022&DEV_43B8", "Накопители", false)]
+    [InlineData("PCI\\\\VEN_1022&DEV_1483", "Системное устройство", false)]
+    [InlineData("HID\\\\VID_0416&PID_B23C", "USB-контроллеры", false)]
+    public void CanRestartDevice_OnlyAllowsSupportedNonCriticalDevices(string id, string category, bool expected)
+    {
+        var device = new InterruptAffinityDevice(id, "Test device", category, 0, "", "");
+
+        Assert.Equal(expected, InterruptAffinityService.CanRestartDevice(device));
+    }
+
+    [Fact]
+    public void RequiresRestartConfirmation_ForUsbController()
+    {
+        var device = new InterruptAffinityDevice(
+            "PCI\\\\VEN_1022&DEV_43BC", "AMD USB Controller", "USB-контроллеры", 0, "", "");
+
+        Assert.True(InterruptAffinityService.RequiresRestartConfirmation(device));
+    }
+
+    [Fact]
+    public void DoesNotRequireRestartConfirmation_ForGpu()
+    {
+        var device = new InterruptAffinityDevice(
+            "PCI\\\\VEN_10DE&DEV_2188", "NVIDIA GPU", "Графика", 0, "", "");
+
+        Assert.False(InterruptAffinityService.RequiresRestartConfirmation(device));
+    }
 }

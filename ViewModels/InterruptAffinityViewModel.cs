@@ -33,9 +33,12 @@ public sealed class InterruptAffinityDeviceItem
     public string Recommendation => _device.Recommendation;
     public string CurrentPolicy => _device.CurrentPolicy;
     public bool CanRestart => InterruptAffinityService.CanRestartDevice(_device);
-    public string RestartHint => CanRestart
-        ? "Можно перезапустить без полной перезагрузки ПК; изображение или сеть могут кратковременно пропасть."
-        : "Перезапуск заблокирован для безопасности: устройство может отключить ввод, накопители или системную шину.";
+    public bool RequiresRestartConfirmation => InterruptAffinityService.RequiresRestartConfirmation(_device);
+    public string RestartHint => !CanRestart
+        ? "Перезапуск заблокирован: это критический контроллер дисков или системный мост."
+        : RequiresRestartConfirmation
+            ? "Перезапуск может временно отключить USB-устройства, включая мышь и клавиатуру."
+            : "Устройство можно перезапустить без полной перезагрузки ПК; связь или изображение могут кратковременно пропасть.";
     public ObservableCollection<InterruptAffinityCoreOption> CoreOptions { get; } = new();
 
     public InterruptAffinityDeviceItem(InterruptAffinityDevice device)
@@ -121,6 +124,17 @@ public sealed class InterruptAffinityViewModel : ObservableObject
     private async Task RestartDeviceAsync(InterruptAffinityDeviceItem? item)
     {
         if (item is null) return;
+        if (item.RequiresRestartConfirmation)
+        {
+            var answer = System.Windows.MessageBox.Show(
+                $"Перезапустить «{item.Name}»?\n\nUSB-контроллер может на несколько секунд отключить мышь, клавиатуру, гарнитуру и другие USB-устройства. Не выполняйте это во время передачи файлов или обновления прошивки.",
+                "Подтверждение перезапуска устройства",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+            if (answer != System.Windows.MessageBoxResult.Yes)
+                return;
+        }
+
         IsBusy = true;
         RefreshCommands();
         try
