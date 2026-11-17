@@ -102,10 +102,12 @@ public sealed class InterruptAffinityService
                 var oldMask = existing?.GetValue("AssignmentSetOverride");
                 if (oldMask is not null && oldMask is not byte[])
                     throw new InvalidDataException($"Неизвестный формат текущей маски для {device.Name}; изменения отменены.");
+                if (oldPolicy is not null && oldPolicy is not int)
+                    throw new InvalidDataException($"Неизвестный формат политики для {device.Name}; изменения отменены.");
+                var maskKind = oldMask is null ? null : existing!.GetValueKind("AssignmentSetOverride").ToString();
                 backups.Add(new RegistryBackup(keyPath,
                     oldPolicy is not null, oldPolicy is int p ? p : 0,
-                    oldMask is byte[] bytes ? Convert.ToBase64String(bytes) : null,
-                    existing?.GetValueKind("AssignmentSetOverride").ToString()));
+                    oldMask is byte[] bytes ? Convert.ToBase64String(bytes) : null, maskKind));
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(_backupPath)!);
