@@ -398,6 +398,12 @@ public sealed class MainViewModel : ObservableObject
         set => SelectPage(AppPage.System, value);
     }
 
+    public bool IsInterruptAffinityPage
+    {
+        get => _page == AppPage.InterruptAffinity;
+        set => SelectPage(AppPage.InterruptAffinity, value);
+    }
+
     public bool IsMaintenancePage
     {
         get => _page == AppPage.Maintenance;
@@ -740,6 +746,7 @@ public sealed class MainViewModel : ObservableObject
         AppPage.Store => AppSettings.Current.IsTabVisible("Store"),
         AppPage.Games => AppSettings.Current.IsTabVisible("Games"),
         AppPage.System => AppSettings.Current.IsTabVisible("System"),
+        AppPage.InterruptAffinity => true,
         AppPage.Maintenance => AppSettings.Current.IsTabVisible("Maintenance"),
         _ => true,
     };
@@ -887,6 +894,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDashboardPage));
         OnPropertyChanged(nameof(IsTweaksPage));
         OnPropertyChanged(nameof(IsSystemPage));
+        OnPropertyChanged(nameof(IsInterruptAffinityPage));
         Processes.IsPageVisible = IsSystemPage;
         OnPropertyChanged(nameof(IsMaintenancePage));
         OnPropertyChanged(nameof(IsDebloatPage));
@@ -1244,6 +1252,7 @@ public enum AppPage
     Dashboard,
     Tweaks,
     System,
+    InterruptAffinity,
     Maintenance,
     Debloat,
     Apps,
