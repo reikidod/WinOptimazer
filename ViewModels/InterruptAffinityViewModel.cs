@@ -59,9 +59,7 @@ public sealed class InterruptAffinityViewModel : ObservableObject
 
     private void RefreshCommands()
     {
-        (ScanCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
-        (ApplyCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        (RestoreCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        System.Windows.Input.CommandManager.InvalidateRequerySuggested();
         OnPropertyChanged(nameof(HasBackup));
     }
 }
