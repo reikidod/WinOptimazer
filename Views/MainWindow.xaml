@@ -1117,9 +1117,8 @@
                                     <Button Grid.Column="1" Content="Сканировать устройства" Command="{Binding ScanCommand}" />
                                 </Grid>
                                 <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Margin="0,10,0,8" />
-                                <TextBlock Text="Для применения и отката нужны права администратора."
-                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12"
-                                           Visibility="{Binding IsAdministrator, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}" />
+                                <TextBlock Text="Применение и откат доступны при запуске WinOptimizer от имени администратора."
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" />
                                 <ItemsControl ItemsSource="{Binding Devices}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
