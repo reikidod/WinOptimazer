@@ -143,19 +143,8 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Width="38" Height="38" Margin="0" CornerRadius="8" ToolTip="{Binding VersionLabel}"
-                                    Background="{DynamicResource BgCardBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                <Grid>
-                                    <Viewbox Width="30" Height="30" Stretch="Uniform">
-                                        <Canvas Width="24" Height="24">
-                                            <Path Data="M2 6 H5.4 L7.8 17 L10.2 6 H13.8 L16.2 17 L18.6 6 H22 L18 20 H14.8 L12 11.6 L9.2 20 H6 Z"
-                                                  Fill="{DynamicResource TextPrimaryBrush}" />
-                                            <Path Data="M18 2 H22 V6 H18 Z"
-                                                  Fill="{DynamicResource BrandCyanBrush}" />
-                                        </Canvas>
-                                    </Viewbox>
-                                </Grid>
+                            <Border Width="38" Height="38" Margin="0" CornerRadius="8" ToolTip="{Binding VersionLabel}" Background="#202124" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
+                                <Image Source="{StaticResource WinOptimizerAppIcon}" Stretch="Uniform" />
                             </Border>
                             <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"
                                        Margin="10,0,0,0"
