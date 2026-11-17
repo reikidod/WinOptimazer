@@ -440,6 +440,24 @@ public sealed class UiStructureTests
 
 
     [Fact]
+    public void ExecutableAndInstaller_UseTheSuppliedBrandIcon()
+    {
+        var project = File.ReadAllText(Path.Combine(RepositoryRoot(), "WinOptimizer.csproj"));
+        var installer = File.ReadAllText(Path.Combine(RepositoryRoot(), "installer/WinOptimizer.iss"));
+        var iconBase64 = File.ReadAllText(Path.Combine(RepositoryRoot(), "Assets/app.ico.b64")).Trim();
+        var icon = Convert.FromBase64String(iconBase64);
+
+        Assert.Contains("<ApplicationIcon>$(IntermediateOutputPath)WinOptimizer.Brand.ico</ApplicationIcon>", project);
+        Assert.Contains("GenerateWinOptimizerBrandIcon", project);
+        Assert.Contains("SetupIconFile=..\\obj\\Release\\net8.0-windows\\win-x64\\WinOptimizer.Brand.ico", installer);
+        Assert.True(icon.Length > 256);
+        Assert.Equal(0, icon[0]);
+        Assert.Equal(0, icon[1]);
+        Assert.Equal(1, icon[2]);
+        Assert.Equal(0, icon[3]);
+    }
+
+    [Fact]
     public void MainWindow_UsesNativeWindowsIcon()
     {
         var view = LoadView("Views/MainWindow.xaml");
