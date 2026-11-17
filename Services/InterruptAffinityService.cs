@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Management;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -8,13 +9,14 @@ namespace WinOptimizer.Services;
 
 public sealed record InterruptAffinityDevice(
     string DeviceId, string Name, string Category, int Processor,
-    string Recommendation, string CurrentPolicy);
+    string Recommendation, string CurrentPolicy, ulong ProcessorMask = 0);
 
 public sealed record InterruptAffinityResult(bool Success, string Message);
 
 /// <summary>
-/// Reversible interrupt-affinity configuration. Windows reads these values when the
-/// device driver starts; changes are not advertised as immediately effective.
+/// Reversible interrupt-affinity configuration. Recommendations use physical-core
+/// topology and one logical processor per core by default. Windows reads these values
+/// when the device driver starts; changes are not advertised as immediately effective.
 /// </summary>
 public sealed class InterruptAffinityService
 {
@@ -22,6 +24,9 @@ public sealed class InterruptAffinityService
     private const string AffinitySuffix = @"Device Parameters\Interrupt Management\Affinity Policy";
     private const int SpecifiedProcessorsPolicy = 4;
     private const int MaximumSupportedProcessorsPerGroup = 64;
+    private const int RelationProcessorCore = 0;
+    private const int GroupAffinitySize = 16;
+    private const int ProcessorCoreGroupMaskOffset = 32;
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private readonly string _backupPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -32,6 +37,11 @@ public sealed class InterruptAffinityService
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern uint GetActiveProcessorCount(ushort groupNumber);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetLogicalProcessorInformationEx(
+        int relationshipType, IntPtr buffer, ref uint returnedLength);
 
     public bool IsAdministrator
     {
@@ -47,8 +57,8 @@ public sealed class InterruptAffinityService
         if (!OperatingSystem.IsWindows())
             throw new PlatformNotSupportedException("Поддерживается только Windows.");
 
-        var (groupCount, processorCount) = GetSupportedTopology();
-        if (processorCount < 2) return Array.Empty<InterruptAffinityDevice>();
+        var topology = GetSupportedTopology();
+        if (topology.ProcessorCount < 2) return Array.Empty<InterruptAffinityDevice>();
 
         var results = new List<InterruptAffinityDevice>();
         using var searcher = new ManagementObjectSearcher(
@@ -82,55 +92,174 @@ public sealed class InterruptAffinityService
                 policy = "Нет доступа к настройке";
             }
 
-            // CPU 0 is intentionally excluded as a conservative starting point.
-            // This is not P-core/E-core aware and does not claim a latency improvement.
-            var processor = 1 + results.Count % (processorCount - 1);
-            results.Add(new InterruptAffinityDevice(id, name, category, processor,
-                $"Логический процессор {processor} · группа 0 · предварительная рекомендация", policy));
+            var selectedCores = GetRecommendedCoreIndexes(category, topology.Cores.Count);
+            var selectedProcessors = selectedCores
+                .Select(coreIndex => topology.Cores[coreIndex].LogicalProcessors[0])
+                .Distinct()
+                .ToArray();
+            var mask = selectedProcessors.Aggregate(0UL, (current, cpu) => current | (1UL << cpu));
+            var coreLabels = string.Join(" + ", selectedCores.Select(index => $"ядро {index}"));
+            var cpuLabels = string.Join(", ", selectedProcessors.Select(cpu => $"CPU {cpu}"));
+            var recommendation = selectedProcessors.Length > 1
+                ? $"Физические {coreLabels} · потоки {cpuLabels} · несколько ядер"
+                : $"Физическое {coreLabels} · поток {cpuLabels}";
+
+            results.Add(new InterruptAffinityDevice(
+                id, name, category, selectedProcessors[0], recommendation, policy, mask));
         }
 
         return results.OrderBy(x => x.Category).ThenBy(x => x.Name).ToArray();
     }
 
-    internal static byte[] CreateProcessorMask(int processor, int processorCount)
-    {
-        if (processorCount is < 2 or > MaximumSupportedProcessorsPerGroup)
-            throw new ArgumentOutOfRangeException(nameof(processorCount), "Поддерживается от 2 до 64 процессоров в одной группе.");
-        if (processor < 1 || processor >= processorCount)
-            throw new ArgumentOutOfRangeException(nameof(processor), "Номер процессора должен находиться в диапазоне 1..N-1.");
+    internal static byte[] CreateProcessorMask(int processor, int processorCount) =>
+        CreateProcessorMask(new[] { processor }, processorCount);
 
-        var mask = new byte[sizeof(ulong)];
-        mask[processor / 8] = (byte)(1 << (processor % 8));
-        return mask;
+    internal static byte[] CreateProcessorMask(IReadOnlyCollection<int> processors, int processorCount)
+    {
+        if (processorCount is < 1 or > MaximumSupportedProcessorsPerGroup)
+            throw new ArgumentOutOfRangeException(nameof(processorCount),
+                "Поддерживается от 1 до 64 логических процессоров в одной группе.");
+        if (processors is null || processors.Count == 0)
+            throw new ArgumentException("Необходимо выбрать хотя бы один логический процессор.", nameof(processors));
+
+        ulong mask = 0;
+        foreach (var processor in processors)
+        {
+            if (processor < 0 || processor >= processorCount)
+                throw new ArgumentOutOfRangeException(nameof(processors),
+                    "Номер логического процессора находится вне диапазона доступной группы.");
+            mask |= 1UL << processor;
+        }
+
+        return BitConverter.GetBytes(mask);
     }
 
-    private static (ushort GroupCount, int ProcessorCount) GetSupportedTopology()
+    private static int[] GetRecommendedCoreIndexes(string category, int coreCount)
+    {
+        if (coreCount <= 0) throw new InvalidOperationException("Не удалось определить физические ядра.");
+
+        // Spread interrupt sources across physical cores. The selected logical CPU
+        // for each core is obtained from Windows topology; sibling numbering is never assumed.
+        var preferred = category switch
+        {
+            "Графика" => new[] { 0 },
+            "USB-контроллеры" => new[] { 1 },
+            "Сеть" => new[] { 2, 3 },
+            "Накопители" => new[] { 4 },
+            "Аудио" => new[] { 5 },
+            _ => new[] { 1 + (StringComparer.Ordinal.GetHashCode(category) & int.MaxValue) % Math.Max(1, coreCount - 1) }
+        };
+
+        return preferred.Select(index => index % coreCount).Distinct().ToArray();
+    }
+
+    private static ProcessorTopology GetSupportedTopology()
     {
         try
         {
             var groups = GetActiveProcessorGroupCount();
             if (groups != 1)
-                throw new NotSupportedException("Системы с несколькими группами процессоров пока не поддерживаются. Настройки не изменены.");
+                throw new NotSupportedException(
+                    "Системы с несколькими группами процессоров пока не поддерживаются. Настройки не изменены.");
 
-            var count = GetActiveProcessorCount(0);
-            if (count is < 2 or > MaximumSupportedProcessorsPerGroup)
-                throw new NotSupportedException("Не удалось безопасно определить топологию процессоров (поддерживается 2–64 логических процессора в одной группе).");
+            var count = checked((int)GetActiveProcessorCount(0));
+            if (count is < 1 or > MaximumSupportedProcessorsPerGroup)
+                throw new NotSupportedException(
+                    "Не удалось безопасно определить число логических процессоров (поддерживается 1–64 в группе).");
 
-            return (groups, checked((int)count));
+            var cores = ReadPhysicalCores();
+            var discoveredCount = cores.Sum(core => core.LogicalProcessors.Count);
+            if (cores.Count == 0 || discoveredCount != count)
+                throw new InvalidOperationException(
+                    "Windows вернула неполную топологию физических ядер. Настройки не изменены.");
+
+            return new ProcessorTopology(count, cores);
         }
         catch (EntryPointNotFoundException ex)
         {
-            throw new PlatformNotSupportedException("Windows API для определения групп процессоров недоступен.", ex);
+            throw new PlatformNotSupportedException("Windows API для определения топологии процессоров недоступен.", ex);
+        }
+    }
+
+    private static IReadOnlyList<ProcessorCore> ReadPhysicalCores()
+    {
+        uint length = 0;
+        _ = GetLogicalProcessorInformationEx(RelationProcessorCore, IntPtr.Zero, ref length);
+        var error = Marshal.GetLastWin32Error();
+        if (length == 0 || (error != 122 && error != 0))
+            throw new Win32Exception(error, "Не удалось запросить топологию физических ядер.");
+
+        var buffer = Marshal.AllocHGlobal(checked((int)length));
+        try
+        {
+            if (!GetLogicalProcessorInformationEx(RelationProcessorCore, buffer, ref length))
+                throw new Win32Exception(Marshal.GetLastWin32Error(),
+                    "Не удалось получить топологию физических ядер.");
+
+            var cores = new List<ProcessorCore>();
+            var offset = 0;
+            var totalLength = checked((int)length);
+            while (offset + 8 <= totalLength)
+            {
+                var relationship = Marshal.ReadInt32(buffer, offset);
+                var size = Marshal.ReadInt32(buffer, offset + 4);
+                if (size < 8 || offset + size > totalLength)
+                    throw new InvalidDataException("Windows вернула повреждённую структуру топологии процессора.");
+
+                if (relationship == RelationProcessorCore)
+                {
+                    if (size < ProcessorCoreGroupMaskOffset)
+                        throw new InvalidDataException("Структура физического ядра имеет неверный размер.");
+
+                    var groupCount = unchecked((ushort)Marshal.ReadInt16(buffer, offset + 30));
+                    if (groupCount == 0 ||
+                        ProcessorCoreGroupMaskOffset + groupCount * GroupAffinitySize > size)
+                        throw new InvalidDataException("Не удалось прочитать маски логических процессоров ядра.");
+
+                    var logicalProcessors = new List<int>();
+                    for (var groupIndex = 0; groupIndex < groupCount; groupIndex++)
+                    {
+                        var affinityOffset = offset + ProcessorCoreGroupMaskOffset + groupIndex * GroupAffinitySize;
+                        var group = unchecked((ushort)Marshal.ReadInt16(buffer, affinityOffset + 8));
+                        if (group != 0)
+                            throw new NotSupportedException(
+                                "Топология физических ядер содержит несколько групп процессоров; настройки не изменены.");
+
+                        var affinityMask = unchecked((ulong)Marshal.ReadInt64(buffer, affinityOffset));
+                        for (var bit = 0; bit < 64; bit++)
+                            if ((affinityMask & (1UL << bit)) != 0)
+                                logicalProcessors.Add(bit);
+                    }
+
+                    if (logicalProcessors.Count == 0)
+                        throw new InvalidDataException("Для физического ядра не найдены логические процессоры.");
+                    cores.Add(new ProcessorCore(cores.Count, logicalProcessors.Order().ToArray()));
+                }
+
+                offset += size;
+            }
+
+            if (offset != totalLength)
+                throw new InvalidDataException("Размер данных топологии не совпадает с размером структур Windows.");
+
+            return cores;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
         }
     }
 
     private static string? Categorize(string name, string? pnpClass)
     {
         var n = name.ToLowerInvariant();
-        if (n.Contains("display") || n.Contains("nvidia") || n.Contains("radeon") || n.Contains("geforce") || pnpClass == "Display") return "Графика";
-        if (n.Contains("ethernet") || n.Contains("wi-fi") || n.Contains("wireless") || n.Contains("network") || pnpClass == "Net") return "Сеть";
-        if (n.Contains("usb") || pnpClass == "USB") return "USB";
-        if (n.Contains("nvme") || n.Contains("storage") || n.Contains("raid") || n.Contains("standard nvm") || pnpClass == "SCSIAdapter") return "Накопители";
+        if (n.Contains("display") || n.Contains("nvidia") || n.Contains("radeon") ||
+            n.Contains("geforce") || pnpClass == "Display") return "Графика";
+        if (n.Contains("ethernet") || n.Contains("wi-fi") || n.Contains("wireless") ||
+            n.Contains("network") || pnpClass == "Net") return "Сеть";
+        if (n.Contains("usb") || pnpClass == "USB") return "USB-контроллеры";
+        if (n.Contains("nvme") || n.Contains("storage") || n.Contains("raid") ||
+            n.Contains("standard nvm") || pnpClass == "SCSIAdapter") return "Накопители";
         if (n.Contains("audio") || n.Contains("sound") || pnpClass == "MEDIA") return "Аудио";
         return null;
     }
@@ -148,7 +277,8 @@ public sealed class InterruptAffinityService
         var backupPersisted = false;
         try
         {
-            var (_, processorCount) = GetSupportedTopology();
+            var topology = GetSupportedTopology();
+            var processorCount = topology.ProcessorCount;
             if (File.Exists(_backupPath))
                 return new(false, "Уже существует резервная копия. Сначала выполните откат, чтобы не потерять исходные настройки.");
 
@@ -161,7 +291,15 @@ public sealed class InterruptAffinityService
                     !seen.Add(device.DeviceId))
                     throw new InvalidDataException("Список устройств содержит некорректный или повторяющийся идентификатор.");
 
-                _ = CreateProcessorMask(device.Processor, processorCount);
+                var selectedMask = device.ProcessorMask != 0
+                    ? device.ProcessorMask
+                    : 1UL << device.Processor;
+                var validMask = processorCount == 64 ? ulong.MaxValue : (1UL << processorCount) - 1;
+                if (selectedMask == 0 || (selectedMask & ~validMask) != 0)
+                    throw new InvalidDataException($"Маска процессоров для {device.Name} выходит за пределы доступной топологии.");
+                _ = CreateProcessorMask(Enumerable.Range(0, processorCount)
+                    .Where(cpu => (selectedMask & (1UL << cpu)) != 0).ToArray(), processorCount);
+
                 var deviceRoot = EnumRoot + device.DeviceId;
                 using var parent = Registry.LocalMachine.OpenSubKey(deviceRoot);
                 if (parent is null)
@@ -208,14 +346,16 @@ public sealed class InterruptAffinityService
             foreach (var device in devices)
             {
                 var keyPath = EnumRoot + device.DeviceId + "\\" + AffinitySuffix;
-                var mask = CreateProcessorMask(device.Processor, processorCount);
+                var selectedMask = device.ProcessorMask != 0 ? device.ProcessorMask : 1UL << device.Processor;
+                var mask = BitConverter.GetBytes(selectedMask);
                 using var target = Registry.LocalMachine.CreateSubKey(keyPath, writable: true)
                     ?? throw new UnauthorizedAccessException($"Не удалось открыть параметры {device.Name}.");
                 target.SetValue("DevicePolicy", SpecifiedProcessorsPolicy, RegistryValueKind.DWord);
                 target.SetValue("AssignmentSetOverride", mask, RegistryValueKind.Binary);
             }
 
-            return new(true, $"Политики подготовлены для устройств: {devices.Count}. Это экспериментальная настройка без гарантии снижения задержек. Перезагрузите Windows, чтобы драйверы перечитали параметры.");
+            return new(true,
+                $"Политики подготовлены для устройств: {devices.Count}. Рекомендации распределены по физическим ядрам; сеть может использовать несколько ядер. Это экспериментальная настройка без гарантии снижения задержек. Перезагрузите Windows, чтобы драйверы перечитали параметры.");
         }
         catch (Exception ex)
         {
@@ -269,7 +409,7 @@ public sealed class InterruptAffinityService
                 throw new InvalidDataException("Резервная копия содержит недопустимый путь реестра.");
 
             using var key = Registry.LocalMachine.OpenSubKey(entry.KeyPath, writable: true);
-            if (key is null) continue; // The device was removed; there is no live setting to restore.
+            if (key is null) continue;
 
             if (entry.HadPolicy) key.SetValue("DevicePolicy", entry.Policy, RegistryValueKind.DWord);
             else key.DeleteValue("DevicePolicy", throwOnMissingValue: false);
@@ -303,6 +443,8 @@ public sealed class InterruptAffinityService
         }
     }
 
+    private sealed record ProcessorCore(int Index, IReadOnlyList<int> LogicalProcessors);
+    private sealed record ProcessorTopology(int ProcessorCount, IReadOnlyList<ProcessorCore> Cores);
     private sealed record RegistryBackup(
         string KeyPath, bool HadPolicy, int Policy, string? MaskKind,
         string? MaskBase64, int? MaskDword, long? MaskQword);
