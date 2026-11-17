@@ -80,32 +80,24 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void BrandMark_StaysInsideItsSquareContainer()
+    public void BrandMark_UsesTheSharedApplicationIconResource()
     {
         var document = LoadView("Views/MainWindow.xaml");
         var logoBorder = Assert.Single(Elements(document, "Border"), element =>
             Attribute(element, "Width") == "38" &&
             Attribute(element, "Height") == "38" &&
-            element.Descendants().Any(child => child.Name.LocalName == "Viewbox"));
+            element.Descendants().Any(child => child.Name.LocalName == "Image"));
 
-        var viewbox = Assert.Single(logoBorder.Descendants(), element =>
-            element.Name.LocalName == "Viewbox");
-        Assert.Equal("30", Attribute(viewbox, "Width"));
-        Assert.Equal("30", Attribute(viewbox, "Height"));
+        var image = Assert.Single(logoBorder.Descendants(), element =>
+            element.Name.LocalName == "Image");
+        Assert.Equal("{StaticResource WinOptimizerAppIcon}", Attribute(image, "Source"));
+        Assert.Equal("Uniform", Attribute(image, "Stretch"));
 
-        var canvas = Assert.Single(viewbox.Descendants(), element =>
-            element.Name.LocalName == "Canvas");
-        Assert.Equal("24", Attribute(canvas, "Width"));
-        Assert.Equal("24", Attribute(canvas, "Height"));
-        var paths = canvas.Elements().Where(element => element.Name.LocalName == "Path").ToArray();
-        Assert.Equal(2, paths.Length);
-        Assert.Equal("{DynamicResource TextPrimaryBrush}", Attribute(paths[0], "Fill"));
-        Assert.Equal("{DynamicResource BrandCyanBrush}", Attribute(paths[1], "Fill"));
-        Assert.DoesNotContain(canvas.Elements(), element => element.Name.LocalName == "Ellipse");
-        Assert.DoesNotContain(canvas.DescendantsAndSelf(), element =>
-            element.Attributes().Any(attribute =>
-                attribute.Name.LocalName == "Margin" &&
-                attribute.Value.Split(',').Any(value => double.TryParse(value, out var number) && number < 0)));
+        var app = LoadView("App.xaml");
+        Assert.Contains(Elements(app, "DrawingImage"), element =>
+            Attribute(element, "Key") == "WinOptimizerAppIcon" &&
+            Elements(element, "GeometryDrawing").Any(drawing => Attribute(drawing, "Brush") == "#00C58E") &&
+            Elements(element, "GeometryDrawing").Count() == 5);
     }
 
     [Fact]
