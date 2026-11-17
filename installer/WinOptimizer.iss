@@ -35,7 +35,7 @@ LicenseFile=LICENSE.txt
 OutputDir=..\dist
 ; Имя без версии: встроенное обновление ищет в релизе файл с «Setup» в названии
 OutputBaseFilename=WinOptimizer-Setup
-SetupIconFile=..\obj\Release\net8.0-windows\win-x64\WinOptimizer.Brand.ico
+SetupIconFile=..\obj\WinOptimizer.Brand.ico
 ; Просит Проводник обновить кэш значков, чтобы у ярлыков и exe сразу появилась новая иконка
 ChangesAssociations=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
