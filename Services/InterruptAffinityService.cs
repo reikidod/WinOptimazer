@@ -39,7 +39,9 @@ public sealed class InterruptAffinityService
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Поддерживается только Windows.");
         var logical = Environment.ProcessorCount;
         if (logical < 2) return Array.Empty<InterruptAffinityDevice>();
-        var count = Math.Min(logical, MaximumSupportedProcessorsPerGroup);
+        if (logical > MaximumSupportedProcessorsPerGroup)
+            throw new NotSupportedException("Системы с несколькими группами процессоров пока не поддерживаются: безопасный расчёт маски требует отдельной топологии групп.");
+        var count = logical;
         var results = new List<InterruptAffinityDevice>();
         using var searcher = new ManagementObjectSearcher(
             "SELECT Name, PNPDeviceID, PNPClass FROM Win32_PnPEntity WHERE PNPDeviceID IS NOT NULL");
@@ -89,6 +91,7 @@ public sealed class InterruptAffinityService
         var backups = new List<RegistryBackup>();
         try
         {
+            // Persist every original value before the first registry write.
             foreach (var device in devices)
             {
                 if (device.Processor is < 1 or >= MaximumSupportedProcessorsPerGroup)
@@ -97,11 +100,20 @@ public sealed class InterruptAffinityService
                 using var existing = Registry.LocalMachine.OpenSubKey(keyPath);
                 var oldPolicy = existing?.GetValue("DevicePolicy");
                 var oldMask = existing?.GetValue("AssignmentSetOverride");
+                if (oldMask is not null && oldMask is not byte[])
+                    throw new InvalidDataException($"Неизвестный формат текущей маски для {device.Name}; изменения отменены.");
                 backups.Add(new RegistryBackup(keyPath,
                     oldPolicy is not null, oldPolicy is int p ? p : 0,
                     oldMask is byte[] bytes ? Convert.ToBase64String(bytes) : null,
                     existing?.GetValueKind("AssignmentSetOverride").ToString()));
+            }
 
+            Directory.CreateDirectory(Path.GetDirectoryName(_backupPath)!);
+            File.WriteAllText(_backupPath, JsonSerializer.Serialize(backups, JsonOptions));
+
+            foreach (var device in devices)
+            {
+                var keyPath = $@"SYSTEM\CurrentControlSet\Enum\{device.DeviceId}\{AffinitySuffix}";
                 var mask = new byte[8];
                 mask[device.Processor / 8] = (byte)(1 << (device.Processor % 8));
                 using var target = Registry.LocalMachine.CreateSubKey(keyPath, writable: true)
@@ -110,13 +122,16 @@ public sealed class InterruptAffinityService
                 target.SetValue("AssignmentSetOverride", mask, RegistryValueKind.Binary);
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(_backupPath)!);
-            File.WriteAllText(_backupPath, JsonSerializer.Serialize(backups, JsonOptions));
             return new(true, $"Политики подготовлены для устройств: {devices.Count}. Перезагрузите Windows, чтобы драйверы перечитали параметры.");
         }
         catch (Exception ex)
         {
-            try { RestoreEntries(backups); } catch { /* original error remains primary */ }
+            try
+            {
+                RestoreEntries(backups);
+                if (File.Exists(_backupPath)) File.Delete(_backupPath);
+            }
+            catch { /* Keep backup file for manual retry. */ }
             return new(false, $"Не удалось применить настройки. Выполнена попытка вернуть уже изменённые значения. Причина: {ex.Message}");
         }
     }
