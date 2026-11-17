@@ -38,6 +38,8 @@ public sealed class MainViewModel : ObservableObject
 
     public ProcessMonitorViewModel Processes { get; } = new();
 
+    public InterruptAffinityViewModel InterruptAffinity { get; } = new();
+
     private bool _isBusy;
     private bool _isInfoLoading;
     private bool _isTweakStateReady;
