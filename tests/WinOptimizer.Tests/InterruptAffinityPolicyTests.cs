@@ -26,13 +26,13 @@ public sealed class InterruptAffinityPolicyTests
         var mask = InterruptAffinityService.CreateProcessorMask(new[] { 0, 4, 8 }, 12);
 
         Assert.Equal(8, mask.Length);
-        Assert.Equal(0x01, mask[0]);
-        Assert.Equal(0x11, mask[1]);
+        Assert.Equal(0x11, mask[0]);
+        Assert.Equal(0x01, mask[1]);
         Assert.Equal(3, mask.Sum(value => System.Numerics.BitOperations.PopCount((uint)value)));
     }
 
     [Theory]
-    [InlineData(0, 8)]
+    [InlineData(7, 7)]
     [InlineData(8, 8)]
     [InlineData(-1, 8)]
     [InlineData(1, 0)]
