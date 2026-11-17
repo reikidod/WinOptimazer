@@ -71,8 +71,12 @@ public sealed class UiStructureTests
 
         var accentButton = Assert.Single(Elements(theme, "Style"), element =>
             Attribute(element, "Key") == "AccentButton");
-        Assert.DoesNotContain(Elements(accentButton, "Setter"), element =>
-            Attribute(element, "Property") == "Effect");
+        Assert.Contains(Elements(accentButton, "Setter"), element =>
+            Attribute(element, "Property") == "Background" &&
+            Attribute(element, "Value") == "{DynamicResource SiteAccentButtonBrush}");
+        Assert.Contains(Elements(accentButton, "Setter"), element =>
+            Attribute(element, "Property") == "BorderBrush" &&
+            Attribute(element, "Value") == "{DynamicResource AccentBrush}");
     }
 
     [Fact]
@@ -93,9 +97,11 @@ public sealed class UiStructureTests
             element.Name.LocalName == "Canvas");
         Assert.Equal("24", Attribute(canvas, "Width"));
         Assert.Equal("24", Attribute(canvas, "Height"));
-        Assert.Single(canvas.Elements(), element => element.Name.LocalName == "Path");
-        var accentDot = Assert.Single(canvas.Elements(), element => element.Name.LocalName == "Ellipse");
-        Assert.Equal("{DynamicResource AccentBrush}", Attribute(accentDot, "Fill"));
+        var paths = canvas.Elements().Where(element => element.Name.LocalName == "Path").ToArray();
+        Assert.Equal(2, paths.Length);
+        Assert.Equal("{DynamicResource TextPrimaryBrush}", Attribute(paths[0], "Fill"));
+        Assert.Equal("{DynamicResource BrandCyanBrush}", Attribute(paths[1], "Fill"));
+        Assert.DoesNotContain(canvas.Elements(), element => element.Name.LocalName == "Ellipse");
         Assert.DoesNotContain(canvas.DescendantsAndSelf(), element =>
             element.Attributes().Any(attribute =>
                 attribute.Name.LocalName == "Margin" &&

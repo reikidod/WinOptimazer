@@ -51,6 +51,19 @@ jobs:
           dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --no-restore --logger "console;verbosity=normal" --logger "trx;LogFileName=winoptimizer-tests.trx"
           if ($LASTEXITCODE -ne 0) { throw 'Регрессионные тесты не прошли' }
 
+      - name: Verify no tests were skipped
+        shell: pwsh
+        run: |
+          $trx = Get-ChildItem tests/WinOptimizer.Tests/TestResults -Filter *.trx -Recurse | Select-Object -First 1
+          if (-not $trx) { throw 'Не найден отчёт тестов (.trx)' }
+          [xml]$report = Get-Content $trx.FullName
+          $c = $report.TestRun.ResultSummary.Counters
+          Write-Host "Всего: $($c.total); выполнено: $($c.executed); успешно: $($c.passed); упало: $($c.failed); не выполнено: $($c.notExecuted)"
+          if ([int]$c.total -eq 0) { throw 'Тесты не запускались' }
+          if ([int]$c.failed -ne 0 -or [int]$c.notExecuted -ne 0 -or [int]$c.executed -ne [int]$c.total -or [int]$c.passed -ne [int]$c.total) {
+            throw 'Часть тестов упала или была пропущена'
+          }
+
       - name: Upload application build
         if: success()
         uses: actions/upload-artifact@v4

@@ -154,6 +154,12 @@
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="18" ShadowDepth="2" Direction="270"
+                                  Opacity="0.24" Color="#0078D4" />
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- ===== Пункт навигации в боковой панели ===== -->
