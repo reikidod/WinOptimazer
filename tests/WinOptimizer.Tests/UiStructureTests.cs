@@ -447,9 +447,9 @@ public sealed class UiStructureTests
         var iconBase64 = File.ReadAllText(Path.Combine(RepositoryRoot(), "Assets/app.ico.b64")).Trim();
         var icon = Convert.FromBase64String(iconBase64);
 
-        Assert.Contains("<ApplicationIcon>$(IntermediateOutputPath)WinOptimizer.Brand.ico</ApplicationIcon>", project);
+        Assert.Contains("<ApplicationIcon>$(BaseIntermediateOutputPath)WinOptimizer.Brand.ico</ApplicationIcon>", project);
         Assert.Contains("GenerateWinOptimizerBrandIcon", project);
-        Assert.Contains("SetupIconFile=..\\obj\\Release\\net8.0-windows\\win-x64\\WinOptimizer.Brand.ico", installer);
+        Assert.Contains("SetupIconFile=..\\obj\\WinOptimizer.Brand.ico", installer);
         Assert.True(icon.Length > 256);
         Assert.Equal(0, icon[0]);
         Assert.Equal(0, icon[1]);
