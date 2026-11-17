@@ -1,4 +1,5 @@
 using WinOptimizer.Services;
+using Xunit;
 
 namespace WinOptimizer.Tests;
 
