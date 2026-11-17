@@ -12,7 +12,7 @@
     <!-- Оставляем стандартные настройки GC/JIT .NET: concurrent GC уменьшает паузы UI,
          а Tiered PGO помогает оптимизировать горячие участки кода после прогрева. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>$(IntermediateOutputPath)WinOptimizer.Brand.ico</ApplicationIcon>
+    <ApplicationIcon>$(BaseIntermediateOutputPath)WinOptimizer.Brand.ico</ApplicationIcon>
     <AssemblyName>WinOptimizer</AssemblyName>
     <RootNamespace>WinOptimizer</RootNamespace>
     <Version>0.7.7-g</Version>
@@ -78,8 +78,8 @@
 
 
   <Target Name="GenerateWinOptimizerBrandIcon" BeforeTargets="CoreCompile">
-    <MakeDir Directories="$(IntermediateOutputPath)" />
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$encoded = Get-Content -Raw -LiteralPath '$(MSBuildProjectDirectory)\Assets\app.ico.b64'; [IO.File]::WriteAllBytes('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)WinOptimizer.Brand.ico', [Convert]::FromBase64String($encoded.Trim()))&quot;" />
+    <MakeDir Directories="$(BaseIntermediateOutputPath)" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$encoded = Get-Content -Raw -LiteralPath '$(MSBuildProjectDirectory)\Assets\app.ico.b64'; [IO.File]::WriteAllBytes('$(MSBuildProjectDirectory)\$(BaseIntermediateOutputPath)WinOptimizer.Brand.ico', [Convert]::FromBase64String($encoded.Trim()))&quot;" />
   </Target>
 
   <Target Name="CopyGameBoostService" AfterTargets="Build">
