@@ -424,10 +424,10 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <Border Background="{DynamicResource AccentBrush}" />
-                                <StackPanel Grid.Column="1" Margin="20,16,18,16" VerticalAlignment="Center">
-                                    <TextBlock Text="SYSTEM OVERVIEW  /  WINOPTIMIZER" FontSize="9.5"
+                                <StackPanel Grid.Column="1" Margin="24,20,22,20" VerticalAlignment="Center">
+                                    <TextBlock Text="СИСТЕМНЫЙ МОНИТОР  /  WINOPTIMIZER" FontSize="9.5"
                                                FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
-                                    <TextBlock Text="Обзор системы" FontSize="26"
+                                    <TextBlock Text="Состояние компьютера" FontSize="28"
                                                FontWeight="SemiBold" Margin="0,5,0,0" />
                                     <TextBlock Text="{Binding DashboardStatus}" Style="{StaticResource SecondaryText}"
                                                FontSize="12.5" TextWrapping="Wrap" Margin="0,4,0,0" />
@@ -470,7 +470,7 @@
 
                                 <!-- CPU -->
                                 <StackPanel Grid.Column="0" Margin="18,15,16,14">
-                                    <TextBlock Text="01 / PROCESSOR" FontSize="9" FontWeight="Bold"
+                                    <TextBlock Text="01 / ПРОЦЕССОР" FontSize="9" FontWeight="Bold"
                                                Foreground="{DynamicResource TextDimBrush}" />
                                     <TextBlock Text="{Binding DashboardSnapshot.CpuSummary, TargetNullValue='…'}"
                                                FontSize="30" FontWeight="SemiBold" Margin="0,10,0,0" />
@@ -499,7 +499,7 @@
 
                                 <!-- RAM -->
                                 <StackPanel Grid.Column="2" Margin="18,15,16,14">
-                                    <TextBlock Text="02 / MEMORY" FontSize="9" FontWeight="Bold"
+                                    <TextBlock Text="02 / ПАМЯТЬ" FontSize="9" FontWeight="Bold"
                                                Foreground="{DynamicResource TextDimBrush}" />
                                     <TextBlock Text="{Binding DashboardSnapshot.MemoryLoadValue, TargetNullValue='…'}"
                                                FontSize="30" FontWeight="SemiBold" Margin="0,10,0,0" />
@@ -527,7 +527,7 @@
 
                                 <!-- GPU -->
                                 <StackPanel Grid.Column="4" Margin="18,15,16,14">
-                                    <TextBlock Text="03 / GRAPHICS" FontSize="9" FontWeight="Bold"
+                                    <TextBlock Text="03 / ГРАФИКА" FontSize="9" FontWeight="Bold"
                                                Foreground="{DynamicResource TextDimBrush}" />
                                     <ItemsControl ItemsSource="{Binding GpuActivity}" Margin="0,7,0,0">
                                         <ItemsControl.ItemTemplate>
@@ -567,7 +567,7 @@
 
                                 <!-- Disk -->
                                 <StackPanel Grid.Column="6" Margin="18,15,16,14">
-                                    <TextBlock Text="04 / STORAGE" FontSize="9" FontWeight="Bold"
+                                    <TextBlock Text="04 / НАКОПИТЕЛЬ" FontSize="9" FontWeight="Bold"
                                                Foreground="{DynamicResource TextDimBrush}" />
                                     <TextBlock Text="{Binding DashboardSnapshot.DiskFreeText, TargetNullValue='…'}"
                                                FontSize="27" FontWeight="SemiBold" Margin="0,10,0,0" />

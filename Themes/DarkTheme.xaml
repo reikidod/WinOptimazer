@@ -87,10 +87,10 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8"
+                            CornerRadius="5"
                             SnapsToDevicePixels="True">
                         <Grid>
-                            <Border x:Name="Highlight" Background="White" Opacity="0" CornerRadius="7" IsHitTestVisible="False" />
+                            <Border x:Name="Highlight" Background="White" Opacity="0" CornerRadius="4" IsHitTestVisible="False" />
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
@@ -136,11 +136,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Root" CornerRadius="10" Background="Transparent"
+                    <Border x:Name="Root" CornerRadius="6" Background="Transparent"
                             BorderThickness="1" BorderBrush="Transparent"
                             Padding="12,10" SnapsToDevicePixels="True">
                         <Grid>
-                            <Border x:Name="Bar" Width="3" Height="18" CornerRadius="2"
+                            <Border x:Name="Bar" Width="3" Height="18" CornerRadius="0"
                                     HorizontalAlignment="Left" VerticalAlignment="Center"
                                     Margin="-12,0,0,0"
                                     Background="{DynamicResource AccentBrush}" Opacity="0"

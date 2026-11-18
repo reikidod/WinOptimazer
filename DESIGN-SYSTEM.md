@@ -69,3 +69,8 @@
 ## Dashboard redesign — telemetry console
 
 The home screen uses one unified four-channel telemetry panel rather than four isolated floating cards. CPU, memory, graphics and storage share a common measurement grid with thin dividers, compact history traces and consistent hierarchy. Additional drives are shown as full-width inventory rows so the drive name, usage bar, capacity summary and utilization percentage can be compared at a glance. Preserve live bindings and command behavior when changing this layout.
+
+
+## Control Desk refresh — November 2026
+
+The visible application surface uses a native desktop control-desk language: strong page headings, compact rectangular navigation and action controls, bordered work panels, and a restrained active-state rail. Avoid decorative gradients, floating cards, oversized rounded tiles, and English-only telemetry labels in Russian UI. Preserve all existing bindings, commands, theme selection, and the shared WinOptimizer brand icon.

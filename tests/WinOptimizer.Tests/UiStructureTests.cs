@@ -129,9 +129,9 @@ public sealed class UiStructureTests
     {
         var view = LoadView("Views/MainWindow.xaml");
         Assert.Contains(Elements(view, "TextBlock"), element =>
-            Attribute(element, "Text") == "WINDOWS CONTROL CENTER");
+            Attribute(element, "Text") == "СИСТЕМНЫЙ МОНИТОР  /  WINOPTIMIZER");
         Assert.Contains(Elements(view, "TextBlock"), element =>
-            Attribute(element, "Text") == "Состояние системы");
+            Attribute(element, "Text") == "Состояние компьютера");
         Assert.Contains(Elements(view, "Button"), element =>
             Attribute(element, "Content") == "Обновить данные");
     }
@@ -150,6 +150,32 @@ public sealed class UiStructureTests
         Assert.DoesNotContain(Elements(view, "Border"), element =>
             Attribute(element, "Width") == "230" &&
             Attribute(element, "CornerRadius") == "12");
+    }
+
+    [Fact]
+    public void SharedSurfaces_UseTheNewControlDeskTreatment()
+    {
+        var shared = LoadView("Themes/SharedStyles.xaml");
+        var extras = LoadView("Themes/DarkTheme.Extras.xaml");
+
+        var pageTitle = Assert.Single(Elements(shared, "Style"), element =>
+            Attribute(element, "Key") == "PageTitle");
+        Assert.Contains(Elements(pageTitle, "Setter"), element =>
+            Attribute(element, "Property") == "FontSize" &&
+            Attribute(element, "Value") == "29");
+
+        var borderCard = Assert.Single(Elements(shared, "Style"), element =>
+            Attribute(element, "Key") == "BorderCard");
+        Assert.Contains(Elements(borderCard, "Setter"), element =>
+            Attribute(element, "Property") == "CornerRadius" &&
+            Attribute(element, "Value") == "3");
+
+        var hoverCard = Assert.Single(Elements(extras, "Style"), element =>
+            Attribute(element, "Key") == "HoverCard");
+        Assert.Contains(Elements(hoverCard, "Border"), element =>
+            Attribute(element, "Name") == "Card" &&
+            Attribute(element, "CornerRadius") == "4" &&
+            Attribute(element, "BorderThickness") == "1");
     }
 
     [Fact]

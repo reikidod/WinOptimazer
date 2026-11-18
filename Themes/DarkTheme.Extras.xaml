@@ -117,16 +117,16 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContentControl">
-                    <Border x:Name="Card" Background="{DynamicResource BgSidebarBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
-                            CornerRadius="0" Padding="10,9" SnapsToDevicePixels="True">
+                    <Border x:Name="Card" Background="{DynamicResource BgCardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="4" Padding="13,12" SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="3" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Border x:Name="StateRail" Grid.Column="0" Background="{DynamicResource AccentBrush}"
-                                    Opacity="0.28" CornerRadius="0" Margin="0,1,0,1" />
+                                    Opacity="0.18" CornerRadius="1" Margin="0,1,0,1" />
                             <ContentPresenter Grid.Column="1" Margin="12,0,0,0" />
                         </Grid>
                     </Border>
