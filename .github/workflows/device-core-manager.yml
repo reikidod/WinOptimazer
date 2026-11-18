@@ -51,8 +51,32 @@ jobs:
           $exe = 'DeviceCoreManager/bin/Release/net8.0-windows/win-x64/WinOptimizer.DeviceCoreManager.exe'
           if (-not (Test-Path $exe)) { throw "Не найден исполняемый файл: $exe" }
 
+      - name: Smoke test console entry point
+        shell: pwsh
+        run: |
+          $exe = 'DeviceCoreManager/bin/Release/net8.0-windows/win-x64/WinOptimizer.DeviceCoreManager.exe'
+          & $exe --help
+          if ($LASTEXITCODE -ne 0) { throw 'Проверка запуска Device Core Manager --help завершилась с ошибкой' }
+
       - name: Run existing interrupt-affinity regression tests
         shell: pwsh
         run: |
           dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --filter "FullyQualifiedName~InterruptAffinityPolicyTests" --logger "console;verbosity=normal"
           if ($LASTEXITCODE -ne 0) { throw 'Тесты политики interrupt affinity завершились с ошибкой' }
+
+      - name: Publish framework-dependent package
+        shell: pwsh
+        run: |
+          dotnet publish DeviceCoreManager/WinOptimizer.DeviceCoreManager.csproj --configuration Release --no-restore --self-contained false --output artifacts/DeviceCoreManager
+          if ($LASTEXITCODE -ne 0) { throw 'Публикация Device Core Manager завершилась с ошибкой' }
+          $exe = 'artifacts/DeviceCoreManager/WinOptimizer.DeviceCoreManager.exe'
+          if (-not (Test-Path $exe)) { throw "В пакете отсутствует $exe" }
+          Compress-Archive -Path 'artifacts/DeviceCoreManager/*' -DestinationPath 'artifacts/WinOptimizer-DeviceCoreManager-win-x64.zip' -Force
+
+      - name: Upload Device Core Manager package
+        uses: actions/upload-artifact@v4
+        with:
+          name: WinOptimizer-DeviceCoreManager-win-x64
+          path: artifacts/WinOptimizer-DeviceCoreManager-win-x64.zip
+          if-no-files-found: error
+          retention-days: 30

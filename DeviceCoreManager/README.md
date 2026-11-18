@@ -9,11 +9,14 @@
 ```powershell
 dotnet restore DeviceCoreManager/WinOptimizer.DeviceCoreManager.csproj
 dotnet build DeviceCoreManager/WinOptimizer.DeviceCoreManager.csproj -c Release
+dotnet publish DeviceCoreManager/WinOptimizer.DeviceCoreManager.csproj -c Release --self-contained false -o artifacts/DeviceCoreManager
 ```
 
-Исполняемый файл:
+Исполняемый файл после сборки:
 
 `DeviceCoreManager/bin/Release/net8.0-windows/win-x64/WinOptimizer.DeviceCoreManager.exe`
+
+Готовый ZIP публикуется как артефакт workflow **Device Core Manager CI** в GitHub Actions. Сборка framework-dependent: для запуска требуется .NET 8 Runtime x64.
 
 ## Использование
 

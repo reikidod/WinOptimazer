@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Principal;
 using Microsoft.Win32;
 using WinOptimizer.Services;
 
@@ -188,7 +187,19 @@ internal static class Program
         if (!result.Success)
             return 1;
 
-        if (VerifyApplied(selectedDevices, out var verificationError))
+        bool verified;
+        string verificationError;
+        try
+        {
+            verified = VerifyApplied(selectedDevices, out verificationError);
+        }
+        catch (Exception ex)
+        {
+            verified = false;
+            verificationError = ex.Message;
+        }
+
+        if (verified)
         {
             Console.WriteLine("Проверка реестра: успешно. DevicePolicy и маски процессоров совпадают с выбранными значениями.");
             Console.WriteLine("Резервная копия сохранена. Для возврата исходных настроек используйте пункт 3 или --restore.");
@@ -223,7 +234,13 @@ internal static class Program
         {
             var path = @"SYSTEM\CurrentControlSet\Enum\" + device.DeviceId + "\\" + AffinitySuffix;
             using var key = Registry.LocalMachine.OpenSubKey(path);
-            if (key?.GetValue("DevicePolicy") is not int policy || policy != 4)
+            if (key is null)
+            {
+                error = $"Не удалось повторно открыть параметры «{device.Name}».";
+                return false;
+            }
+
+            if (key.GetValue("DevicePolicy") is not int policy || policy != 4)
             {
                 error = $"Для «{device.Name}» DevicePolicy не равен 4.";
                 return false;
@@ -263,8 +280,15 @@ internal static class Program
             .Select(core => core.Index)
             .ToHashSet();
 
+        var tokens = input.Split(',', StringSplitOptions.TrimEntries);
+        if (tokens.Any(string.IsNullOrWhiteSpace))
+        {
+            error = "Разделяйте номера ядер запятыми; пустые элементы недопустимы.";
+            return false;
+        }
+
         var parsed = new HashSet<int>();
-        foreach (var token in input.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        foreach (var token in tokens)
         {
             if (!int.TryParse(token, NumberStyles.None, CultureInfo.InvariantCulture, out var index) ||
                 !available.Contains(index))
