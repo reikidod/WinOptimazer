@@ -50,10 +50,10 @@ public class ThemePaletteTests
         Assert.Equal("#101418", palette.BgWindow);
         Assert.Equal("#1A2127", palette.BgCard);
         Assert.Equal("#00C58E", palette.Accent);
-        Assert.Equal("#00A577", palette.AccentStrong);
+        Assert.Equal("#007A5A", palette.AccentStrong);
         Assert.False(palette.IsLight);
         Assert.True(ThemeManager.Contrast(palette.TextDim, palette.BgCard) >= 4.5);
-        Assert.True(ThemeManager.Contrast("#FFFFFF", "#00A577") >= 4.5);
+        Assert.True(ThemeManager.Contrast("#FFFFFF", "#007A5A") >= 4.5);
     }
 
     [Fact]
