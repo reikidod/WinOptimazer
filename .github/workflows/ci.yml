@@ -42,7 +42,7 @@ jobs:
             @('BgSidebarColor', '#151A1F'),
             @('BgCardColor', '#1A2127'),
             @('AccentColor', '#00C58E'),
-            @('AccentStrongColor', '#00A577')
+            @('AccentStrongColor', '#007A5A')
           )
           foreach ($pair in $pairs) {
             $key, $value = $pair[0], $pair[1]
@@ -75,6 +75,7 @@ jobs:
           $src = Get-Content -Raw dll/WinOptimizer.Settings/ThemeManager.cs
           if ($src -notmatch '#00C58E') { throw 'ThemeManager: акцент #00C58E не найден' }
           if ($src -notmatch '#101418') { throw 'ThemeManager: BgWindow #101418 не найден' }
+          if ($src -notmatch '#007A5A') { throw 'ThemeManager: AccentStrong #007A5A не найден' }
           if ($src -notmatch 'Control Center \(Signal\)') { throw 'ThemeManager: имя темы Signal не найдено' }
           Write-Host 'ThemeManager aurora/Signal палитра в порядке'
 
