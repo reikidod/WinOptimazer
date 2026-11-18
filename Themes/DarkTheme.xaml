@@ -14,7 +14,7 @@
     <Color x:Key="BorderColor">#2C363E</Color>
     <Color x:Key="BorderHoverColor">#3D4A54</Color>
     <Color x:Key="AccentColor">#00C58E</Color>
-    <Color x:Key="AccentStrongColor">#00A577</Color>
+    <Color x:Key="AccentStrongColor">#007A5A</Color>
     <Color x:Key="AccentSoftColor">#2600C58E</Color>
     <Color x:Key="TrackOffColor">#2A343C</Color>
 
@@ -33,10 +33,10 @@
 
     <!-- Brand keys kept for compatibility with existing pages; they follow the accent (ThemeManager overrides them per theme). -->
     <SolidColorBrush x:Key="BrandCyanBrush" Color="#00C58E" />
-    <SolidColorBrush x:Key="BrandRedBrush" Color="#00A577" />
+    <SolidColorBrush x:Key="BrandRedBrush" Color="#007A5A" />
     <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#00C58E" Offset="0" />
-        <GradientStop Color="#00A577" Offset="1" />
+        <GradientStop Color="#007A5A" Offset="1" />
     </LinearGradientBrush>
     <SolidColorBrush x:Key="BrandActionBrush" Color="#00C58E" />
 
