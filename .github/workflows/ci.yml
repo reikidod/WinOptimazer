@@ -78,6 +78,23 @@ jobs:
           if ($src -notmatch 'Control Center \(Signal\)') { throw 'ThemeManager: имя темы Signal не найдено' }
           Write-Host 'ThemeManager aurora/Signal палитра в порядке'
 
+      - name: Guard UiStructureTests is complete
+        shell: pwsh
+        run: |
+          $path = 'tests/WinOptimizer.Tests/UiStructureTests.cs'
+          $lines = (Get-Content $path).Count
+          $text = Get-Content -Raw $path
+          if ($lines -lt 200) {
+            throw "UiStructureTests.cs обрезан ($lines строк). Восстановите полный файл (см. commit 69cc17a) и обновите цвета Signal."
+          }
+          if ($text -like '*PLACEHOLDER*' -or $text -like '*Remainder of file must be restored*') {
+            throw 'UiStructureTests.cs содержит заглушку — восстановите полный файл'
+          }
+          if ($text -notlike '*#101418*' -or $text -notlike '*#00C58E*') {
+            throw 'UiStructureTests.cs: ожидаются Signal-цвета #101418 / #00C58E в ассертах'
+          }
+          Write-Host "UiStructureTests.cs OK ($lines строк)"
+
       - name: Run theme unit tests
         shell: pwsh
         run: |
