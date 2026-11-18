@@ -1,23 +1,33 @@
 # WinOptimizer Design System
 
-Reference: approved visual concept #3 (white, blue and cyan dashboard / website).
+Reference: WinOptimizer Control Center — a practical Windows desktop utility, not a promotional dashboard.
 
-## Product-wide rules
-- Default visual direction: light Modern Fluent Design.
-- Background: #F6FAFF; surfaces: #FFFFFF; hover surface: #EAF5FF.
-- Primary cyan: #00B4F4; action blue: #0078D4.
-- Main text: #1E293B; secondary: #475569; muted: #64748B.
-- Border: #DCEBFA; hover border: #72C9F0.
-- Success: #10B981; warning: #D97706; danger: #DC2626.
-- Corner radii: 12–16 px for controls, 18 px for large cards.
-- Typography: Segoe UI Variable / Segoe UI.
-- Effects: moderate shadows, subtle cyan glows, short transitions; avoid heavy blur.
-- Preserve all existing commands, bindings, view models, settings and navigation behavior.
-- Apply the same tokens to every page, dialog, context menu, notification, and settings surface.
-- Existing theme resource keys must remain available as compatibility aliases when renamed.
+## Visual direction
+- Dense, calm, technical interface inspired by native Windows administration tools.
+- Graphite surfaces with clear hierarchy; no glass effects, neon glows, decorative gradients, or floating-card grids.
+- Reuse the existing application icon everywhere. Do not draw substitute brand marks or create alternate logos.
+- The green accent is reserved for active navigation, enabled states, progress, and primary actions.
+- Prefer tables, compact metric panels, grouped settings rows, segmented controls, and clear section dividers over repeated cards.
 
-## App layout reference
-Compact left navigation, white rounded surfaces, cyan active state, system metric cards, recommendation panel, quick actions, and a clear status row. Advanced controls remain collapsible and do not dominate the page.
+## Palette
+- Window: #14191D; sidebar: #191F24.
+- Main surface: #1D2429; hover surface: #242D32.
+- Borders: #303A40; hover border: #596B60.
+- Accent: #A5C982; deep accent: #526D45.
+- Primary text: #E7ECEF; secondary: #AAB5BE; muted: #7E8A94.
+- Success: #9BCB82; warning: #D6AA68; danger: #D9827D.
 
-## Accessibility and performance
-Maintain readable contrast, keyboard focus indicators, reduced-motion support where relevant, and avoid expensive continuous animations.
+## Components
+- Surfaces use 4–6 px corner radii, 1 px borders, no drop shadows.
+- Dashboard metrics use flat panels with readable values, compact labels, and restrained history charts.
+- Tweak and setting entries use row-like panels with a narrow state rail on hover/focus.
+- Section headers and expanders remain visually distinct from their contents.
+- Badges are compact, outlined labels rather than pills.
+- Buttons use restrained hover/focus feedback and no bounce or glow.
+- Advanced settings remain collapsible and do not dominate the page.
+
+## Engineering constraints
+- Preserve all existing commands, bindings, view models, settings, navigation behavior, and compatibility resource keys.
+- Do not replace the existing app icon or introduce third-party icon packs.
+- Keep keyboard focus visible and maintain readable contrast in both themes.
+- Respect reduced-motion settings and avoid expensive continuous animations.

@@ -59,10 +59,10 @@ public sealed class UiStructureTests
 
         foreach (var (key, value) in new[]
         {
-            ("BgWindowColor", "#171B20"),
-            ("BgSidebarColor", "#1D2329"),
-            ("BgCardColor", "#222930"),
-            ("AccentColor", "#9ABF80")
+            ("BgWindowColor", "#14191D"),
+            ("BgSidebarColor", "#191F24"),
+            ("BgCardColor", "#1D2429"),
+            ("AccentColor", "#A5C982")
         })
         {
             Assert.Contains(Elements(theme, "Color"), element =>
@@ -77,6 +77,36 @@ public sealed class UiStructureTests
         Assert.Contains(Elements(accentButton, "Setter"), element =>
             Attribute(element, "Property") == "BorderBrush" &&
             Attribute(element, "Value") == "{DynamicResource AccentBrush}");
+    }
+
+    [Fact]
+    public void CardSystem_UsesFlatControlCenterPanels()
+    {
+        var main = LoadView("Views/MainWindow.xaml");
+        var extras = LoadView("Themes/DarkTheme.Extras.xaml");
+        var shared = LoadView("Themes/SharedStyles.xaml");
+        var dashboardCard = Assert.Single(Elements(main, "Style"), element =>
+            Attribute(element, "Key") == "DashboardCard");
+        Assert.Contains(Elements(dashboardCard, "Setter"), element =>
+            Attribute(element, "Property") == "CornerRadius" &&
+            Attribute(element, "Value") == "5");
+        Assert.Contains(Elements(dashboardCard, "Setter"), element =>
+            Attribute(element, "Property") == "Effect" &&
+            Attribute(element, "Value") == "{x:Null}");
+
+        var hoverCard = Assert.Single(Elements(extras, "Style"), element =>
+            Attribute(element, "Key") == "HoverCard");
+        Assert.Contains(Elements(hoverCard, "Border"), element =>
+            Attribute(element, "Name") == "StateRail");
+
+        foreach (var document in new[] { extras, shared })
+        {
+            var borderCard = Assert.Single(Elements(document, "Style"), element =>
+                Attribute(element, "Key") == "BorderCard");
+            Assert.Contains(Elements(borderCard, "Setter"), element =>
+                Attribute(element, "Property") == "CornerRadius" &&
+                Attribute(element, "Value") == "5");
+        }
     }
 
     [Fact]

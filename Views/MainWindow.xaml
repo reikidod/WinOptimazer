@@ -15,18 +15,19 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <local:CardWidthConverter x:Key="CardWidth" />
+        <!-- Flat metric surface: strict geometry and no floating-card effects. -->
         <Style x:Key="DashboardCard" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="5" />
             <Setter Property="Padding" Value="18,16" />
             <Setter Property="Margin" Value="0,0,14,12" />
             <Setter Property="Effect" Value="{x:Null}" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
-                    <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentStrongBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>

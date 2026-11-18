@@ -3,18 +3,18 @@
     <!-- Общие стили страниц. Лежат на уровне Application, а не в Window.Resources:
          MainWindowPages и SettingsPage (из WinOptimizer.Settings.dll) парсятся отдельно
          и на этапе InitializeComponent ещё не видят ресурсы окна. -->
+    <!-- Flat section surface; content hierarchy comes from spacing and dividers, not floating tiles. -->
     <Style x:Key="BorderCard" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="14" />
-        <Setter Property="Padding" Value="18,16" />
-        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="16,14" />
+        <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Effect" Value="{x:Null}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
             </Trigger>
         </Style.Triggers>
@@ -35,11 +35,12 @@
 
     <!-- Небольшой «бейдж» с текстом -->
     <Style x:Key="Badge" TargetType="Border">
-        <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Padding" Value="9,3" />
-        <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="7,3" />
+        <Setter Property="Margin" Value="0,0,7,0" />
         <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
     </Style>
 
     <!-- ===== Контекстное меню (в стиле карточек: скругление, рамка, тень, подсветка под курсором) ===== -->

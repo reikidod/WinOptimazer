@@ -2,16 +2,16 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:WinOptimizer.Views">
 
-    <!-- WinOptimizer / Control Room: restrained graphite surfaces and muted sage accent. -->
-    <Color x:Key="BgWindowColor">#171B20</Color>
-    <Color x:Key="BgSidebarColor">#1D2329</Color>
-    <Color x:Key="BgCardColor">#222930</Color>
-    <Color x:Key="BgCardHoverColor">#29323A</Color>
-    <Color x:Key="BorderColor">#343D46</Color>
-    <Color x:Key="BorderHoverColor">#56636D</Color>
-    <Color x:Key="AccentColor">#9ABF80</Color>
-    <Color x:Key="AccentStrongColor">#587A4A</Color>
-    <Color x:Key="TrackOffColor">#39434C</Color>
+    <!-- WinOptimizer Control Center: engineering graphite palette; green is reserved for state and action. -->
+    <Color x:Key="BgWindowColor">#14191D</Color>
+    <Color x:Key="BgSidebarColor">#191F24</Color>
+    <Color x:Key="BgCardColor">#1D2429</Color>
+    <Color x:Key="BgCardHoverColor">#242D32</Color>
+    <Color x:Key="BorderColor">#303A40</Color>
+    <Color x:Key="BorderHoverColor">#596B60</Color>
+    <Color x:Key="AccentColor">#A5C982</Color>
+    <Color x:Key="AccentStrongColor">#526D45</Color>
+    <Color x:Key="TrackOffColor">#303A40</Color>
 
     <SolidColorBrush x:Key="BgWindowBrush" Color="{StaticResource BgWindowColor}" />
     <SolidColorBrush x:Key="BgSidebarBrush" Color="{StaticResource BgSidebarColor}" />
@@ -73,7 +73,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10"
+                            CornerRadius="6"
                             RenderTransformOrigin="0.5,0.5"
                             SnapsToDevicePixels="True">
                         <Border.RenderTransform>
@@ -154,12 +154,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect BlurRadius="18" ShadowDepth="2" Direction="270"
-                                  Opacity="0.24" Color="#0078D4" />
-            </Setter.Value>
-        </Setter>
+        <Setter Property="Effect" Value="{x:Null}" />
     </Style>
 
     <!-- ===== Пункт навигации в боковой панели ===== -->
@@ -173,7 +168,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Root" CornerRadius="10" Background="Transparent" BorderThickness="1" BorderBrush="Transparent"
+                    <Border x:Name="Root" CornerRadius="5" Background="Transparent" BorderThickness="1" BorderBrush="Transparent"
                             Padding="12,10" SnapsToDevicePixels="True">
                         <Grid>
                             <Border x:Name="HoverFill" Margin="-12,-10" CornerRadius="8" Opacity="0" IsHitTestVisible="False"

@@ -111,21 +111,34 @@
         </Setter>
     </Style>
 
-    <!-- ===== Карточка с лёгким hover ===== -->
+    <!-- Settings entry: compact technical row with a restrained state rail on hover/focus. -->
     <Style x:Key="HoverCard" TargetType="ContentControl">
-        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="Margin" Value="0,0,0,5" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContentControl">
                     <Border x:Name="Card" Background="{DynamicResource BgCardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="14" Padding="16,12" SnapsToDevicePixels="True">
-                        <ContentPresenter />
+                            CornerRadius="4" Padding="14,11" SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="StateRail" Grid.Column="0" Background="{DynamicResource AccentBrush}"
+                                    Opacity="0" CornerRadius="1" Margin="0,1,0,1" />
+                            <ContentPresenter Grid.Column="1" Margin="10,0,0,0" />
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Card" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                             <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
+                            <Setter TargetName="StateRail" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            <Setter TargetName="StateRail" Property="Opacity" Value="1" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -137,12 +150,13 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="CornerRadius" Value="5" />
         <Setter Property="Padding" Value="16,14" />
-        <Setter Property="Margin" Value="0,0,0,12" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Effect" Value="{x:Null}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
             </Trigger>
         </Style.Triggers>
