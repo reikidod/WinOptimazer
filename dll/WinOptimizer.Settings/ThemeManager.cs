@@ -21,11 +21,14 @@ public sealed record AccentInfo(string Id, string Name, string Accent, string Ac
 /// </summary>
 public static class ThemeManager
 {
-    public const string DefaultTheme = "light";
+    public const string DefaultTheme = "aurora";
     public const string ThemeAccent = "theme";
 
     public static readonly IReadOnlyList<ThemeInfo> Themes =
     [
+        // Aurora Slate (design system v2) — фирменная тема и тема по умолчанию для новых установок.
+        new("aurora", "Aurora (тёмная)", new("#0E1117", "#121620", "#171C28", "#1E2535", "#262E3F", "#3A4A6B", "#6AA6FF", "#2F5FD0", "#2A3246",
+            "#EAEFF8", "#A4AFC4", "#7C879E", "#5FD39A", "#F0B35C", "#F2777A", "#8591A8")),
         new("dark", "Тёмная", new("#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
             "#F2F3F5", "#C2C6CE", "#A9AEB9", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
         new("light", "Светлая", new("#F6FAFF", "#FFFFFF", "#FFFFFF", "#EAF5FF", "#DCEBFA", "#72C9F0", "#009BD8", "#0078D4", "#DCEBFA",
@@ -118,6 +121,8 @@ public static class ThemeManager
             Set(app, "AccentBrush", accentHex);
             Set(app, "AccentStrongBrush", accentStrong);
             Set(app, "TrackOffBrush", p.TrackOff);
+            Set(app, "BgInputBrush", p.BgWindow);
+            Set(app, "AccentSoftBrush", accentHex, 38);
             Set(app, "TextPrimaryBrush", p.TextPrimary);
             Set(app, "TextSecondaryBrush", p.TextSecondary);
             Set(app, "TextDimBrush", p.TextDim);
@@ -153,8 +158,15 @@ public static class ThemeManager
         app.Resources["SiteCyanGlowBrush"] = CreateGlow(primary);
         app.Resources["SiteRedGlowBrush"] = CreateGlow(primary);
         app.Resources["SiteBlueGlowBrush"] = CreateGlow(secondary);
-        app.Resources["SiteAccentButtonBrush"] = CreateGradient(secondary, primary);
+        // На тёмных темах конец градиента смешиваем с насыщенным акцентом, чтобы белый текст кнопки читался.
+        app.Resources["SiteAccentButtonBrush"] = CreateGradient(secondary, isLight ? primary : Mix(secondary, primary, 0.5));
+        app.Resources["BrandGradientBrush"] = CreateGradient(primary, secondary);
     }
+
+    private static Color Mix(Color a, Color b, double t) => Color.FromRgb(
+        (byte)Math.Round(a.R + (b.R - a.R) * t),
+        (byte)Math.Round(a.G + (b.G - a.G) * t),
+        (byte)Math.Round(a.B + (b.B - a.B) * t));
 
     private static RadialGradientBrush CreateGlow(Color color)
     {

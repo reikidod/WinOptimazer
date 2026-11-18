@@ -31,12 +31,12 @@
     <SolidColorBrush x:Key="TrackOffBrush" Color="{StaticResource TrackOffColor}" />
     <SolidColorBrush x:Key="TextOnAccentBrush" Color="#FFFFFF" />
 
-    <!-- Brand keys kept for compatibility with existing pages; they now carry the blue-violet signature. -->
+    <!-- Brand keys kept for compatibility with existing pages; they follow the accent (ThemeManager overrides them per theme). -->
     <SolidColorBrush x:Key="BrandCyanBrush" Color="#6AA6FF" />
-    <SolidColorBrush x:Key="BrandRedBrush" Color="#8B7CFF" />
+    <SolidColorBrush x:Key="BrandRedBrush" Color="#2F5FD0" />
     <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#6AA6FF" Offset="0" />
-        <GradientStop Color="#8B7CFF" Offset="1" />
+        <GradientStop Color="#2F5FD0" Offset="1" />
     </LinearGradientBrush>
     <SolidColorBrush x:Key="BrandActionBrush" Color="#3D6FE0" />
 

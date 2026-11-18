@@ -41,6 +41,22 @@ public class ThemePaletteTests
     }
 
     [Fact]
+    public void AuroraTheme_IsDefaultAndUsesDesignSystemV2Palette()
+    {
+        Assert.Equal("aurora", ThemeManager.DefaultTheme);
+        Assert.Equal("aurora", ThemeManager.Themes[0].Id);
+
+        var palette = ThemeManager.Find("aurora").Palette;
+        Assert.Equal("#0E1117", palette.BgWindow);
+        Assert.Equal("#171C28", palette.BgCard);
+        Assert.Equal("#6AA6FF", palette.Accent);
+        Assert.Equal("#2F5FD0", palette.AccentStrong);
+        Assert.False(palette.IsLight);
+        Assert.True(ThemeManager.Contrast(palette.TextDim, palette.BgCard) >= 4.5);
+        Assert.True(ThemeManager.Contrast("#FFFFFF", "#3D6FE0") >= 4.5);
+    }
+
+    [Fact]
     public void ThemeAndAccentIdentifiers_AreUnique()
     {
         Assert.Equal(

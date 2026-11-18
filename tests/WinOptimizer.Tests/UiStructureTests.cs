@@ -41,7 +41,7 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void MainShell_UsesRestrainedGraphiteVisualLanguage()
+    public void MainShell_UsesAuroraSlateVisualLanguage()
     {
         var view = LoadView("Views/MainWindow.xaml");
         var theme = LoadView("Themes/DarkTheme.xaml");
@@ -59,10 +59,10 @@ public sealed class UiStructureTests
 
         foreach (var (key, value) in new[]
         {
-            ("BgWindowColor", "#14191D"),
-            ("BgSidebarColor", "#191F24"),
-            ("BgCardColor", "#1D2429"),
-            ("AccentColor", "#A5C982")
+            ("BgWindowColor", "#0E1117"),
+            ("BgSidebarColor", "#121620"),
+            ("BgCardColor", "#171C28"),
+            ("AccentColor", "#6AA6FF")
         })
         {
             Assert.Contains(Elements(theme, "Color"), element =>
@@ -76,11 +76,11 @@ public sealed class UiStructureTests
             Attribute(element, "Value") == "{DynamicResource SiteAccentButtonBrush}");
         Assert.Contains(Elements(accentButton, "Setter"), element =>
             Attribute(element, "Property") == "BorderBrush" &&
-            Attribute(element, "Value") == "{DynamicResource AccentBrush}");
+            Attribute(element, "Value") == "{DynamicResource SiteAccentButtonBrush}");
     }
 
     [Fact]
-    public void CardSystem_UsesFlatControlCenterPanels()
+    public void CardSystem_UsesLayeredRoundedPanels()
     {
         var main = LoadView("Views/MainWindow.xaml");
         var extras = LoadView("Themes/DarkTheme.Extras.xaml");
@@ -89,7 +89,7 @@ public sealed class UiStructureTests
             Attribute(element, "Key") == "DashboardCard");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "CornerRadius" &&
-            Attribute(element, "Value") == "5");
+            Attribute(element, "Value") == "12");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "Effect" &&
             Attribute(element, "Value") == "{x:Null}");
@@ -105,23 +105,23 @@ public sealed class UiStructureTests
                 Attribute(element, "Key") == "BorderCard");
             Assert.Contains(Elements(borderCard, "Setter"), element =>
                 Attribute(element, "Property") == "CornerRadius" &&
-                Attribute(element, "Value") == "5");
+                Attribute(element, "Value") == "12");
         }
     }
 
     [Fact]
-    public void GameAndUtilityPanels_UseCompactControlCenterGeometry()
+    public void GameAndUtilityPanels_StayWithinDesignSystemRadius()
     {
         var main = LoadView("Views/MainWindow.xaml");
         var gamePage = Assert.Single(Elements(main, "Grid"), element =>
             Attribute(element, "Visibility") == "{Binding IsGamesPage, Converter={StaticResource BoolToVis}}");
 
         Assert.Empty(Elements(gamePage, "Border").Where(element =>
-            double.TryParse(Attribute(element, "CornerRadius"), out var radius) && radius > 6));
+            double.TryParse(Attribute(element, "CornerRadius"), out var radius) && radius > 16));
 
         var utilityPages = LoadView("Views/MainWindowPages.xaml");
         Assert.Empty(Elements(utilityPages, "Border").Where(element =>
-            double.TryParse(Attribute(element, "CornerRadius"), out var radius) && radius > 6));
+            double.TryParse(Attribute(element, "CornerRadius"), out var radius) && radius > 16));
     }
 
     [Fact]

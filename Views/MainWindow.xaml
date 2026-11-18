@@ -413,14 +413,18 @@
                               Padding="0,0,6,12" Focusable="False">
                     <StackPanel Margin="0,0,8,12">
                         <!-- Приветствие и основные действия -->
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,18" Padding="24,20" CornerRadius="14">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#1B2540" Offset="0" />
-                                    <GradientStop Color="{StaticResource BgCardColor}" Offset="0.65" />
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,18" Padding="0" CornerRadius="14">
                             <Grid>
+                                <!-- Мягкая акцентная подсветка: берёт цвет текущей темы и затухает по диагонали -->
+                                <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="13" IsHitTestVisible="False">
+                                    <Border.OpacityMask>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#FF000000" Offset="0" />
+                                            <GradientStop Color="#00000000" Offset="0.7" />
+                                        </LinearGradientBrush>
+                                    </Border.OpacityMask>
+                                </Border>
+                                <Grid Margin="24,20">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
@@ -442,6 +446,7 @@
                                     <Button Content="Проверить систему" Style="{StaticResource AccentButton}"
                                             Command="{Binding RunDiagnosticsCommand}" Padding="18,10" />
                                 </StackPanel>
+                            </Grid>
                             </Grid>
                         </Border>
 
