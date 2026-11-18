@@ -26,10 +26,10 @@ public static class ThemeManager
 
     public static readonly IReadOnlyList<ThemeInfo> Themes =
     [
-        // WinOptimizer Control: графитовая палитра с приглушённым зелёным рабочим акцентом.
-        // Сохраняем ID aurora, чтобы обновить тему существующих установок без сброса выбора пользователя.
-        new("aurora", "Control Center (графитовая)", new("#14191D", "#191F24", "#20282D", "#273238", "#344047", "#718078", "#A5C982", "#526D45", "#303A40",
-            "#EDF1EC", "#BCC7BF", "#9AA69E", "#8DBF75", "#D6AD6A", "#D97878", "#97A39B")),
+        // WinOptimizer Signal Control Center: глубокий уголь + акцент логотипа #00C58E.
+        // ID aurora сохранён, чтобы не сбрасывать выбор темы у существующих установок.
+        new("aurora", "Control Center (Signal)", new("#101418", "#151A1F", "#1A2127", "#222A31", "#2C363E", "#3D4A54", "#00C58E", "#00A577", "#2A343C",
+            "#F2F5F3", "#B5C0BA", "#8E9B94", "#2FD49A", "#D6AD6A", "#D97878", "#97A39B")),
         new("dark", "Тёмная", new("#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
             "#F2F3F5", "#C2C6CE", "#A9AEB9", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
         new("light", "Светлая", new("#F6FAFF", "#FFFFFF", "#FFFFFF", "#EAF5FF", "#DCEBFA", "#72C9F0", "#009BD8", "#0078D4", "#DCEBFA",
@@ -51,7 +51,7 @@ public static class ThemeManager
         new(ThemeAccent, "Как в теме", "", ""),
         new("blue", "Синий", "#6EA8FF", "#3A66C8"),
         new("red", "Красный", "#FF6B6B", "#C0392B"),
-        new("green", "Зелёный", "#4FD1A1", "#1F8F6A"),
+        new("green", "Зелёный", "#00C58E", "#00A577"),
         new("purple", "Фиолетовый", "#B48CFF", "#7B4FD0"),
         new("orange", "Оранжевый", "#FFA94D", "#C46A12"),
         new("pink", "Розовый", "#FF7EB6", "#C23C7E"),
@@ -87,43 +87,28 @@ public static class ThemeManager
             var cardAlpha = hasBackground && s.TransparencyEffectsEnabled
                 ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0)
                 : (byte)255;
-            var themeKey = $"{s.ThemeId}|{s.AccentId}|{hasBackground}";
-            var key = $"{themeKey}|{cardAlpha}";
-            if (key == _appliedKey) return;
 
-            var p = Find(s.ThemeId).Palette;
-            // Быстрый путь: двигается только «Плотность карточек» — обновляем alpha у 3 кистей, без полного пересоздания палитры.
-            if (_appliedKey is not null && _appliedKey.StartsWith(themeKey + "|", StringComparison.Ordinal))
-            {
-                Set(app, "BgSidebarBrush", p.BgSidebar, cardAlpha);
-                Set(app, "BgCardBrush", p.BgCard, cardAlpha);
-                Set(app, "BgCardHoverBrush", p.BgCardHover, cardAlpha);
-                _appliedKey = key;
-                return;
-            }
+            var theme = Find(s.ThemeId);
+            var p = theme.Palette;
+            var accentInfo = Accents.FirstOrDefault(a => a.Id == s.AccentId) ?? Accents[0];
+            var accent = accentInfo.Id == ThemeAccent ? p.Accent : accentInfo.Accent;
+            var accentStrong = accentInfo.Id == ThemeAccent ? p.AccentStrong : accentInfo.AccentStrong;
+
+            var key = $"{theme.Id}|{s.AccentId}|{cardAlpha}|{s.TransparencyEffectsEnabled}";
+            if (_appliedKey == key) return;
             _appliedKey = key;
 
-            var accent = Accents.FirstOrDefault(a => a.Id == s.AccentId);
-            var accentHex = p.Accent;
-            var accentStrong = p.AccentStrong;
-            if (accent is { Id: not ThemeAccent } && accent.Accent.Length > 0)
-            {
-                // На светлой теме пастельный акцент плохо читается на белом: берём насыщенный вариант и для текста.
-                accentHex = p.IsLight ? accent.AccentStrong : accent.Accent;
-                accentStrong = accent.AccentStrong;
-            }
-
             Set(app, "BgWindowBrush", p.BgWindow);
-            Set(app, "BgSidebarBrush", p.BgSidebar, cardAlpha);
+            Set(app, "BgSidebarBrush", p.BgSidebar);
             Set(app, "BgCardBrush", p.BgCard, cardAlpha);
             Set(app, "BgCardHoverBrush", p.BgCardHover, cardAlpha);
+            Set(app, "BgInputBrush", p.BgWindow);
             Set(app, "BorderBrush", p.Border);
             Set(app, "BorderHoverBrush", p.BorderHover);
-            Set(app, "AccentBrush", accentHex);
+            Set(app, "AccentBrush", accent);
             Set(app, "AccentStrongBrush", accentStrong);
+            Set(app, "AccentSoftBrush", accent, 38);
             Set(app, "TrackOffBrush", p.TrackOff);
-            Set(app, "BgInputBrush", p.BgWindow);
-            Set(app, "AccentSoftBrush", accentHex, 38);
             Set(app, "TextPrimaryBrush", p.TextPrimary);
             Set(app, "TextSecondaryBrush", p.TextSecondary);
             Set(app, "TextDimBrush", p.TextDim);
@@ -131,11 +116,16 @@ public static class ThemeManager
             Set(app, "WarnBrush", p.Warn);
             Set(app, "DangerBrush", p.Danger);
             Set(app, "NeutralBrush", p.Neutral);
-            SetThemeAtmosphere(app, accentHex, accentStrong, p.IsLight);
+            Set(app, "TextOnAccentBrush", "#FFFFFF");
+            Set(app, "BrandCyanBrush", accent);
+            Set(app, "BrandRedBrush", accentStrong);
+            Set(app, "BrandActionBrush", accent);
+
+            SetThemeAtmosphere(app, accent, accentStrong, p.IsLight);
         }
-        catch (Exception ex)
+        catch
         {
-            Logger.Error("Не удалось применить тему", ex);
+            // Не роняем приложение из‑за сбоя темы.
         }
     }
 
@@ -187,28 +177,45 @@ public static class ThemeManager
 
     private static void Set(Application app, string key, string hex, byte alpha = 255)
     {
-        var c = ParseColor(hex);
-        c.A = alpha;
-        var brush = new SolidColorBrush(c);
+        var color = ParseColor(hex);
+        if (alpha < 255) color = Color.FromArgb(alpha, color.R, color.G, color.B);
+        var brush = new SolidColorBrush(color);
         brush.Freeze();
         app.Resources[key] = brush;
     }
 
-    internal static Color ParseColor(string hex) => (Color)ColorConverter.ConvertFromString(hex);
-
-    /// <summary>Контраст двух цветов по WCAG (1…21). Нужен для проверки читаемости палитр в тестах.</summary>
-    internal static double Contrast(string hexA, string hexB)
+    public static Color ParseColor(string hex)
     {
-        static double Lin(byte v)
+        hex = hex.TrimStart('#');
+        if (hex.Length == 8)
+            return Color.FromArgb(
+                Convert.ToByte(hex[..2], 16),
+                Convert.ToByte(hex[2..4], 16),
+                Convert.ToByte(hex[4..6], 16),
+                Convert.ToByte(hex[6..8], 16));
+        return Color.FromRgb(
+            Convert.ToByte(hex[..2], 16),
+            Convert.ToByte(hex[2..4], 16),
+            Convert.ToByte(hex[4..6], 16));
+    }
+
+    /// <summary>Контраст двух цветов по WCAG (для тестов палитры).</summary>
+    public static double Contrast(string hexA, string hexB)
+    {
+        static double Lum(Color c)
         {
-            var c = v / 255.0;
-            return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+            static double F(byte v)
+            {
+                var s = v / 255.0;
+                return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4);
+            }
+            return 0.2126 * F(c.R) + 0.7152 * F(c.G) + 0.0722 * F(c.B);
         }
 
-        static double Lum(Color c) => 0.2126 * Lin(c.R) + 0.7152 * Lin(c.G) + 0.0722 * Lin(c.B);
-        var la = Lum(ParseColor(hexA));
-        var lb = Lum(ParseColor(hexB));
-        var (hi, lo) = la > lb ? (la, lb) : (lb, la);
-        return (hi + 0.05) / (lo + 0.05);
+        var a = Lum(ParseColor(hexA));
+        var b = Lum(ParseColor(hexB));
+        var lighter = Math.Max(a, b);
+        var darker = Math.Min(a, b);
+        return (lighter + 0.05) / (darker + 0.05);
     }
 }
