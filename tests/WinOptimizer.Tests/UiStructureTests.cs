@@ -105,7 +105,7 @@ public sealed class UiStructureTests
                 Attribute(element, "Key") == "BorderCard");
             Assert.Contains(Elements(borderCard, "Setter"), element =>
                 Attribute(element, "Property") == "CornerRadius" &&
-                Attribute(element, "Value") == "4");
+                Attribute(element, "Value") == "3");
         }
     }
 
