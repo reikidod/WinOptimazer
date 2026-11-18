@@ -8,8 +8,8 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="5" />
-        <Setter Property="Padding" Value="16,14" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="18,16" />
         <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Effect" Value="{x:Null}" />
@@ -22,7 +22,7 @@
 
     <!-- Заголовок страницы и подзаголовок -->
     <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontSize" Value="26" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -35,8 +35,8 @@
 
     <!-- Небольшой «бейдж» с текстом -->
     <Style x:Key="Badge" TargetType="Border">
-        <Setter Property="CornerRadius" Value="3" />
-        <Setter Property="Padding" Value="7,3" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="8,3" />
         <Setter Property="Margin" Value="0,0,7,0" />
         <Setter Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
@@ -57,7 +57,7 @@
                     <Border Margin="10" Padding="4"
                             Background="{DynamicResource BgCardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="8">
+                            BorderThickness="1" CornerRadius="12">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.5" Color="Black" />
                         </Border.Effect>

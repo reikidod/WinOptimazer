@@ -305,7 +305,7 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="RadioButton">
-                                                <Border x:Name="Chip" CornerRadius="5" Padding="13,8"
+                                                <Border x:Name="Chip" CornerRadius="16" Padding="14,7"
                                                         Background="{DynamicResource BgCardBrush}"
                                                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -316,9 +316,9 @@
                                                         <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                                                     </Trigger>
                                                     <Trigger Property="IsChecked" Value="True">
-                                                        <Setter TargetName="Chip" Property="Background" Value="{DynamicResource BgCardHoverBrush}" />
+                                                        <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentSoftBrush}" />
                                                         <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>

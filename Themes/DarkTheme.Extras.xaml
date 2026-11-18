@@ -119,7 +119,7 @@
                 <ControlTemplate TargetType="ContentControl">
                     <Border x:Name="Card" Background="{DynamicResource BgCardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="4" Padding="14,11" SnapsToDevicePixels="True">
+                            CornerRadius="10" Padding="16,12" SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2" />
@@ -150,8 +150,8 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="5" />
-        <Setter Property="Padding" Value="16,14" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="18,16" />
         <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Effect" Value="{x:Null}" />

@@ -1,33 +1,55 @@
-# WinOptimizer Design System
+# WinOptimizer Design System v2 — «Aurora Slate»
 
-Reference: WinOptimizer Control Center — a practical Windows desktop utility, not a promotional dashboard.
+> **Приоритет:** дизайн — первостепенная часть любой UI-задачи. Любое изменение интерфейса обязано следовать этому документу. Правила в нём выше старых описаний дизайна (graphite/green) в других файлах.
 
-## Visual direction
-- Dense, calm, technical interface inspired by native Windows administration tools.
-- Graphite surfaces with clear hierarchy; no glass effects, neon glows, decorative gradients, or floating-card grids.
-- Reuse the existing application icon everywhere. Do not draw substitute brand marks or create alternate logos.
-- The green accent is reserved for active navigation, enabled states, progress, and primary actions.
-- Prefer tables, compact metric panels, grouped settings rows, segmented controls, and clear section dividers over repeated cards.
+Основа: Windows 11 Fluent. Тёмная slate-палитра, один спокойный синий акцент, слоистые поверхности, мягкие скругления, минимум декора.
 
-## Palette
-- Window: #14191D; sidebar: #191F24.
-- Main surface: #1D2429; hover surface: #242D32.
-- Borders: #303A40; hover border: #596B60.
-- Accent: #A5C982; deep accent: #526D45.
-- Primary text: #E7ECEF; secondary: #AAB5BE; muted: #7E8A94.
-- Success: #9BCB82; warning: #D6AA68; danger: #D9827D.
+## Принципы
+1. **Слои вместо теней.** Глубина создаётся сменой тона: окно → боковая панель → карточка → карточка при наведении. Тени только у всплывающих элементов (контекстное меню, переключатель).
+2. **Один акцент.** Синий = выбор, фокус, главное действие, прогресс. Статусные цвета только для состояния.
+3. **Читаемость.** Основной текст ≥ 13 px, пары цветов ≥ 4.5:1 на карточке. Мелкий текст (10–11 px) только для подписей-меток.
+4. **Спокойное движение.** Только короткие fade (≤ 250 мс). Без «пружин», масштабирования при нажатии, бесконечных анимаций (кроме IsIndeterminate).
+5. **Не ломать существующее.** Все ключи ресурсов, команды, bindings, настройки и навигация сохраняются.
 
-## Components
-- Surfaces use 4–6 px corner radii, 1 px borders, no drop shadows.
-- Dashboard metrics use flat panels with readable values, compact labels, and restrained history charts.
-- Tweak and setting entries use row-like panels with a narrow state rail on hover/focus.
-- Section headers and expanders remain visually distinct from their contents.
-- Badges are compact, outlined labels rather than pills.
-- Buttons use restrained hover/focus feedback and no bounce or glow.
-- Advanced settings remain collapsible and do not dominate the page.
+## Токены (Themes/DarkTheme.xaml)
+| Назначение | Ключ | Значение |
+|---|---|---|
+| Окно | BgWindow | #0E1117 |
+| Боковая панель | BgSidebar | #121620 |
+| Карточка | BgCard | #171C28 |
+| Карточка hover | BgCardHover | #1E2535 |
+| Поле ввода | BgInput | #0F131B |
+| Граница / hover | Border / BorderHover | #262E3F / #3A4A6B |
+| Акцент | Accent | #6AA6FF |
+| Акцент насыщенный (переключатель, выделение текста) | AccentStrong | #2F5FD0 |
+| Акцент мягкий (выбранный пункт, чип) | AccentSoft | #6AA6FF @ 15% |
+| Кнопка действия | SiteAccentButton | #3D6FE0, текст белый |
+| Дорожка выкл. | TrackOff | #2A3246 |
+| Текст | TextPrimary / Secondary / Dim | #EAEFF8 / #A4AFC4 / #7C879E |
+| Состояния | Success / Warn / Danger / Neutral | #5FD39A / #F0B35C / #F2777A / #8591A8 |
+| Бренд-градиент (дуга, мини-индикаторы) | BrandGradient | #6AA6FF → #8B7CFF |
 
-## Engineering constraints
-- Preserve all existing commands, bindings, view models, settings, navigation behavior, and compatibility resource keys.
-- Do not replace the existing app icon or introduce third-party icon packs.
-- Keep keyboard focus visible and maintain readable contrast in both themes.
-- Respect reduced-motion settings and avoid expensive continuous animations.
+Новые цвета добавлять только через токены, не хардкодом в XAML.
+
+## Геометрия
+- Карточки и секции: радиус **12**, hero-блок 14; внутренние отступы 18–20.
+- Контролы (кнопки, поля): радиус **8**; навигация и кнопка сайдбара: **10**; чипы фильтров: **16** (таблетка); бейджи: 8.
+- Рамка 1 px. Шаг отступов: 4 / 8 / 12 / 16 / 24.
+
+## Компоненты
+- **Кнопка**: фон BgCardHover, рамка Border; hover/press — белая подсветка 7%/14%; фокус — рамка Accent. **AccentButton** — заливка SiteAccentButton.
+- **Навигация**: «таблетка» 46 px; hover — BgCardHover; выбранный — AccentSoft + текст/иконка Accent + 3 px индикатор слева.
+- **Карточка (BorderCard, DashboardCard, SettingsCard, HoverCard)**: BgCard, рамка 1 px, hover — BorderHover.
+- **Чип фильтра**: выбранный — AccentSoft + рамка и текст Accent.
+- **Hero главной**: DashboardCard с мягким градиентом #1B2540 → BgCard; единственный градиентный фон страницы.
+- **Индикатор оптимизации**: дуга без стрелки, BrandGradient, плавное заполнение.
+- **Раскрывающиеся секции**: основное видно, редкое скрыто; не делать каждый элемент раскрывающимся.
+
+## Запреты
+- Не менять скроллбары (ScrollThumb, ScrollBar, OverlayScroll) без прямой просьбы.
+- Не менять и не подменять иконку приложения.
+- Без размытия/«стекла», неоновых свечений, декоративных градиентов (кроме перечисленных), анимаций ради анимаций.
+- Без хардкода цветов вне токенов.
+
+## Перед коммитом UI-изменений
+Проверить: XAML валиден, ключи ресурсов сохранены, фокус виден, контраст ≥ 4.5:1, нет скачков layout при обновлении данных, CI на `beta` зелёный.

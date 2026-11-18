@@ -20,14 +20,14 @@
             <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="5" />
-            <Setter Property="Padding" Value="18,16" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20,18" />
             <Setter Property="Margin" Value="0,0,14,12" />
             <Setter Property="Effect" Value="{x:Null}" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="{DynamicResource AccentStrongBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -47,7 +47,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="7">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="10">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -75,9 +75,9 @@
         <!-- Навигация: компактная рейка с иконками или полная панель с подписями. -->
         <Style x:Key="SidebarNavigationButton" TargetType="RadioButton" BasedOn="{StaticResource NavButton}">
             <Setter Property="Width" Value="54" />
-            <Setter Property="Height" Value="48" />
+            <Setter Property="Height" Value="46" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Margin" Value="0,3" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Style.Triggers>
@@ -144,7 +144,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Width="38" Height="38" Margin="0" CornerRadius="8" ToolTip="{Binding VersionLabel}" Background="#202124" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
+                            <Border Width="38" Height="38" Margin="0" CornerRadius="10" ToolTip="{Binding VersionLabel}" Background="#202124" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
                                 <Image Source="{StaticResource WinOptimizerAppIcon}" Stretch="Uniform" />
                             </Border>
                             <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -413,29 +413,37 @@
                               Padding="0,0,6,12" Focusable="False">
                     <StackPanel Margin="0,0,8,12">
                         <!-- Приветствие и основные действия -->
-                        <Grid Margin="0,0,0,18">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Добро пожаловать!" FontSize="26" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding DashboardStatus}" Style="{StaticResource SecondaryText}"
-                                           FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0" />
-                                <TextBlock Text="{Binding DiagnosticSummary}" FontSize="12.5" FontWeight="Medium"
-                                           TextWrapping="Wrap" Margin="0,8,0,0" />
-                                <TextBlock Text="{Binding DiagnosticLastRunText}"
-                                           Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,0" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button Content="Характеристики ПК" Margin="0,0,8,0" Padding="14,10"
-                                        Command="{Binding NavigateCommand}" CommandParameter="System" />
-                                <Button Content="Обновить" Margin="0,0,8,0" Padding="14,10"
-                                        Command="{Binding RefreshDashboardCommand}" />
-                                <Button Content="Проверить систему" Style="{StaticResource AccentButton}"
-                                        Command="{Binding RunDiagnosticsCommand}" Padding="18,10" />
-                            </StackPanel>
-                        </Grid>
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,18" Padding="24,20" CornerRadius="14">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#1B2540" Offset="0" />
+                                    <GradientStop Color="{StaticResource BgCardColor}" Offset="0.65" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Добро пожаловать!" FontSize="26" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding DashboardStatus}" Style="{StaticResource SecondaryText}"
+                                               FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0" />
+                                    <TextBlock Text="{Binding DiagnosticSummary}" FontSize="12.5" FontWeight="Medium"
+                                               TextWrapping="Wrap" Margin="0,8,0,0" />
+                                    <TextBlock Text="{Binding DiagnosticLastRunText}"
+                                               Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,0" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Характеристики ПК" Margin="0,0,8,0" Padding="14,10"
+                                            Command="{Binding NavigateCommand}" CommandParameter="System" />
+                                    <Button Content="Обновить" Margin="0,0,8,0" Padding="14,10"
+                                            Command="{Binding RefreshDashboardCommand}" />
+                                    <Button Content="Проверить систему" Style="{StaticResource AccentButton}"
+                                            Command="{Binding RunDiagnosticsCommand}" Padding="18,10" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
 
                         <!-- Живые показатели: карточки с локальной историей и мини-графиками -->
                         <Grid Margin="0,0,0,18">
@@ -815,7 +823,7 @@
                                           StrokeDashArray="26,26" StrokeDashOffset="26"
                                           local:Motion.ArcProgress="{Binding GaugeProgressValue}">
                                         <Path.Effect>
-                                            <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.18" Color="#00B4F4" />
+                                            <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.22" Color="#6AA6FF" />
                                         </Path.Effect>
                                     </Path>
                                     <TextBlock Canvas.Left="0" Canvas.Top="136" Text="ЛЁГКАЯ" FontSize="9"

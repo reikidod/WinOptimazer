@@ -7,7 +7,7 @@
             <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="16,14" />
             <Setter Property="Margin" Value="0,0,12,10" />
             <Style.Triggers>
