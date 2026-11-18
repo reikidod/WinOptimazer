@@ -110,6 +110,21 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void GameAndUtilityPanels_UseCompactControlCenterGeometry()
+    {
+        var main = LoadView("Views/MainWindow.xaml");
+        var gamePage = Assert.Single(Elements(main, "Grid"), element =>
+            Attribute(element, "Visibility") == "{Binding IsGamesPage, Converter={StaticResource BoolToVis}}");
+
+        Assert.Empty(Elements(gamePage, "Border").Where(element =>
+            double.TryParse(Attribute(element, "CornerRadius"), out var radius) && radius > 6));
+
+        var utilityPages = LoadView("Views/MainWindowPages.xaml");
+        Assert.Empty(Elements(utilityPages, "Border").Where(element =>
+            double.TryParse(Attribute(element, "CornerRadius"), out var radius) && radius > 6));
+    }
+
+    [Fact]
     public void BrandMark_UsesTheSharedApplicationIconResource()
     {
         var document = LoadView("Views/MainWindow.xaml");
