@@ -41,19 +41,19 @@ public class ThemePaletteTests
     }
 
     [Fact]
-    public void ControlCenterTheme_IsDefaultAndUsesGraphiteGreenPalette()
+    public void ControlCenterTheme_IsDefaultAndUsesSignalGreenPalette()
     {
         Assert.Equal("aurora", ThemeManager.DefaultTheme);
         Assert.Equal("aurora", ThemeManager.Themes[0].Id);
 
         var palette = ThemeManager.Find("aurora").Palette;
-        Assert.Equal("#14191D", palette.BgWindow);
-        Assert.Equal("#20282D", palette.BgCard);
-        Assert.Equal("#A5C982", palette.Accent);
-        Assert.Equal("#526D45", palette.AccentStrong);
+        Assert.Equal("#101418", palette.BgWindow);
+        Assert.Equal("#1A2127", palette.BgCard);
+        Assert.Equal("#00C58E", palette.Accent);
+        Assert.Equal("#00A577", palette.AccentStrong);
         Assert.False(palette.IsLight);
         Assert.True(ThemeManager.Contrast(palette.TextDim, palette.BgCard) >= 4.5);
-        Assert.True(ThemeManager.Contrast("#FFFFFF", "#526D45") >= 4.5);
+        Assert.True(ThemeManager.Contrast("#FFFFFF", "#00A577") >= 4.5);
     }
 
     [Fact]
