@@ -1,0 +1,58 @@
+name: Device Core Manager CI
+
+on:
+  push:
+    branches: [beta]
+    paths:
+      - "DeviceCoreManager/**"
+      - "Services/InterruptAffinityService.cs"
+      - "WinOptimizer.csproj"
+      - ".github/workflows/device-core-manager.yml"
+  pull_request:
+    branches: [beta]
+    paths:
+      - "DeviceCoreManager/**"
+      - "Services/InterruptAffinityService.cs"
+      - "WinOptimizer.csproj"
+      - ".github/workflows/device-core-manager.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: device-core-manager-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Windows x64 — Device Core Manager
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore console utility
+        shell: pwsh
+        run: |
+          dotnet restore DeviceCoreManager/WinOptimizer.DeviceCoreManager.csproj
+          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить Device Core Manager' }
+
+      - name: Build console utility
+        shell: pwsh
+        run: |
+          dotnet build DeviceCoreManager/WinOptimizer.DeviceCoreManager.csproj --configuration Release --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Сборка Device Core Manager завершилась с ошибкой' }
+          $exe = 'DeviceCoreManager/bin/Release/net8.0-windows/win-x64/WinOptimizer.DeviceCoreManager.exe'
+          if (-not (Test-Path $exe)) { throw "Не найден исполняемый файл: $exe" }
+
+      - name: Run existing interrupt-affinity regression tests
+        shell: pwsh
+        run: |
+          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --filter "FullyQualifiedName~InterruptAffinityPolicyTests" --logger "console;verbosity=normal"
+          if ($LASTEXITCODE -ne 0) { throw 'Тесты политики interrupt affinity завершились с ошибкой' }

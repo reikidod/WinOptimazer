@@ -48,6 +48,11 @@
     <Compile Remove="GameBoostService\**" />
     <EmbeddedResource Remove="GameBoostService\**" />
     <None Remove="GameBoostService\**" />
+    <!-- Консольная утилита собирается отдельным проектом и ссылается на сервис этого приложения. -->
+    <Compile Remove="DeviceCoreManager\**" />
+    <EmbeddedResource Remove="DeviceCoreManager\**" />
+    <None Remove="DeviceCoreManager\**" />
+    <Page Remove="DeviceCoreManager\**" />
   </ItemGroup>
 
   <ItemGroup>
