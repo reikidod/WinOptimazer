@@ -28,7 +28,7 @@ public static class ThemeManager
     [
         // WinOptimizer Signal Control Center: глубокий уголь + акцент логотипа #00C58E.
         // ID aurora сохранён, чтобы не сбрасывать выбор темы у существующих установок.
-        new("aurora", "Control Center (Signal)", new("#101418", "#151A1F", "#1A2127", "#222A31", "#2C363E", "#3D4A54", "#00C58E", "#00A577", "#2A343C",
+        new("aurora", "Control Center (Signal)", new("#101418", "#151A1F", "#1A2127", "#222A31", "#2C363E", "#3D4A54", "#00C58E", "#007A5A", "#2A343C",
             "#F2F5F3", "#B5C0BA", "#8E9B94", "#2FD49A", "#D6AD6A", "#D97878", "#97A39B")),
         new("dark", "Тёмная", new("#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
             "#F2F3F5", "#C2C6CE", "#A9AEB9", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
@@ -51,7 +51,7 @@ public static class ThemeManager
         new(ThemeAccent, "Как в теме", "", ""),
         new("blue", "Синий", "#6EA8FF", "#3A66C8"),
         new("red", "Красный", "#FF6B6B", "#C0392B"),
-        new("green", "Зелёный", "#00C58E", "#00A577"),
+        new("green", "Зелёный", "#00C58E", "#007A5A"),
         new("purple", "Фиолетовый", "#B48CFF", "#7B4FD0"),
         new("orange", "Оранжевый", "#FFA94D", "#C46A12"),
         new("pink", "Розовый", "#FF7EB6", "#C23C7E"),
@@ -82,7 +82,6 @@ public static class ThemeManager
         if (app is null) return;
         try
         {
-            // Размытие/затемнение фона не меняют кисти — не пересоздаём их на каждый тик ползунка.
             var hasBackground = !string.IsNullOrEmpty(s.BackgroundImage);
             var cardAlpha = hasBackground && s.TransparencyEffectsEnabled
                 ? (byte)Math.Round(255 * s.CardOpacityPercent / 100.0)
@@ -125,7 +124,6 @@ public static class ThemeManager
         }
         catch
         {
-            // Не роняем приложение из‑за сбоя темы.
         }
     }
 
@@ -142,14 +140,13 @@ public static class ThemeManager
             Viewbox = new Rect(0, 0, 56, 56),
             ViewboxUnits = BrushMappingMode.Absolute,
             Drawing = new GeometryDrawing(new SolidColorBrush(gridColor), null,
-                Geometry.Parse("M0,0 H56 V1 H0 Z M0,0 V56 H1 V0 Z"))
+                Geometry.Parse("M0,0 V56 H1 V0 Z M0,0 H56 V1 H0 Z"))
         };
         grid.Freeze();
         app.Resources["SiteGridBrush"] = grid;
         app.Resources["SiteCyanGlowBrush"] = CreateGlow(primary);
         app.Resources["SiteRedGlowBrush"] = CreateGlow(primary);
         app.Resources["SiteBlueGlowBrush"] = CreateGlow(secondary);
-        // На тёмных темах конец градиента смешиваем с насыщенным акцентом, чтобы белый текст кнопки читался.
         app.Resources["SiteAccentButtonBrush"] = CreateGradient(secondary, isLight ? primary : Mix(secondary, primary, 0.12));
         app.Resources["BrandGradientBrush"] = CreateGradient(primary, secondary);
     }
