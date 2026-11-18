@@ -137,6 +137,22 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void Dashboard_UsesUnifiedTelemetryAndDriveInventoryRows()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+        Assert.Contains(Elements(view, "Border"), element =>
+            Attribute(element, "Name") == "DashboardTelemetryPanel");
+        Assert.Contains(Elements(view, "Grid"), element =>
+            element.Descendants().Any(child => child.Name.LocalName == "TextBlock" &&
+                Attribute(child, "Text") == "{Binding DisplayName}") &&
+            element.Descendants().Any(child => child.Name.LocalName == "ProgressBar" &&
+                Attribute(child, "Maximum") == "100"));
+        Assert.DoesNotContain(Elements(view, "Border"), element =>
+            Attribute(element, "Width") == "230" &&
+            Attribute(element, "CornerRadius") == "12");
+    }
+
+    [Fact]
     public void BrandMark_UsesTheSharedApplicationIconResource()
     {
         var document = LoadView("Views/MainWindow.xaml");

@@ -6,17 +6,17 @@
          Layers: window (deepest) -> sidebar -> card -> card hover.
          Blue is the single accent: selection, focus, primary action, progress.
          Status colours (success / warn / danger) are used only for state, never for decoration. -->
-    <Color x:Key="BgWindowColor">#0E1117</Color>
-    <Color x:Key="BgSidebarColor">#121620</Color>
-    <Color x:Key="BgCardColor">#171C28</Color>
-    <Color x:Key="BgCardHoverColor">#1E2535</Color>
-    <Color x:Key="BgInputColor">#0F131B</Color>
-    <Color x:Key="BorderColor">#262E3F</Color>
-    <Color x:Key="BorderHoverColor">#3A4A6B</Color>
-    <Color x:Key="AccentColor">#6AA6FF</Color>
-    <Color x:Key="AccentStrongColor">#2F5FD0</Color>
-    <Color x:Key="AccentSoftColor">#266AA6FF</Color>
-    <Color x:Key="TrackOffColor">#2A3246</Color>
+    <Color x:Key="BgWindowColor">#14191D</Color>
+    <Color x:Key="BgSidebarColor">#191F24</Color>
+    <Color x:Key="BgCardColor">#20282D</Color>
+    <Color x:Key="BgCardHoverColor">#273238</Color>
+    <Color x:Key="BgInputColor">#171E22</Color>
+    <Color x:Key="BorderColor">#344047</Color>
+    <Color x:Key="BorderHoverColor">#718078</Color>
+    <Color x:Key="AccentColor">#A5C982</Color>
+    <Color x:Key="AccentStrongColor">#526D45</Color>
+    <Color x:Key="AccentSoftColor">#26A5C982</Color>
+    <Color x:Key="TrackOffColor">#303A40</Color>
 
     <SolidColorBrush x:Key="BgWindowBrush" Color="{StaticResource BgWindowColor}" />
     <SolidColorBrush x:Key="BgSidebarBrush" Color="{StaticResource BgSidebarColor}" />
@@ -32,11 +32,11 @@
     <SolidColorBrush x:Key="TextOnAccentBrush" Color="#FFFFFF" />
 
     <!-- Brand keys kept for compatibility with existing pages; they follow the accent (ThemeManager overrides them per theme). -->
-    <SolidColorBrush x:Key="BrandCyanBrush" Color="#6AA6FF" />
-    <SolidColorBrush x:Key="BrandRedBrush" Color="#2F5FD0" />
+    <SolidColorBrush x:Key="BrandCyanBrush" Color="#A5C982" />
+    <SolidColorBrush x:Key="BrandRedBrush" Color="#526D45" />
     <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#6AA6FF" Offset="0" />
-        <GradientStop Color="#2F5FD0" Offset="1" />
+        <GradientStop Color="#A5C982" Offset="0" />
+        <GradientStop Color="#526D45" Offset="1" />
     </LinearGradientBrush>
     <SolidColorBrush x:Key="BrandActionBrush" Color="#3D6FE0" />
 
@@ -61,9 +61,9 @@
     <SolidColorBrush x:Key="SiteAccentButtonBrush" Color="#3D6FE0" />
 
     <!-- Text on slate surfaces (all pairs >= 4.5:1 on BgCard). -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#EAEFF8" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A4AFC4" />
-    <SolidColorBrush x:Key="TextDimBrush" Color="#7C879E" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#EDF1EC" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#BCC7BF" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="#9AA69E" />
 
     <SolidColorBrush x:Key="SuccessBrush" Color="#5FD39A" />
     <SolidColorBrush x:Key="WarnBrush" Color="#F0B35C" />

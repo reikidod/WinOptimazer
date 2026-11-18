@@ -64,3 +64,8 @@
 - Information groups use technical rows and separators instead of floating cards.
 - Interactive states use a clear accent border or rail, not shadows or scale effects.
 - Preserve the existing WinOptimizer icon and all command bindings when changing layout.
+
+
+## Dashboard redesign — telemetry console
+
+The home screen uses one unified four-channel telemetry panel rather than four isolated floating cards. CPU, memory, graphics and storage share a common measurement grid with thin dividers, compact history traces and consistent hierarchy. Additional drives are shown as full-width inventory rows so the drive name, usage bar, capacity summary and utilization percentage can be compared at a glance. Preserve live bindings and command behavior when changing this layout.
