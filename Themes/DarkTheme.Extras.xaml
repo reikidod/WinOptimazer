@@ -150,9 +150,9 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="Padding" Value="14,12" />
-        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="18,16" />
+        <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Effect" Value="{x:Null}" />
         <Style.Triggers>
