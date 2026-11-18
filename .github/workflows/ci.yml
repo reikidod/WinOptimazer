@@ -15,9 +15,92 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  themes:
+    name: Themes — palette, tokens, structure
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore tests
+        shell: pwsh
+        run: |
+          dotnet restore tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj
+          if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить тесты' }
+
+      - name: Validate DarkTheme Signal tokens
+        shell: pwsh
+        run: |
+          $theme = Get-Content -Raw Themes/DarkTheme.xaml
+          $pairs = @(
+            @('BgWindowColor', '#101418'),
+            @('BgSidebarColor', '#151A1F'),
+            @('BgCardColor', '#1A2127'),
+            @('AccentColor', '#00C58E'),
+            @('AccentStrongColor', '#00A577')
+          )
+          foreach ($pair in $pairs) {
+            $key, $value = $pair[0], $pair[1]
+            if ($theme -notlike "*$key*$value*") {
+              throw "DarkTheme.xaml: ожидается $key = $value"
+            }
+            Write-Host "OK $key = $value"
+          }
+          foreach ($style in @('AccentButton', 'NavButton')) {
+            if ($theme -notlike "*x:Key=`"$style`"*") {
+              throw "DarkTheme.xaml: отсутствует Style $style"
+            }
+            Write-Host "OK Style $style"
+          }
+          if ($theme -notlike '*TargetType="Button"*') {
+            throw 'DarkTheme.xaml: отсутствует базовый Style Button'
+          }
+          if ($theme -notlike '*</ResourceDictionary>*') {
+            throw 'DarkTheme.xaml: файл обрезан (нет закрывающего ResourceDictionary)'
+          }
+          $lines = (Get-Content Themes/DarkTheme.xaml).Count
+          if ($lines -lt 200) {
+            throw "DarkTheme.xaml слишком короткий ($lines строк) — возможна обрезка"
+          }
+          Write-Host "DarkTheme.xaml Signal tokens и стили в порядке ($lines строк)"
+
+      - name: Validate ThemeManager aurora palette
+        shell: pwsh
+        run: |
+          $src = Get-Content -Raw dll/WinOptimizer.Settings/ThemeManager.cs
+          if ($src -notmatch '#00C58E') { throw 'ThemeManager: акцент #00C58E не найден' }
+          if ($src -notmatch '#101418') { throw 'ThemeManager: BgWindow #101418 не найден' }
+          if ($src -notmatch 'Control Center \(Signal\)') { throw 'ThemeManager: имя темы Signal не найдено' }
+          Write-Host 'ThemeManager aurora/Signal палитра в порядке'
+
+      - name: Run theme unit tests
+        shell: pwsh
+        run: |
+          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj `
+            --configuration Release `
+            --filter "FullyQualifiedName~ThemePaletteTests|FullyQualifiedName~UiStructureTests" `
+            --logger "console;verbosity=normal" `
+            --logger "trx;LogFileName=theme-tests.trx"
+          if ($LASTEXITCODE -ne 0) { throw 'Тесты тем не прошли' }
+
+      - name: Upload theme test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WinOptimizer-theme-tests-${{ github.run_number }}
+          path: tests/WinOptimizer.Tests/TestResults/*.trx
+          if-no-files-found: warn
+          retention-days: 14
+
   build-and-test:
     name: Windows x64 — restore, build, tests
     runs-on: windows-latest
+    needs: themes
     steps:
       - name: Checkout
         uses: actions/checkout@v4
