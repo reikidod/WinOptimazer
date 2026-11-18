@@ -117,17 +117,17 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContentControl">
-                    <Border x:Name="Card" Background="{DynamicResource BgCardBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="10" Padding="16,12" SnapsToDevicePixels="True">
+                    <Border x:Name="Card" Background="{DynamicResource BgSidebarBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                            CornerRadius="0" Padding="10,9" SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2" />
+                                <ColumnDefinition Width="3" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Border x:Name="StateRail" Grid.Column="0" Background="{DynamicResource AccentBrush}"
-                                    Opacity="0" CornerRadius="1" Margin="0,1,0,1" />
-                            <ContentPresenter Grid.Column="1" Margin="10,0,0,0" />
+                                    Opacity="0.28" CornerRadius="0" Margin="0,1,0,1" />
+                            <ContentPresenter Grid.Column="1" Margin="12,0,0,0" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -150,9 +150,9 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="Padding" Value="18,16" />
-        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Margin" Value="0,0,0,8" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Effect" Value="{x:Null}" />
         <Style.Triggers>

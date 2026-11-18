@@ -15,19 +15,19 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <local:CardWidthConverter x:Key="CardWidth" />
-        <!-- Flat metric surface: strict geometry and no floating-card effects. -->
+        <!-- Control Center: dense, squared telemetry surfaces; no floating-card aesthetic. -->
         <Style x:Key="DashboardCard" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="20,18" />
-            <Setter Property="Margin" Value="0,0,14,12" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="18,16" />
+            <Setter Property="Margin" Value="0,0,12,10" />
             <Setter Property="Effect" Value="{x:Null}" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -413,44 +413,45 @@
                               Padding="0,0,6,12" Focusable="False">
                     <StackPanel Margin="0,0,8,12">
                         <!-- Приветствие и основные действия -->
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,18" Padding="0" CornerRadius="14">
+                        <!-- Главная статус-панель: рабочая панель, а не декоративный баннер. -->
+                        <Border Background="{DynamicResource BgCardBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="0" Margin="0,0,0,14">
                             <Grid>
-                                <!-- Мягкая акцентная подсветка: берёт цвет текущей темы и затухает по диагонали -->
-                                <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="13" IsHitTestVisible="False">
-                                    <Border.OpacityMask>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="#FF000000" Offset="0" />
-                                            <GradientStop Color="#00000000" Offset="0.7" />
-                                        </LinearGradientBrush>
-                                    </Border.OpacityMask>
-                                </Border>
-                                <Grid Margin="24,20">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Добро пожаловать!" FontSize="26" FontWeight="SemiBold" />
+                                <Border Background="{DynamicResource AccentBrush}" />
+                                <StackPanel Grid.Column="1" Margin="20,16,18,16" VerticalAlignment="Center">
+                                    <TextBlock Text="WINDOWS CONTROL CENTER" FontSize="9.5"
+                                               FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
+                                    <TextBlock Text="Состояние системы" FontSize="24"
+                                               FontWeight="SemiBold" Margin="0,5,0,0" />
                                     <TextBlock Text="{Binding DashboardStatus}" Style="{StaticResource SecondaryText}"
-                                               FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0" />
-                                    <TextBlock Text="{Binding DiagnosticSummary}" FontSize="12.5" FontWeight="Medium"
-                                               TextWrapping="Wrap" Margin="0,8,0,0" />
+                                               FontSize="12.5" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                    <TextBlock Text="{Binding DiagnosticSummary}" FontSize="12"
+                                               FontWeight="Medium" TextWrapping="Wrap" Margin="0,7,0,0" />
                                     <TextBlock Text="{Binding DiagnosticLastRunText}"
-                                               Style="{StaticResource SecondaryText}" FontSize="11" Margin="0,3,0,0" />
+                                               Style="{StaticResource SecondaryText}" FontSize="10.5" Margin="0,3,0,0" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button Content="Характеристики ПК" Margin="0,0,8,0" Padding="14,10"
-                                            Command="{Binding NavigateCommand}" CommandParameter="System" />
-                                    <Button Content="Обновить" Margin="0,0,8,0" Padding="14,10"
-                                            Command="{Binding RefreshDashboardCommand}" />
-                                    <Button Content="Проверить систему" Style="{StaticResource AccentButton}"
-                                            Command="{Binding RunDiagnosticsCommand}" Padding="18,10" />
-                                </StackPanel>
-                            </Grid>
+                                <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1,0,0,0" Padding="16,0" Margin="0,12">
+                                    <StackPanel VerticalAlignment="Center" MinWidth="154">
+                                        <Button Content="Проверить систему" Style="{StaticResource AccentButton}"
+                                                Command="{Binding RunDiagnosticsCommand}" Padding="16,9" />
+                                        <Button Content="Обновить данные" Margin="0,7,0,0"
+                                                Command="{Binding RefreshDashboardCommand}" Padding="16,8" />
+                                        <Button Content="Характеристики ПК" Margin="0,7,0,0"
+                                                Command="{Binding NavigateCommand}" CommandParameter="System"
+                                                Padding="16,8" />
+                                    </StackPanel>
+                                </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Живые показатели: карточки с локальной историей и мини-графиками -->
+                        <!-- Живые показатели: четыре независимых канала телеметрии -->
                         <Grid Margin="0,0,0,18">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />

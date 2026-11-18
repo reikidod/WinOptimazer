@@ -41,7 +41,7 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void MainShell_UsesAuroraSlateVisualLanguage()
+    public void MainShell_UsesGraphiteControlCenterVisualLanguage()
     {
         var view = LoadView("Views/MainWindow.xaml");
         var theme = LoadView("Themes/DarkTheme.xaml");
@@ -59,10 +59,10 @@ public sealed class UiStructureTests
 
         foreach (var (key, value) in new[]
         {
-            ("BgWindowColor", "#0E1117"),
-            ("BgSidebarColor", "#121620"),
-            ("BgCardColor", "#171C28"),
-            ("AccentColor", "#6AA6FF")
+            ("BgWindowColor", "#14191D"),
+            ("BgSidebarColor", "#191F24"),
+            ("BgCardColor", "#20282D"),
+            ("AccentColor", "#A5C982")
         })
         {
             Assert.Contains(Elements(theme, "Color"), element =>
@@ -80,7 +80,7 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void CardSystem_UsesLayeredRoundedPanels()
+    public void CardSystem_UsesTechnicalPanelGeometry()
     {
         var main = LoadView("Views/MainWindow.xaml");
         var extras = LoadView("Themes/DarkTheme.Extras.xaml");
@@ -89,7 +89,7 @@ public sealed class UiStructureTests
             Attribute(element, "Key") == "DashboardCard");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "CornerRadius" &&
-            Attribute(element, "Value") == "12");
+            Attribute(element, "Value") == "4");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "Effect" &&
             Attribute(element, "Value") == "{x:Null}");
@@ -122,6 +122,18 @@ public sealed class UiStructureTests
         var utilityPages = LoadView("Views/MainWindowPages.xaml");
         Assert.Empty(Elements(utilityPages, "Border").Where(element =>
             double.TryParse(Attribute(element, "CornerRadius"), out var radius) && radius > 16));
+    }
+
+    [Fact]
+    public void DashboardHero_UsesControlCenterStatusPanelInsteadOfDecorativeBanner()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+        Assert.Contains(Elements(view, "TextBlock"), element =>
+            Attribute(element, "Text") == "WINDOWS CONTROL CENTER");
+        Assert.Contains(Elements(view, "TextBlock"), element =>
+            Attribute(element, "Text") == "Состояние системы");
+        Assert.Contains(Elements(view, "Button"), element =>
+            Attribute(element, "Content") == "Обновить данные");
     }
 
     [Fact]

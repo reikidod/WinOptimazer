@@ -26,9 +26,10 @@ public static class ThemeManager
 
     public static readonly IReadOnlyList<ThemeInfo> Themes =
     [
-        // Aurora Slate (design system v2) — фирменная тема и тема по умолчанию для новых установок.
-        new("aurora", "Aurora (тёмная)", new("#0E1117", "#121620", "#171C28", "#1E2535", "#262E3F", "#3A4A6B", "#6AA6FF", "#2F5FD0", "#2A3246",
-            "#EAEFF8", "#A4AFC4", "#7C879E", "#5FD39A", "#F0B35C", "#F2777A", "#8591A8")),
+        // WinOptimizer Control: графитовая палитра с приглушённым зелёным рабочим акцентом.
+        // Сохраняем ID aurora, чтобы обновить тему существующих установок без сброса выбора пользователя.
+        new("aurora", "Control Center (графитовая)", new("#14191D", "#191F24", "#20282D", "#273238", "#344047", "#718078", "#A5C982", "#526D45", "#303A40",
+            "#EDF1EC", "#BCC7BF", "#9AA69E", "#8DBF75", "#D6AD6A", "#D97878", "#97A39B")),
         new("dark", "Тёмная", new("#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
             "#F2F3F5", "#C2C6CE", "#A9AEB9", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
         new("light", "Светлая", new("#F6FAFF", "#FFFFFF", "#FFFFFF", "#EAF5FF", "#DCEBFA", "#72C9F0", "#009BD8", "#0078D4", "#DCEBFA",
@@ -159,7 +160,7 @@ public static class ThemeManager
         app.Resources["SiteRedGlowBrush"] = CreateGlow(primary);
         app.Resources["SiteBlueGlowBrush"] = CreateGlow(secondary);
         // На тёмных темах конец градиента смешиваем с насыщенным акцентом, чтобы белый текст кнопки читался.
-        app.Resources["SiteAccentButtonBrush"] = CreateGradient(secondary, isLight ? primary : Mix(secondary, primary, 0.5));
+        app.Resources["SiteAccentButtonBrush"] = CreateGradient(secondary, isLight ? primary : Mix(secondary, primary, 0.12));
         app.Resources["BrandGradientBrush"] = CreateGradient(primary, secondary);
     }
 
