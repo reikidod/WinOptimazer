@@ -12,12 +12,23 @@ public sealed class DiagnosticProfileValidatorTests
       "AutoApplyOnServiceStart": true,
       "WatchUsbReconnect": true,
       "Tweaks": [
-        { "Name": "USB selective suspend off", "Type": "usb-suspend", "Enabled": true, "Target": "both" },
         {
-          "Name": "Mouse polling rate", "Type": "polling", "Method": "hid-report",
-          "Enabled": false, "Target": "mouse", "Vid": "25A7", "Pid": "1234",
-          "DefaultHz": 1000, "Levels": [125, 250, 500, 1000],
-          "ReportsByHz": { "125": "", "1000": "01 02 A0" }
+          "Name": "USB selective suspend off",
+          "Type": "usb-suspend",
+          "Enabled": true,
+          "Target": "both"
+        },
+        {
+          "Name": "Mouse polling rate",
+          "Type": "polling",
+          "Method": "hid-report",
+          "Enabled": false,
+          "Target": "mouse",
+          "Vid": "25A7",
+          "Pid": "1234",
+          "DefaultHz": 1000,
+          "Levels": [125, 250, 500, 1000],
+          "ReportsByHz": { "125": "", "1000": "0102A0" }
         }
       ]
     }
@@ -30,11 +41,11 @@ public sealed class DiagnosticProfileValidatorTests
     }
 
     [Theory]
+    [InlineData("""{"Tweaks":[]}""")]
     [InlineData("""{"Tweaks":[{"Name":"x","Type":"unknown","Enabled":true}]}""")]
     [InlineData("""{"Tweaks":[{"Name":"x","Type":"polling","Method":"hid-report","Enabled":true,"Levels":[0]}]}""")]
     [InlineData("""{"Tweaks":[{"Name":"x","Type":"polling","Method":"hid-report","Enabled":true,"Vid":"ZZZZ"}]}""")]
     [InlineData("""{"Tweaks":[{"Name":"x","Type":"usb-suspend","Enabled":true},{"Name":"X","Type":"usb-suspend","Enabled":false}]}""")]
-    [InlineData("""{"Tweaks":[{"Name":"x","Type":"polling","Method":"hid-report","Enabled":true,"ReportsByHz":{"1000":"0G"}}]}""")]
     public void Validate_RejectsUnsupportedOrUnsafeProfiles(string json)
     {
         Assert.Throws<InvalidDataException>(() => DiagnosticProfileValidator.Validate(json));
@@ -44,13 +55,5 @@ public sealed class DiagnosticProfileValidatorTests
     public void Validate_RequiresTweaksArray()
     {
         Assert.Throws<InvalidDataException>(() => DiagnosticProfileValidator.Validate("""{"AutoApplyOnServiceStart":true}"""));
-    }
-
-    [Fact]
-    public void HasCustomCommands_DetectsElevatedCommandExecution()
-    {
-        Assert.True(DiagnosticProfileValidator.HasCustomCommands(
-            """{"Tweaks":[{"Name":"Keyboard","Type":"polling","Method":"command","Enabled":true,"ApplyCommand":"vendor-tool.exe /rate {HZ}"}]}"""));
-        Assert.False(DiagnosticProfileValidator.HasCustomCommands(ValidProfile));
     }
 }

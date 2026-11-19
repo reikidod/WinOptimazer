@@ -81,7 +81,7 @@ internal static class DiagnosticProfileValidator
                 throw new InvalidDataException($"Для твика «{name}» Levels должен быть непустым массивом.");
             foreach (var level in levels.EnumerateArray())
             {
-                if (!level.TryGetInt32(out var rate) || rate is < 125 or > 32000)
+                if (!level.TryGetInt32(out var levelRate) || levelRate is < 125 or > 32000)
                     throw new InvalidDataException($"Для твика «{name}» Levels содержит недопустимую частоту.");
             }
         }
@@ -100,7 +100,7 @@ internal static class DiagnosticProfileValidator
                 throw new InvalidDataException($"Для твика «{name}» ReportsByHz должен быть объектом.");
             foreach (var report in reports.EnumerateObject())
             {
-                if (!int.TryParse(report.Name, out var rate) || rate is < 125 or > 32000 ||
+                if (!int.TryParse(report.Name, out var reportRate) || reportRate is < 125 or > 32000 ||
                     report.Value.ValueKind != JsonValueKind.String)
                     throw new InvalidDataException($"Для твика «{name}» обнаружен некорректный HID-репорт.");
 
