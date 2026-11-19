@@ -6,6 +6,8 @@ on:
     paths:
       - "DeviceCoreManager/**"
       - "Services/InterruptAffinityService.cs"
+      - "Services/LiblavaBenchmarkParser.cs"
+      - "tests/WinOptimizer.Tests/GpuAffinityBenchmarkTests.cs"
       - "WinOptimizer.csproj"
       - ".github/workflows/device-core-manager.yml"
   pull_request:
