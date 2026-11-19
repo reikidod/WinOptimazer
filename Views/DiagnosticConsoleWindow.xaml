@@ -64,6 +64,7 @@
                            VerticalAlignment="Center"/>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Content="Копировать" Click="CopyOutput_Click" Margin="0,0,6,0"/>
+                    <Button Content="Сохранить JSON" Click="SaveReport_Click" Margin="0,0,6,0"/>
                     <Button Content="Очистить" Click="ClearOutput_Click"/>
                 </StackPanel>
             </DockPanel>

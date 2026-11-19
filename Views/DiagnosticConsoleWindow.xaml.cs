@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Microsoft.Win32;
+using WinOptimizer.Services;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
@@ -13,6 +15,11 @@ public partial class DiagnosticConsoleWindow : Window
     private readonly DiagnosticToolKind _kind;
     private Process? _process;
     private string? _scriptPath;
+    private DateTimeOffset? _runStartedAt;
+    private DateTimeOffset? _runFinishedAt;
+    private string _runMode = "interactive";
+    private int? _lastExitCode;
+    private bool _runCancelled;
 
     public DiagnosticConsoleWindow(DiagnosticToolKind kind)
     {
@@ -108,6 +115,9 @@ public partial class DiagnosticConsoleWindow : Window
                 int exitCode;
                 try { exitCode = process.ExitCode; }
                 catch { exitCode = -1; }
+                _lastExitCode = exitCode;
+                _runFinishedAt = DateTimeOffset.Now;
+                _runCancelled = false;
                 StatusText.Text = exitCode == 0
                     ? "Операция завершена успешно."
                     : $"Операция завершена с ошибкой · код {exitCode}.";
@@ -118,14 +128,19 @@ public partial class DiagnosticConsoleWindow : Window
                 RunningIndicator.Visibility = Visibility.Collapsed;
             });
 
-            Append($"\r\n> Запуск: {(_kind == DiagnosticToolKind.CoreAffinity ? "CoreAffinity" : "InputLatency")} {(mode ?? "interactive")}\r\n");
+            _runStartedAt = DateTimeOffset.Now;
+            _runFinishedAt = null;
+            _runMode = mode ?? "interactive";
+            _lastExitCode = null;
+            _runCancelled = false;
+            _process = process;
+            Append($"\r\n> Запуск: {(_kind == DiagnosticToolKind.CoreAffinity ? "CoreAffinity" : "InputLatency")} {_runMode}\r\n");
             if (!process.Start())
             {
+                _process = null;
                 process.Dispose();
                 throw new InvalidOperationException("Windows не запустила встроенный сценарий.");
             }
-
-            _process = process;
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             InputBox.IsEnabled = true;
@@ -203,6 +218,47 @@ public partial class DiagnosticConsoleWindow : Window
         }
     }
 
+    private void SaveReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(OutputBox.Text))
+        {
+            StatusText.Text = "Нет данных для отчёта.";
+            return;
+        }
+
+        try
+        {
+            var tool = _kind == DiagnosticToolKind.CoreAffinity ? "CoreAffinity" : "InputLatency";
+            var report = new DiagnosticRunReport(
+                tool,
+                _runMode,
+                _runStartedAt ?? DateTimeOffset.Now,
+                _runFinishedAt,
+                _lastExitCode,
+                _runCancelled,
+                OutputBox.Text);
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Сохранить отчёт диагностики",
+                Filter = "Отчёт WinOptimizer (*.json)|*.json",
+                FileName = $"WinOptimizer-{tool}-{DateTime.Now:yyyyMMdd-HHmmss}.json",
+                AddExtension = true,
+                DefaultExt = ".json",
+                OverwritePrompt = true
+            };
+            if (dialog.ShowDialog(this) != true) return;
+
+            File.WriteAllText(dialog.FileName, DiagnosticReportService.Serialize(report), new UTF8Encoding(true));
+            StatusText.Text = "Структурированный отчёт сохранён.";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Не удалось сохранить отчёт.";
+            Logger.Error("Не удалось сохранить отчёт диагностики", ex);
+        }
+    }
+
     private void ClearOutput_Click(object sender, RoutedEventArgs e)
     {
         OutputBox.Clear();
@@ -249,6 +305,9 @@ public partial class DiagnosticConsoleWindow : Window
                 process.WaitForExit(3000);
                 if (userRequested)
                 {
+                    _runFinishedAt = DateTimeOffset.Now;
+                    _lastExitCode = null;
+                    _runCancelled = true;
                     StatusText.Text = "Операция остановлена пользователем.";
                     Append("[!] Выполнение остановлено. Проверьте состояние системы перед повторным запуском.\r\n");
                 }
