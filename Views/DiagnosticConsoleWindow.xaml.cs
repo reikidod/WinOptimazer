@@ -110,6 +110,22 @@ public partial class DiagnosticConsoleWindow : Window
         }
     }
 
+
+    private void EditProfile_Click(object sender, RoutedEventArgs e)
+    {
+        var profilePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "WinOptimizer", "InputLatency", "profile.json");
+        if (!File.Exists(profilePath))
+        {
+            Append("Профиль ещё не создан. Сначала выполните «Сканировать HID» — исходный сценарий создаст профиль по умолчанию.\\r\\n");
+            return;
+        }
+
+        var editor = new DiagnosticProfileEditorWindow(profilePath) { Owner = this };
+        editor.ShowDialog();
+    }
+
     private void SendInput_Click(object sender, RoutedEventArgs e) => SendInput();
     private void InputBox_KeyDown(object sender, KeyEventArgs e)
     {
