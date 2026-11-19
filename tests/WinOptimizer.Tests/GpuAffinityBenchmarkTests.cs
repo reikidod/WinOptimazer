@@ -27,7 +27,7 @@ public sealed class GpuAffinityBenchmarkTests
             frames = Enumerable.Repeat(8.0, 100).Concat(new[] { 0.0, -1.0 })
         });
 
-        var result = GpuAffinityBenchmark.ParseLiblavaBenchmarkJson(expanded);
+        var result = LiblavaBenchmarkParser.Parse(expanded);
 
         Assert.Equal(100, result.FrameCount);
         Assert.Equal(125.0, result.AverageFps, 3);
@@ -39,6 +39,6 @@ public sealed class GpuAffinityBenchmarkTests
     [InlineData(@"{""frames"":[8,8,8]}")]
     public void ParseLiblavaBenchmarkJson_RejectsMissingOrInsufficientFrames(string json)
     {
-        Assert.Throws<InvalidDataException>(() => GpuAffinityBenchmark.ParseLiblavaBenchmarkJson(json));
+        Assert.Throws<InvalidDataException>(() => LiblavaBenchmarkParser.Parse(json));
     }
 }
