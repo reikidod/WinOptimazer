@@ -63,6 +63,46 @@ public partial class DiagnosticProfileEditorWindow : Window
         }
     }
 
+    private void RestoreBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var backupPath = _profilePath + ".bak";
+        if (!File.Exists(backupPath))
+        {
+            StatusText.Text = "Резервная копия ещё не создана.";
+            return;
+        }
+
+        string? temporaryPath = null;
+        try
+        {
+            EnsureTrustedPath();
+            var backup = File.ReadAllText(backupPath, Encoding.UTF8);
+            DiagnosticProfileValidator.Validate(backup);
+            if (MessageBox.Show("Заменить текущий профиль последней резервной копией?",
+                    "Восстановление профиля", MessageBoxButton.YesNo,
+                    MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+                return;
+
+            temporaryPath = _profilePath + "." + Guid.NewGuid().ToString("N") + ".restore";
+            File.WriteAllText(temporaryPath, backup, new UTF8Encoding(true));
+            File.Move(temporaryPath, _profilePath, overwrite: true);
+            ProfileText.Text = backup;
+            StatusText.Text = "Профиль восстановлен из profile.json.bak.";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Не удалось восстановить копию: " + ex.Message;
+        }
+        finally
+        {
+            if (temporaryPath is not null)
+            {
+                try { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
+                catch { /* best-effort cleanup */ }
+            }
+        }
+    }
+
     private void EnsureTrustedPath()
     {
         var directory = Path.GetDirectoryName(_profilePath)
