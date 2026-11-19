@@ -15,7 +15,7 @@ public enum DiagnosticToolKind
 /// </summary>
 internal static class DiagnosticScriptProvider
 {
-    private const string CoreAffinityResource = "WinOptimizer.Diagnostics.CoreAffinity.bat";
+    private const string CoreAffinityResource = "WinOptimizer.Diagnostics.CoreAffinity.ps1";
     private const string InputLatencyResource = "WinOptimizer.Diagnostics.InputLatency.ps1";
     private const string CoreAffinityMarker = "#PSBEGIN";
 
