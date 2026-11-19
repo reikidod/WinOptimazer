@@ -204,7 +204,7 @@ public sealed class UiStructureTests
         var app = LoadView("App.xaml");
         Assert.Contains(Elements(app, "DrawingImage"), element =>
             Attribute(element, "Key") == "WinOptimizerAppIcon" &&
-            Elements(element, "GeometryDrawing").Any(drawing => Attribute(drawing, "Brush") == "#00C58E") &&
+            Elements(element, "GeometryDrawing").Any(drawing => Attribute(drawing, "Brush") == "#3FB950") &&
             Elements(element, "GeometryDrawing").Count() == 5);
     }
 
