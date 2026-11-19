@@ -13,6 +13,7 @@ public partial class DiagnosticProfileEditorWindow : Window
     {
         InitializeComponent();
         _profilePath = profilePath;
+        EnsureTrustedPath();
         ProfileText.Text = File.ReadAllText(_profilePath, Encoding.UTF8);
     }
 
@@ -21,6 +22,7 @@ public partial class DiagnosticProfileEditorWindow : Window
         string? temporaryPath = null;
         try
         {
+            EnsureTrustedPath();
             DiagnosticProfileValidator.Validate(ProfileText.Text);
 
             if (DiagnosticProfileValidator.HasCustomCommands(ProfileText.Text))
@@ -59,6 +61,17 @@ public partial class DiagnosticProfileEditorWindow : Window
                 catch { /* best-effort cleanup */ }
             }
         }
+    }
+
+    private void EnsureTrustedPath()
+    {
+        var directory = Path.GetDirectoryName(_profilePath)
+            ?? throw new InvalidOperationException("Не удалось определить каталог профиля.");
+        if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+            throw new IOException("Отказ от доступа к каталогу профиля через reparse point.");
+        if (File.Exists(_profilePath) &&
+            (File.GetAttributes(_profilePath) & FileAttributes.ReparsePoint) != 0)
+            throw new IOException("Отказ от доступа к файлу профиля через reparse point.");
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();

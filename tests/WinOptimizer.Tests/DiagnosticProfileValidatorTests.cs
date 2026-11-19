@@ -28,7 +28,7 @@ public sealed class DiagnosticProfileValidatorTests
           "Pid": "1234",
           "DefaultHz": 1000,
           "Levels": [125, 250, 500, 1000],
-          "ReportsByHz": { "125": "", "1000": "0102A0" }
+          "ReportsByHz": { "125": "", "1000": "01 02 A0" }
         }
       ]
     }

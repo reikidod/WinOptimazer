@@ -5,8 +5,6 @@ namespace WinOptimizer.Services;
 /// <summary>Validates the supported InputLatency profile contract before it can be saved.</summary>
 internal static class DiagnosticProfileValidator
 {
-    private static readonly HashSet<int> SupportedRates = [125, 250, 500, 1000, 2000, 4000, 8000];
-
     internal static void Validate(string json)
     {
         using var document = JsonDocument.Parse(json);

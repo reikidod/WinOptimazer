@@ -95,14 +95,14 @@ public partial class DiagnosticConsoleWindow : Window
             process.OutputDataReceived += (_, args) =>
             {
                 if (args.Data is not null)
-                    Dispatcher.BeginInvoke(new Action(() => { if (ReferenceEquals(_process, process)) Append(args.Data + Environment.NewLine); }));
+                    PostToUi(() => { if (ReferenceEquals(_process, process)) Append(args.Data + Environment.NewLine); });
             };
             process.ErrorDataReceived += (_, args) =>
             {
                 if (args.Data is not null)
-                    Dispatcher.BeginInvoke(new Action(() => { if (ReferenceEquals(_process, process)) Append("[ошибка] " + args.Data + Environment.NewLine); }));
+                    PostToUi(() => { if (ReferenceEquals(_process, process)) Append("[ошибка] " + args.Data + Environment.NewLine); });
             };
-            process.Exited += (_, _) => Dispatcher.BeginInvoke(new Action(() =>
+            process.Exited += (_, _) => PostToUi(() =>
             {
                 if (!ReferenceEquals(_process, process)) return;
                 int exitCode;
@@ -116,7 +116,7 @@ public partial class DiagnosticConsoleWindow : Window
                 StopButton.IsEnabled = false;
                 RunningIndicator.IsIndeterminate = false;
                 RunningIndicator.Visibility = Visibility.Collapsed;
-            }));
+            });
 
             Append($"\r\n> Запуск: {(_kind == DiagnosticToolKind.CoreAffinity ? "CoreAffinity" : "InputLatency")} {(mode ?? "interactive")}\r\n");
             if (!process.Start())
@@ -207,6 +207,19 @@ public partial class DiagnosticConsoleWindow : Window
     {
         OutputBox.Clear();
         StatusText.Text = "Локальный вывод очищен. Файловый журнал не изменён.";
+    }
+
+    private void PostToUi(Action action)
+    {
+        try
+        {
+            if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
+                Dispatcher.BeginInvoke(action);
+        }
+        catch (InvalidOperationException)
+        {
+            // The window may be closing while redirected process streams are draining.
+        }
     }
 
     private void Append(string text)
