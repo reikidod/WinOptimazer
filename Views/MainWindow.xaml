@@ -169,8 +169,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z M9 21v-7h6v7" />
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M3 10 L12 3 L21 10 V20 H14 V14 H10 V20 H3 Z" />
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Главная" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
@@ -184,8 +186,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M4 6 H20 M4 12 H20 M4 18 H20 M8 4 V8 M15 10 V14 M10 16 V20"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Оптимизация" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
@@ -198,8 +202,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M5 7 H19 M9 7 V5 H15 V7 M7 7 L8 20 H16 L17 7 M10 10 V17 M14 10 V17"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Удаление программ" VerticalAlignment="Center"/>
@@ -213,8 +219,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M4 4 H10 V10 H4 Z M14 4 H20 V10 H14 Z M4 14 H10 V20 H4 Z M14 14 H20 V20 H14 Z"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Приложения" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
@@ -227,8 +235,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M4 8 H20 L19 20 H5 Z M8 8 V6 A4 4 0 0 1 16 6 V8"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Microsoft Store" VerticalAlignment="Center"/>
@@ -242,8 +252,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M7 8 H17 C20 8 21 11 21 15 L20 18 H17 L14 15 H10 L7 18 H4 L3 15 C3 11 4 8 7 8 Z M7 11 V15 M5 13 H9 M16 12 H16.1 M19 14 H19.1"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Игры" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
@@ -257,8 +269,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M3 4 H21 V17 H3 Z M8 21 H16 M12 17 V21"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Мой ПК" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
@@ -271,8 +285,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M9 2h6v3h3v3h3v8h-3v3h-3v3H9v-3H6v-3H3V8h3V5h3V2zm0 5v10h6V7H9zm-3 3v4h2v-4H6zm10 0v4h2v-4h-2z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M8 5 H16 V19 H8 Z M10 9 H14 V15 H10 Z M8 8 H5 V6 M16 8 H19 V6 M8 12 H5 M16 12 H19 M8 16 H5 V18 M16 16 H19 V18"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Задержка и прерывания" VerticalAlignment="Center"
@@ -287,8 +303,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M15.55 13c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2h7.45zM6.16 6h12.15l-2.76 5H8.53L6.16 6zM7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M14 4 A5 5 0 0 0 20 10 L13 17 L7 11 L14 4 Z M7 11 L4 14 L10 20 L13 17"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Обслуживание" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
@@ -301,8 +319,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Viewbox Width="20" Height="20" Style="{StaticResource SidebarNavigationIcon}" VerticalAlignment="Center">
                                 <Canvas Width="24" Height="24">
-                                    <Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                          Data="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                                    <Path Fill="Transparent"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Data="M12 8 A4 4 0 1 0 12 16 A4 4 0 1 0 12 8 M12 2 V5 M12 19 V22 M2 12 H5 M19 12 H22 M5 5 L7 7 M17 17 L19 19 M19 5 L17 7 M7 17 L5 19"/>
                                 </Canvas>
                             </Viewbox>
                             <TextBlock Text="Настройки" VerticalAlignment="Center" Visibility="{Binding DataContext.IsSidebarExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
