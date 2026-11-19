@@ -34,7 +34,7 @@
             <Button Content="Статус и журнал" Tag="status" Click="RunMode_Click" Margin="0,0,8,8"/>
             <Button Content="Установить службу" Tag="install" Click="RunMode_Click" Margin="0,0,8,8"/>
             <Button Content="Удалить службу" Tag="uninstall" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Редактировать профиль" Tag="editprofile" Click="RunMode_Click" Margin="0,0,8,8"/>
+            <Button Content="Редактировать профиль" Click="EditProfile_Click" Margin="0,0,8,8"/>
         </WrapPanel>
 
         <TextBox x:Name="OutputBox" Grid.Row="2" IsReadOnly="True" AcceptsReturn="True"
