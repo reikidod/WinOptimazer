@@ -8,8 +8,8 @@
         Icon="{StaticResource WinOptimizerAppIcon}"
         Background="{DynamicResource BgWindowBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
-        FontSize="14"
+        FontFamily="Cascadia Mono, Cascadia Code, Consolas"
+        FontSize="13"
         UseLayoutRounding="True">
 
     <Window.Resources>
