@@ -32,7 +32,8 @@ public sealed class DiagnosticScriptProviderTests
     [Fact]
     public void MaterializeScript_WritesEmbeddedCopyToIsolatedTestDirectory()
     {
-        var directory = Path.Combine(Path.GetTempPath(), "WinOptimizer.Tests", Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(Path.GetTempPath(), "WinOptimizer.Tests", Guid.NewGuid().ToString("N"));
+        var directory = Path.Combine(root, "EmbeddedDiagnostics");
         try
         {
             var path = DiagnosticScriptProvider.MaterializeScriptForTests(DiagnosticToolKind.InputLatency, directory);
@@ -43,8 +44,8 @@ public sealed class DiagnosticScriptProviderTests
         }
         finally
         {
-            if (Directory.Exists(directory))
-                Directory.Delete(directory, recursive: true);
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
         }
     }
 }
