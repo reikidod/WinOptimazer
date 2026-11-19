@@ -1,11 +1,10 @@
 using System.Diagnostics;
-using Microsoft.Win32;
-using WinOptimizer.Services;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
-using WinOptimizer.Services;
+using Microsoft.Win32;
 using WinOptimizer.Infrastructure;
+using WinOptimizer.Services;
 
 namespace WinOptimizer.Views;
 

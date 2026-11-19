@@ -102,7 +102,8 @@ internal static class DiagnosticScriptProvider
 
     private static void RestrictDirectory(string directory)
     {
-        var currentSid = WindowsIdentity.GetCurrent().User?.Value
+        using var identity = WindowsIdentity.GetCurrent();
+        var currentSid = identity.User?.Value
             ?? throw new InvalidOperationException("Не удалось определить SID текущего пользователя.");
         var icacls = Path.Combine(Environment.SystemDirectory, "icacls.exe");
         if (!File.Exists(icacls))
