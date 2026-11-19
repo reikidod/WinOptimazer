@@ -33,16 +33,16 @@ jobs:
           dotnet restore tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj
           if ($LASTEXITCODE -ne 0) { throw 'Не удалось восстановить тесты' }
 
-      - name: Validate DarkTheme Signal tokens
+      - name: Validate DarkTheme terminal tokens
         shell: pwsh
         run: |
           $theme = Get-Content -Raw Themes/DarkTheme.xaml
           $pairs = @(
-            @('BgWindowColor', '#101418'),
-            @('BgSidebarColor', '#151A1F'),
-            @('BgCardColor', '#1A2127'),
-            @('AccentColor', '#00C58E'),
-            @('AccentStrongColor', '#007A5A')
+            @('BgWindowColor', '#0D1117'),
+            @('BgSidebarColor', '#010409'),
+            @('BgCardColor', '#161B22'),
+            @('AccentColor', '#3FB950'),
+            @('AccentStrongColor', '#1F6F3D')
           )
           foreach ($pair in $pairs) {
             $key, $value = $pair[0], $pair[1]
@@ -67,17 +67,17 @@ jobs:
           if ($lines -lt 200) {
             throw "DarkTheme.xaml слишком короткий ($lines строк) — возможна обрезка"
           }
-          Write-Host "DarkTheme.xaml Signal tokens и стили в порядке ($lines строк)"
+          Write-Host "DarkTheme.xaml terminal tokens и стили в порядке ($lines строк)"
 
       - name: Validate ThemeManager aurora palette
         shell: pwsh
         run: |
           $src = Get-Content -Raw dll/WinOptimizer.Settings/ThemeManager.cs
-          if ($src -notmatch '#00C58E') { throw 'ThemeManager: акцент #00C58E не найден' }
-          if ($src -notmatch '#101418') { throw 'ThemeManager: BgWindow #101418 не найден' }
-          if ($src -notmatch '#007A5A') { throw 'ThemeManager: AccentStrong #007A5A не найден' }
-          if ($src -notmatch 'Control Center \(Signal\)') { throw 'ThemeManager: имя темы Signal не найдено' }
-          Write-Host 'ThemeManager aurora/Signal палитра в порядке'
+          if ($src -notmatch '#3FB950') { throw 'ThemeManager: акцент #00C58E не найден' }
+          if ($src -notmatch '#0D1117') { throw 'ThemeManager: BgWindow #101418 не найден' }
+          if ($src -notmatch '#1F6F3D') { throw 'ThemeManager: AccentStrong #007A5A не найден' }
+          if ($src -notmatch 'Terminal Control Desk') { throw 'ThemeManager: имя темы Signal не найдено' }
+          Write-Host 'ThemeManager aurora/Terminal палитра в порядке'
 
       - name: Guard UiStructureTests is complete
         shell: pwsh
@@ -91,7 +91,7 @@ jobs:
           if ($text -like '*PLACEHOLDER*' -or $text -like '*Remainder of file must be restored*') {
             throw 'UiStructureTests.cs содержит заглушку — восстановите полный файл'
           }
-          if ($text -notlike '*#101418*' -or $text -notlike '*#00C58E*') {
+          if ($text -notlike '*#0D1117*' -or $text -notlike '*#3FB950*') {
             throw 'UiStructureTests.cs: ожидаются Signal-цвета #101418 / #00C58E в ассертах'
           }
           Write-Host "UiStructureTests.cs OK ($lines строк)"
