@@ -59,10 +59,10 @@ public sealed class UiStructureTests
 
         foreach (var (key, value) in new[]
         {
-            ("BgWindowColor", "#101418"),
-            ("BgSidebarColor", "#151A1F"),
-            ("BgCardColor", "#1A2127"),
-            ("AccentColor", "#00C58E")
+            ("BgWindowColor", "#0D1117"),
+            ("BgSidebarColor", "#010409"),
+            ("BgCardColor", "#161B22"),
+            ("AccentColor", "#3FB950")
         })
         {
             Assert.Contains(Elements(theme, "Color"), element =>
@@ -348,21 +348,21 @@ public sealed class UiStructureTests
     public void ThemeManager_RebuildsAtmosphereForSelectedTheme()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "dll/WinOptimizer.Settings/ThemeManager.cs"));
-        Assert.Contains("#00C58E", source);
-        Assert.Contains("#101418", source);
-        Assert.Contains("#007A5A", source);
-        Assert.Contains("Control Center", source);
+        Assert.Contains("#3FB950", source);
+        Assert.Contains("#0D1117", source);
+        Assert.Contains("#1F6F3D", source);
+        Assert.Contains("Terminal Control Desk", source);
     }
 
     [Fact]
-    public void SignalPalette_IsPresentInDarkTheme()
+    public void TerminalPalette_IsPresentInDarkTheme()
     {
         var theme = File.ReadAllText(Path.Combine(RepositoryRoot(), "Themes/DarkTheme.xaml"));
-        Assert.Contains("#101418", theme);
-        Assert.Contains("#151A1F", theme);
-        Assert.Contains("#1A2127", theme);
-        Assert.Contains("#00C58E", theme);
-        Assert.Contains("#007A5A", theme);
+        Assert.Contains("#0D1117", theme);
+        Assert.Contains("#010409", theme);
+        Assert.Contains("#161B22", theme);
+        Assert.Contains("#3FB950", theme);
+        Assert.Contains("#1F6F3D", theme);
         Assert.Contains("AccentButton", theme);
         Assert.Contains("NavButton", theme);
     }
