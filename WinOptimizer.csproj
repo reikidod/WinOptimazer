@@ -78,6 +78,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="tools\diagnostics\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="WinOptimizer.Tests" />
   </ItemGroup>
 
