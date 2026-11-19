@@ -10,7 +10,8 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         UseLayoutRounding="True"
-        Topmost="True">
+        Topmost="True"
+        FontFamily="Cascadia Mono, Cascadia Code, Consolas">
 
     <!-- Все цвета берутся из текущей темы (ThemeManager), поэтому окно совпадает с основным интерфейсом. -->
     <!-- Поле вокруг рамки (36) больше радиуса тени + сдвига (30 + 6), поэтому тень не обрезается границей окна
