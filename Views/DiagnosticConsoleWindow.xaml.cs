@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using WinOptimizer.Services;
+using WinOptimizer.Infrastructure;
 
 namespace WinOptimizer.Views;
 
