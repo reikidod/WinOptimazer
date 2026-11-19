@@ -87,6 +87,8 @@ public sealed class InterruptAffinityViewModel : ObservableObject
     public System.Windows.Input.ICommand RestoreCommand { get; }
     public System.Windows.Input.ICommand RestartDeviceCommand { get; }
     public System.Windows.Input.ICommand RunLatencyTestCommand { get; }
+    public System.Windows.Input.ICommand LaunchCoreAffinityCommand { get; }
+    public System.Windows.Input.ICommand LaunchInputLatencyCommand { get; }
     public string LatencyTestStatus { get => _latencyTestStatus; private set => SetField(ref _latencyTestStatus, value); }
     public string LatencyTestResult { get => _latencyTestResult; private set => SetField(ref _latencyTestResult, value); }
     public string LatencyTestComparison { get => _latencyTestComparison; private set => SetField(ref _latencyTestComparison, value); }
@@ -100,6 +102,24 @@ public sealed class InterruptAffinityViewModel : ObservableObject
         RestartDeviceCommand = new AsyncRelayCommand<InterruptAffinityDeviceItem>(
             RestartDeviceAsync, item => !IsBusy && item is { CanRestart: true } && IsAdministrator);
         RunLatencyTestCommand = new AsyncRelayCommand(RunLatencyTestAsync, () => !IsLatencyTestRunning);
+        LaunchCoreAffinityCommand = new RelayCommand(() => LaunchDiagnosticTool(DiagnosticToolKind.CoreAffinity));
+        LaunchInputLatencyCommand = new RelayCommand(() => LaunchDiagnosticTool(DiagnosticToolKind.InputLatency));
+    }
+
+    private void LaunchDiagnosticTool(DiagnosticToolKind kind)
+    {
+        try
+        {
+            _ = DiagnosticToolLauncher.Launch(kind);
+            Status = kind == DiagnosticToolKind.CoreAffinity
+                ? "Запущен расширенный Core Affinity. Настройки и результаты доступны в отдельном окне."
+                : "Запущен Input Latency Optimizer. Все режимы HID, профиля, измерения и отката доступны в отдельном окне.";
+        }
+        catch (Exception ex)
+        {
+            Status = "Не удалось запустить инструмент: " + ex.Message;
+            Logger.Error("Не удалось запустить диагностический инструмент " + kind, ex);
+        }
     }
 
     private async Task RunLatencyTestAsync()
