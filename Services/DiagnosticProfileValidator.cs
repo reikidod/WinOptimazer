@@ -1,12 +1,11 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace WinOptimizer.Services;
 
 /// <summary>Validates the supported InputLatency profile contract before it can be saved.</summary>
 internal static class DiagnosticProfileValidator
 {
-    private static readonly HashSet<int> SupportedRates = [125, 250, 500, 1000, 2000, 4000, 8000];
-
     internal static void Validate(string json)
     {
         using var document = JsonDocument.Parse(json);
@@ -40,16 +39,30 @@ internal static class DiagnosticProfileValidator
                 enabled.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
                 throw new InvalidDataException($"Для твика «{name}» поле Enabled должно быть логическим.");
 
-            if (tweak.TryGetProperty("Target", out var target))
-            {
-                if (target.ValueKind != JsonValueKind.String ||
-                    target.GetString() is not ("both" or "mouse" or "keyboard"))
-                    throw new InvalidDataException($"Для твика «{name}» Target должен быть both, mouse или keyboard.");
-            }
+            if (tweak.TryGetProperty("Target", out var target) &&
+                (target.ValueKind != JsonValueKind.String ||
+                 target.GetString() is not ("both" or "mouse" or "keyboard")))
+                throw new InvalidDataException($"Для твика «{name}» Target должен быть both, mouse или keyboard.");
 
             if (type == "polling")
                 ValidatePollingTweak(tweak, name);
         }
+    }
+
+    internal static bool HasCustomCommands(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (!document.RootElement.TryGetProperty("Tweaks", out var tweaks) || tweaks.ValueKind != JsonValueKind.Array)
+            return false;
+
+        return tweaks.EnumerateArray().Any(tweak =>
+            tweak.ValueKind == JsonValueKind.Object &&
+            tweak.TryGetProperty("Method", out var method) &&
+            method.ValueKind == JsonValueKind.String &&
+            method.GetString() == "command" &&
+            tweak.TryGetProperty("ApplyCommand", out var command) &&
+            command.ValueKind == JsonValueKind.String &&
+            !string.IsNullOrWhiteSpace(command.GetString()));
     }
 
     private static void ValidatePollingTweak(JsonElement tweak, string name)
@@ -77,7 +90,7 @@ internal static class DiagnosticProfileValidator
         {
             if (tweak.TryGetProperty(id, out var value) &&
                 (value.ValueKind != JsonValueKind.String ||
-                 (value.GetString() is { Length: > 0 } text && !System.Text.RegularExpressions.Regex.IsMatch(text, "^[0-9A-Fa-f]{4}$"))))
+                 (value.GetString() is { Length: > 0 } text && !Regex.IsMatch(text, "^[0-9A-Fa-f]{4}$"))))
                 throw new InvalidDataException($"Для твика «{name}» {id} должен содержать четыре шестнадцатеричных символа.");
         }
 
@@ -90,10 +103,11 @@ internal static class DiagnosticProfileValidator
                 if (!int.TryParse(report.Name, out var rate) || rate is < 125 or > 32000 ||
                     report.Value.ValueKind != JsonValueKind.String)
                     throw new InvalidDataException($"Для твика «{name}» обнаружен некорректный HID-репорт.");
-                var hex = report.Value.GetString();
+
+                var hex = Regex.Replace(report.Value.GetString() ?? string.Empty, @"(?i)0x|[\s:-]", string.Empty);
                 if (!string.IsNullOrEmpty(hex) &&
-                    (hex.Length % 2 != 0 || !System.Text.RegularExpressions.Regex.IsMatch(hex, "^[0-9A-Fa-f]+$")))
-                    throw new InvalidDataException($"Для твика «{name}» HID-репорт должен быть HEX-строкой чётной длины.");
+                    (hex.Length % 2 != 0 || !Regex.IsMatch(hex, "^[0-9A-Fa-f]+$")))
+                    throw new InvalidDataException($"Для твика «{name}» HID-репорт должен содержать HEX-байты.");
             }
         }
     }
