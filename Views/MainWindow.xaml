@@ -1263,7 +1263,7 @@
                                 DataContext="{Binding InterruptAffinity}">
                             <StackPanel>
                                 <TextBlock Text="Расширенные инструменты ввода и CPU" FontSize="16" FontWeight="SemiBold" />
-                                <TextBlock Text="Оригинальные проверенные сценарии CoreAffinity и InputLatency включены в сборку приложения. Они открываются в отдельном окне командной строки, чтобы сохранить интерактивные меню, запросы UAC, тесты и механизмы отката без потери функций исходных BAT/PowerShell-файлов."
+                                <TextBlock Text="CoreAffinity и InputLatency работают внутри интерфейса WinOptimizer: отдельные BAT-окна не открываются. Интерактивный вывод, запросы ввода, тесты и откаты доступны во встроенной панели."
                                            Style="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,10" />
                                 <WrapPanel>
                                     <Button Content="Core Affinity · CPU / FPS / IRQ" Style="{StaticResource AccentButton}"
