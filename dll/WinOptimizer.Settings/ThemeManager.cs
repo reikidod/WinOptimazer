@@ -26,10 +26,10 @@ public static class ThemeManager
 
     public static readonly IReadOnlyList<ThemeInfo> Themes =
     [
-        // WinOptimizer Signal Control Center: глубокий уголь + акцент логотипа #00C58E.
+        // WinOptimizer Terminal Control Desk: тёмная рабочая среда, моноширинная типографика и зелёный статусный акцент.
         // ID aurora сохранён, чтобы не сбрасывать выбор темы у существующих установок.
-        new("aurora", "Control Center (Signal)", new("#101418", "#151A1F", "#1A2127", "#222A31", "#2C363E", "#3D4A54", "#00C58E", "#007A5A", "#2A343C",
-            "#F2F5F3", "#B5C0BA", "#8E9B94", "#2FD49A", "#D6AD6A", "#D97878", "#97A39B")),
+        new("aurora", "Terminal Control Desk", new("#0D1117", "#010409", "#161B22", "#21262D", "#30363D", "#484F58", "#3FB950", "#1F6F3D", "#30363D",
+            "#E6EDF3", "#B1BAC4", "#8B949E", "#3FB950", "#D29922", "#F85149", "#8B949E")),
         new("dark", "Тёмная", new("#1B1C1F", "#202225", "#2A2C31", "#353840", "#3A3D44", "#7F8CA3", "#8AAAD8", "#4B6CA3", "#3A3D44",
             "#F2F3F5", "#C2C6CE", "#A9AEB9", "#7FB38F", "#D2AE6D", "#EE8B8B", "#9AA0AB")),
         new("light", "Светлая", new("#F6FAFF", "#FFFFFF", "#FFFFFF", "#EAF5FF", "#DCEBFA", "#72C9F0", "#009BD8", "#0078D4", "#DCEBFA",
