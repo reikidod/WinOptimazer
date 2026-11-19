@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using WinOptimizer.Infrastructure;
 using WinOptimizer.Services;
+using WinOptimizer.Views;
 
 namespace WinOptimizer.ViewModels;
 
@@ -110,10 +111,14 @@ public sealed class InterruptAffinityViewModel : ObservableObject
     {
         try
         {
-            _ = DiagnosticToolLauncher.Launch(kind);
+            var window = new DiagnosticConsoleWindow(kind)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+            window.Show();
             Status = kind == DiagnosticToolKind.CoreAffinity
-                ? "Запущен расширенный Core Affinity. Настройки и результаты доступны в отдельном окне."
-                : "Запущен Input Latency Optimizer. Все режимы HID, профиля, измерения и отката доступны в отдельном окне.";
+                ? "Core Affinity открыт внутри WinOptimizer."
+                : "Input Latency открыт внутри WinOptimizer.";
         }
         catch (Exception ex)
         {
