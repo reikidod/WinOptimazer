@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Диагностика WinOptimizer"
-        Width="920" Height="680" MinWidth="720" MinHeight="480"
+        Width="980" Height="720" MinWidth="760" MinHeight="520"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource BgWindowBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
@@ -15,27 +15,32 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold"/>
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock x:Name="TitleText" FontSize="21" FontWeight="SemiBold"/>
             <TextBlock x:Name="DescriptionText" Foreground="{DynamicResource TextSecondaryBrush}"
-                       TextWrapping="Wrap" Margin="0,4,0,0"/>
+                       TextWrapping="Wrap" Margin="0,5,0,0"/>
         </StackPanel>
 
-        <WrapPanel x:Name="InputLatencyActions" Grid.Row="1" Margin="0,0,0,10" Visibility="Collapsed">
-            <Button Content="Сканировать HID" Tag="scan" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Автопоиск мыши" Tag="autodetect" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Контроллер донгла" Tag="dongle" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Измерить polling rate" Tag="measure" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Безопасное применение" Tag="safeapply" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Применить профиль" Tag="applynow" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Откатить" Tag="rollback" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Статус и журнал" Tag="status" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Установить службу" Tag="install" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Удалить службу" Tag="uninstall" Click="RunMode_Click" Margin="0,0,8,8"/>
-            <Button Content="Редактировать профиль" Click="EditProfile_Click" Margin="0,0,8,8"/>
-        </WrapPanel>
+        <Border Grid.Row="1" Background="{DynamicResource BgCardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                CornerRadius="6" Padding="10" Margin="0,0,0,12">
+            <WrapPanel x:Name="InputLatencyActions" Visibility="Collapsed">
+                <Button Content="Сканировать HID" Tag="scan" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Автопоиск мыши" Tag="autodetect" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Контроллер донгла" Tag="dongle" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Измерить polling rate" Tag="measure" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Безопасное применение" Tag="safeapply" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Применить профиль" Tag="applynow" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Откатить" Tag="rollback" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Статус и журнал" Tag="status" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Установить службу" Tag="install" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Удалить службу" Tag="uninstall" Click="RunMode_Click" Margin="0,0,8,8"/>
+                <Button Content="Редактировать профиль" Click="EditProfile_Click" Margin="0,0,8,8"/>
+            </WrapPanel>
+        </Border>
 
         <TextBox x:Name="OutputBox" Grid.Row="2" IsReadOnly="True" AcceptsReturn="True"
                  TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
@@ -43,22 +48,39 @@
                  Background="{DynamicResource BgCardBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
                  BorderBrush="{DynamicResource BorderBrush}" Padding="12"/>
 
-        <TextBlock x:Name="StatusText" Grid.Row="3" Foreground="{DynamicResource TextSecondaryBrush}"
-                   Margin="0,8,0,8" Text="Готово."/>
+        <StackPanel Grid.Row="3" Margin="0,10,0,8">
+            <DockPanel LastChildFill="True">
+                <TextBlock x:Name="StatusText" Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Text="Готово."/>
+                <TextBlock DockPanel.Dock="Right" Text="ВЫВОД ДИАГНОСТИКИ"
+                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="10"
+                           VerticalAlignment="Center" Margin="12,0,0,0"/>
+            </DockPanel>
+            <ProgressBar x:Name="RunningIndicator" Height="3" Margin="0,8,0,0"
+                         IsIndeterminate="True" Visibility="Collapsed"/>
+        </StackPanel>
 
-        <Grid Grid.Row="4">
+        <Grid Grid.Row="4" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="InputBox" Grid.Column="0" MinHeight="36" Padding="8"
+            <TextBox x:Name="InputBox" Grid.Column="0" MinHeight="38" Padding="9"
                      VerticalContentAlignment="Center" KeyDown="InputBox_KeyDown"
-                     ToolTip="Введите ответ или команду для текущего сценария"/>
-            <Button Grid.Column="1" Content="Отправить" MinWidth="100" Margin="8,0,0,0"
-                    Click="SendInput_Click"/>
-            <Button Grid.Column="2" Content="Закрыть" MinWidth="90" Margin="8,0,0,0"
-                    Click="Close_Click"/>
+                     ToolTip="Введите ответ или команду для текущего сценария"
+                     IsEnabled="False"/>
+            <Button x:Name="SendButton" Grid.Column="1" Content="Отправить" MinWidth="104"
+                    Margin="8,0,0,0" Click="SendInput_Click" IsEnabled="False"/>
+            <Button x:Name="StopButton" Grid.Column="2" Content="Остановить" MinWidth="104"
+                    Margin="8,0,0,0" Click="Stop_Click" IsEnabled="False"/>
         </Grid>
+
+        <DockPanel Grid.Row="5">
+            <TextBlock Text="Сценарии запускаются скрыто; системные изменения требуют явного действия."
+                       Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
+                       VerticalAlignment="Center"/>
+            <Button DockPanel.Dock="Right" Content="Закрыть" MinWidth="96" Click="Close_Click"/>
+        </DockPanel>
     </Grid>
 </Window>

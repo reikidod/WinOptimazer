@@ -1,4 +1,7 @@
+using System.Diagnostics;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 
 namespace WinOptimizer.Services;
@@ -10,8 +13,9 @@ public enum DiagnosticToolKind
 }
 
 /// <summary>
-/// Supplies the original diagnostic PowerShell logic from embedded application resources.
-/// No BAT file is executed or copied to the application output directory.
+/// Supplies trusted diagnostic scripts from the application assembly.
+/// Materialized copies are stored in a ProgramData directory restricted to SYSTEM
+/// and Administrators; ordinary users receive read/execute access only.
 /// </summary>
 internal static class DiagnosticScriptProvider
 {
@@ -40,18 +44,100 @@ internal static class DiagnosticScriptProvider
     internal static string MaterializeScript(DiagnosticToolKind kind)
     {
         var directory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
             "WinOptimizer", "EmbeddedDiagnostics");
-        Directory.CreateDirectory(directory);
 
-        var fileName = kind == DiagnosticToolKind.CoreAffinity
-            ? "CoreAffinity.internal.ps1"
-            : "InputLatencyOptimizer.internal.ps1";
+        Directory.CreateDirectory(directory);
+        EnsureNoReparsePoint(directory);
+
+        var fileName = kind switch
+        {
+            DiagnosticToolKind.CoreAffinity => "CoreAffinity.internal.ps1",
+            DiagnosticToolKind.InputLatency => "InputLatencyOptimizer.internal.ps1",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Неизвестный диагностический инструмент.")
+        };
         var path = Path.Combine(directory, fileName);
+        EnsureNoReparsePoint(path, allowMissing: true);
+
         var content = ExtractScript(kind);
-        var temporary = path + ".tmp";
-        File.WriteAllText(temporary, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-        File.Move(temporary, path, overwrite: true);
-        return path;
+        var bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(content);
+        var temporary = Path.Combine(directory, $".{fileName}.{Guid.NewGuid():N}.tmp");
+
+        try
+        {
+            File.WriteAllBytes(temporary, bytes);
+            RestrictDirectory(directory);
+
+            // Verify the on-disk copy only after its parent ACL has been restricted.
+            // A mismatch means the file must never be passed to elevated PowerShell.
+            var written = File.ReadAllBytes(temporary);
+            if (!CryptographicOperations.FixedTimeEquals(SHA256.HashData(bytes), SHA256.HashData(written)))
+                throw new CryptographicException("Контрольная сумма встроенного сценария не совпадает с записанной копией.");
+
+            File.Move(temporary, path, overwrite: true);
+            EnsureNoReparsePoint(path);
+            var finalBytes = File.ReadAllBytes(path);
+            if (!CryptographicOperations.FixedTimeEquals(SHA256.HashData(bytes), SHA256.HashData(finalBytes)))
+                throw new CryptographicException("Проверка целостности диагностического сценария после установки не пройдена.");
+
+            return path;
+        }
+        finally
+        {
+            try { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch { /* best-effort cleanup; never hide the original failure */ }
+        }
+    }
+
+    private static void RestrictDirectory(string directory)
+    {
+        var currentSid = WindowsIdentity.GetCurrent().User?.Value
+            ?? throw new InvalidOperationException("Не удалось определить SID текущего пользователя.");
+        var icacls = Path.Combine(Environment.SystemDirectory, "icacls.exe");
+        if (!File.Exists(icacls))
+            throw new FileNotFoundException("Не найдена системная утилита icacls.exe.", icacls);
+
+        var start = new ProcessStartInfo
+        {
+            FileName = icacls,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        start.ArgumentList.Add(directory);
+        start.ArgumentList.Add("/inheritance:r");
+        start.ArgumentList.Add("/grant:r");
+        start.ArgumentList.Add("*S-1-5-18:(OI)(CI)F");
+        start.ArgumentList.Add("*S-1-5-32-544:(OI)(CI)F");
+        start.ArgumentList.Add($"*{currentSid}:(OI)(CI)RX");
+        start.ArgumentList.Add("/T");
+        start.ArgumentList.Add("/C");
+
+        using var process = Process.Start(start)
+            ?? throw new InvalidOperationException("Не удалось запустить icacls.exe для защиты каталога сценариев.");
+        if (!process.WaitForExit(10_000))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { }
+            throw new TimeoutException("Истекло время настройки ACL каталога диагностических сценариев.");
+        }
+
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
+        if (process.ExitCode != 0)
+            throw new UnauthorizedAccessException($"Не удалось ограничить доступ к диагностическим сценариям (icacls {process.ExitCode}). {output} {error}".Trim());
+    }
+
+    private static void EnsureNoReparsePoint(string path, bool allowMissing = false)
+    {
+        if (!File.Exists(path) && !Directory.Exists(path))
+        {
+            if (allowMissing) return;
+            throw new FileNotFoundException("Защищённый диагностический файл не найден.", path);
+        }
+
+        var attributes = File.GetAttributes(path);
+        if ((attributes & FileAttributes.ReparsePoint) != 0)
+            throw new IOException($"Отказ от использования пути с reparse point: {path}");
     }
 }

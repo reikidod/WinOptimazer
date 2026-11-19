@@ -30,11 +30,11 @@ public sealed class DiagnosticScriptProviderTests
     }
 
     [Fact]
-    public void MaterializeScript_WritesInternalPowerShellScript()
+    public void MaterializeScript_WritesIntoProtectedProgramDataDirectory()
     {
         var path = DiagnosticScriptProvider.MaterializeScript(DiagnosticToolKind.InputLatency);
 
-        Assert.EndsWith("InputLatencyOptimizer.internal.ps1", path, StringComparison.Ordinal);
+        Assert.EndsWith(Path.Combine("WinOptimizer", "EmbeddedDiagnostics", "InputLatencyOptimizer.internal.ps1"), path, StringComparison.OrdinalIgnoreCase);
         Assert.True(File.Exists(path));
         Assert.Contains("param(", File.ReadAllText(path), StringComparison.Ordinal);
     }

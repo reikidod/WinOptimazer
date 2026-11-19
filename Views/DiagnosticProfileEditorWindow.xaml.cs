@@ -1,6 +1,6 @@
 using System.Text;
-using System.Text.Json;
 using System.Windows;
+using WinOptimizer.Services;
 
 namespace WinOptimizer.Views;
 
@@ -17,25 +17,32 @@ public partial class DiagnosticProfileEditorWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
+        string? temporaryPath = null;
         try
         {
-            using var document = JsonDocument.Parse(ProfileText.Text);
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
-                throw new InvalidDataException("Корнем профиля должен быть JSON-объект.");
+            DiagnosticProfileValidator.Validate(ProfileText.Text);
 
             var backupPath = _profilePath + ".bak";
             if (File.Exists(_profilePath))
                 File.Copy(_profilePath, backupPath, overwrite: true);
 
-            var temporaryPath = _profilePath + ".tmp";
+            temporaryPath = _profilePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
             File.WriteAllText(temporaryPath, ProfileText.Text, new UTF8Encoding(true));
             File.Move(temporaryPath, _profilePath, overwrite: true);
-            StatusText.Text = "Профиль сохранён. Предыдущая версия: profile.json.bak";
+            StatusText.Text = "Профиль проверен и сохранён. Предыдущая версия: profile.json.bak";
             DialogResult = true;
         }
         catch (Exception ex)
         {
             StatusText.Text = "Не удалось сохранить: " + ex.Message;
+        }
+        finally
+        {
+            if (temporaryPath is not null)
+            {
+                try { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
+                catch { /* best-effort cleanup */ }
+            }
         }
     }
 

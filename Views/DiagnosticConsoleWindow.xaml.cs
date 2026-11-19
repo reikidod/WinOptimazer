@@ -9,6 +9,7 @@ namespace WinOptimizer.Views;
 
 public partial class DiagnosticConsoleWindow : Window
 {
+    private const int MaxOutputCharacters = 250_000;
     private readonly DiagnosticToolKind _kind;
     private Process? _process;
     private string? _scriptPath;
@@ -21,33 +22,36 @@ public partial class DiagnosticConsoleWindow : Window
             ? "Core Affinity · CPU / FPS / IRQ"
             : "Input Latency · HID / Polling";
         DescriptionText.Text = kind == DiagnosticToolKind.CoreAffinity
-            ? "Интерактивный инструмент встроен в окно WinOptimizer. Доступны топология CPU, настройка устройств, FPS-тесты и восстановление."
+            ? "Интерактивный инструмент встроен в WinOptimizer. Доступны топология CPU, настройка устройств, FPS-тесты и восстановление."
             : "Операции запускаются из интерфейса приложения. Вывод, запросы ввода, HID-инспектор, профили и откат остаются в этом окне.";
         InputLatencyActions.Visibility = kind == DiagnosticToolKind.InputLatency
             ? Visibility.Visible : Visibility.Collapsed;
         Loaded += (_, _) =>
         {
             if (_kind == DiagnosticToolKind.CoreAffinity)
-                StartScript(interactive: true, mode: null);
+                StartScript(mode: null);
             else
                 Append("Выберите операцию выше. Результаты и запросы сценария будут отображаться здесь.\r\n");
         };
-        Closed += (_, _) => StopProcess();
+        Closed += (_, _) => StopProcess(userRequested: false);
     }
 
     private void RunMode_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not System.Windows.Controls.Button { Tag: string mode }) return;
-        StartScript(interactive: false, mode);
+        StartScript(mode);
     }
 
-    private void StartScript(bool interactive, string? mode)
+    private void StartScript(string? mode)
     {
         if (_process is { HasExited: false })
         {
-            Append("\r\n[!] Сначала завершите текущую операцию.\r\n");
+            Append("\r\n[!] Сначала остановите текущую операцию.\r\n");
             return;
         }
+
+        _process?.Dispose();
+        _process = null;
 
         try
         {
@@ -55,8 +59,6 @@ public partial class DiagnosticConsoleWindow : Window
             var powershell = Path.Combine(Environment.SystemDirectory,
                 "WindowsPowerShell", "v1.0", "powershell.exe");
 
-            // Force UTF-8 for Russian text under redirected stdout/stdin.
-            // -File alone often leaves console CP = system ANSI → mojibake in the UI.
             var scriptLiteral = "'" + _scriptPath.Replace("'", "''") + "'";
             var modeArg = (_kind == DiagnosticToolKind.InputLatency && !string.IsNullOrWhiteSpace(mode))
                 ? " -Mode " + mode
@@ -78,9 +80,9 @@ public partial class DiagnosticConsoleWindow : Window
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                StandardOutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-                StandardErrorEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-                StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)
+                StandardOutputEncoding = new UTF8Encoding(false),
+                StandardErrorEncoding = new UTF8Encoding(false),
+                StandardInputEncoding = new UTF8Encoding(false)
             };
             startInfo.ArgumentList.Add("-NoLogo");
             startInfo.ArgumentList.Add("-NoProfile");
@@ -89,27 +91,48 @@ public partial class DiagnosticConsoleWindow : Window
             startInfo.ArgumentList.Add("-Command");
             startInfo.ArgumentList.Add(bootstrap);
 
-            _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-            _process.OutputDataReceived += (_, args) =>
+            var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+            process.OutputDataReceived += (_, args) =>
             {
-                if (args.Data is not null) Dispatcher.BeginInvoke(new Action(() => Append(args.Data + Environment.NewLine)));
+                if (args.Data is not null)
+                    Dispatcher.BeginInvoke(new Action(() => { if (ReferenceEquals(_process, process)) Append(args.Data + Environment.NewLine); }));
             };
-            _process.ErrorDataReceived += (_, args) =>
+            process.ErrorDataReceived += (_, args) =>
             {
-                if (args.Data is not null) Dispatcher.BeginInvoke(new Action(() => Append("[ошибка] " + args.Data + Environment.NewLine)));
+                if (args.Data is not null)
+                    Dispatcher.BeginInvoke(new Action(() => { if (ReferenceEquals(_process, process)) Append("[ошибка] " + args.Data + Environment.NewLine); }));
             };
-            _process.Exited += (_, _) => Dispatcher.BeginInvoke(new Action(() =>
+            process.Exited += (_, _) => Dispatcher.BeginInvoke(new Action(() =>
             {
-                StatusText.Text = $"Операция завершена · код {_process?.ExitCode}";
+                if (!ReferenceEquals(_process, process)) return;
+                int exitCode;
+                try { exitCode = process.ExitCode; }
+                catch { exitCode = -1; }
+                StatusText.Text = exitCode == 0
+                    ? "Операция завершена успешно."
+                    : $"Операция завершена с ошибкой · код {exitCode}.";
                 InputBox.IsEnabled = false;
+                SendButton.IsEnabled = false;
+                StopButton.IsEnabled = false;
+                RunningIndicator.IsIndeterminate = false;
+                RunningIndicator.Visibility = Visibility.Collapsed;
             }));
 
             Append($"\r\n> Запуск: {(_kind == DiagnosticToolKind.CoreAffinity ? "CoreAffinity" : "InputLatency")} {(mode ?? "interactive")}\r\n");
-            if (!_process.Start())
+            if (!process.Start())
+            {
+                process.Dispose();
                 throw new InvalidOperationException("Windows не запустила встроенный сценарий.");
-            _process.BeginOutputReadLine();
-            _process.BeginErrorReadLine();
+            }
+
+            _process = process;
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
             InputBox.IsEnabled = true;
+            SendButton.IsEnabled = true;
+            StopButton.IsEnabled = true;
+            RunningIndicator.Visibility = Visibility.Visible;
+            RunningIndicator.IsIndeterminate = true;
             InputBox.Focus();
             StatusText.Text = "Сценарий выполняется внутри WinOptimizer.";
         }
@@ -128,7 +151,7 @@ public partial class DiagnosticConsoleWindow : Window
             "WinOptimizer", "InputLatency", "profile.json");
         if (!File.Exists(profilePath))
         {
-            Append("Профиль ещё не создан. Сначала выполните «Сканировать HID» — исходный сценарий создаст профиль по умолчанию.\r\n");
+            Append("Профиль ещё не создан. Сначала выполните «Сканировать HID» — сценарий создаст профиль по умолчанию.\r\n");
             return;
         }
 
@@ -164,23 +187,49 @@ public partial class DiagnosticConsoleWindow : Window
     private void Append(string text)
     {
         OutputBox.AppendText(text);
+        if (OutputBox.Text.Length > MaxOutputCharacters)
+        {
+            var trimAt = OutputBox.Text.IndexOf('\n', OutputBox.Text.Length - MaxOutputCharacters / 2);
+            if (trimAt < 0) trimAt = OutputBox.Text.Length - MaxOutputCharacters;
+            OutputBox.Select(0, trimAt + 1);
+            OutputBox.SelectedText = "[...ранний вывод сокращён...]\r\n";
+        }
         OutputBox.ScrollToEnd();
     }
 
-    private void StopProcess()
+    private void StopProcess(bool userRequested = true)
     {
+        var process = _process;
+        if (process is null) return;
+
         try
         {
-            if (_process is { HasExited: false })
+            if (!process.HasExited)
             {
-                _process.StandardInput.Close();
-                _process.WaitForExit(1500);
-                if (!_process.HasExited) _process.Kill(entireProcessTree: true);
+                try { process.StandardInput.Close(); } catch { }
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit(3000);
+                if (userRequested)
+                {
+                    StatusText.Text = "Операция остановлена пользователем.";
+                    Append("[!] Выполнение остановлено. Проверьте состояние системы перед повторным запуском.\r\n");
+                }
             }
         }
-        catch (Exception ex) { Logger.Error("Не удалось корректно закрыть диагностический сценарий", ex); }
-        finally { _process?.Dispose(); _process = null; }
+        catch (Exception ex) { Logger.Error("Не удалось корректно остановить диагностический сценарий", ex); }
+        finally
+        {
+            _process = null;
+            process.Dispose();
+            InputBox.IsEnabled = false;
+            SendButton.IsEnabled = false;
+            StopButton.IsEnabled = false;
+            RunningIndicator.IsIndeterminate = false;
+            RunningIndicator.Visibility = Visibility.Collapsed;
+        }
     }
+
+    private void Stop_Click(object sender, RoutedEventArgs e) => StopProcess();
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 }
