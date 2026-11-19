@@ -54,9 +54,10 @@ internal static class DiagnosticScriptProvider
 
     private static string MaterializeScriptCore(DiagnosticToolKind kind, string directory, bool protectDirectory)
     {
-
-        Directory.CreateDirectory(applicationData);
-        EnsureNoReparsePoint(applicationData);
+        var parentDirectory = Path.GetDirectoryName(directory)
+            ?? throw new InvalidOperationException("Не удалось определить каталог диагностических сценариев.");
+        Directory.CreateDirectory(parentDirectory);
+        EnsureNoReparsePoint(parentDirectory);
         Directory.CreateDirectory(directory);
         EnsureNoReparsePoint(directory);
 
