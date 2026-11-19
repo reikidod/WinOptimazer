@@ -29,6 +29,7 @@ internal static class Program
                 "--help" or "-h" or "/?" => ShowHelp(),
                 "--scan" => Scan(service),
                 "--configure" => Configure(service),
+                "--gpu-benchmark" => GpuAffinityBenchmark.RunInteractive(service),
                 "--restore" => Restore(service),
                 null => Interactive(service),
                 _ => UnknownCommand(command)
@@ -53,6 +54,7 @@ internal static class Program
             Console.WriteLine("  1. Сканировать устройства и показать рекомендации");
             Console.WriteLine("  2. Настроить привязку ядер к устройствам");
             Console.WriteLine("  3. Восстановить исходные настройки");
+            Console.WriteLine("  4. GPU benchmark: подбор ядра через liblava");
             Console.WriteLine("  0. Выход");
             Console.Write("\nВыберите действие: ");
 
@@ -68,6 +70,10 @@ internal static class Program
                     break;
                 case "3":
                     Restore(service);
+                    Pause();
+                    break;
+                case "4":
+                    GpuAffinityBenchmark.RunInteractive(service);
                     Pause();
                     break;
                 case "0":
@@ -389,6 +395,7 @@ internal static class Program
         Console.WriteLine("  WinOptimizer.DeviceCoreManager.exe           Интерактивное меню");
         Console.WriteLine("  WinOptimizer.DeviceCoreManager.exe --scan    Только чтение и рекомендации");
         Console.WriteLine("  WinOptimizer.DeviceCoreManager.exe --configure Интерактивная настройка");
+        Console.WriteLine("  WinOptimizer.DeviceCoreManager.exe --gpu-benchmark Тест GPU на liblava");
         Console.WriteLine("  WinOptimizer.DeviceCoreManager.exe --restore Восстановление резервной копии");
         Console.WriteLine("  WinOptimizer.DeviceCoreManager.exe --help    Справка");
         Console.WriteLine();

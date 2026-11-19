@@ -61,7 +61,7 @@ jobs:
       - name: Run existing interrupt-affinity regression tests
         shell: pwsh
         run: |
-          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --filter "FullyQualifiedName~InterruptAffinityPolicyTests" --logger "console;verbosity=normal"
+          dotnet test tests/WinOptimizer.Tests/WinOptimizer.Tests.csproj --configuration Release --filter "FullyQualifiedName~InterruptAffinityPolicyTests|FullyQualifiedName~GpuAffinityBenchmarkTests" --logger "console;verbosity=normal"
           if ($LASTEXITCODE -ne 0) { throw 'Тесты политики interrupt affinity завершились с ошибкой' }
 
       - name: Publish framework-dependent package

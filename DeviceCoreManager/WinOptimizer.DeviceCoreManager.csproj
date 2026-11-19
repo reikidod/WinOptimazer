@@ -15,6 +15,7 @@
   <ItemGroup>
     <!-- Compile the same source file used by the WPF app; keep one implementation without a GUI dependency. -->
     <Compile Include="..\Services\InterruptAffinityService.cs" Link="Services\InterruptAffinityService.cs" />
+    <Compile Include="..\Services\LiblavaBenchmarkParser.cs" Link="Services\LiblavaBenchmarkParser.cs" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 </Project>
