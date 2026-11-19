@@ -303,6 +303,28 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void Sidebar_UsesConsistentTechnicalOutlineIcons()
+    {
+        var document = LoadView("Views/MainWindow.xaml");
+        var navigationIcons = Elements(document, "Path")
+            .Where(element => Attribute(element, "Stroke") ==
+                "{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}")
+            .ToList();
+
+        Assert.Equal(10, navigationIcons.Count);
+        Assert.All(navigationIcons, icon =>
+        {
+            Assert.Equal("Transparent", Attribute(icon, "Fill"));
+            Assert.Equal("1.7", Attribute(icon, "StrokeThickness"));
+            Assert.Equal("Round", Attribute(icon, "StrokeLineJoin"));
+        });
+
+        var application = XDocument.Load(Path.Combine(RepositoryRoot(), "App.xaml"));
+        Assert.Contains(Elements(application, "GeometryDrawing"), drawing =>
+            Attribute(drawing, "Brush") == "#3FB950");
+    }
+
+    [Fact]
     public void SideMouseButtons_AreConnectedToNavigationHistory()
     {
         var codeBehind = File.ReadAllText(Path.Combine(RepositoryRoot(), "Views/MainWindow.xaml.cs"));
