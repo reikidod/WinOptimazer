@@ -184,6 +184,31 @@ public partial class DiagnosticConsoleWindow : Window
         }
     }
 
+    private void CopyOutput_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(OutputBox.Text))
+            {
+                StatusText.Text = "Журнал пуст.";
+                return;
+            }
+            Clipboard.SetText(OutputBox.Text);
+            StatusText.Text = "Вывод скопирован в буфер обмена.";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "Не удалось скопировать вывод.";
+            Logger.Error("Не удалось скопировать журнал диагностики", ex);
+        }
+    }
+
+    private void ClearOutput_Click(object sender, RoutedEventArgs e)
+    {
+        OutputBox.Clear();
+        StatusText.Text = "Локальный вывод очищен. Файловый журнал не изменён.";
+    }
+
     private void Append(string text)
     {
         OutputBox.AppendText(text);

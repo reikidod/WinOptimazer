@@ -27,26 +27,52 @@
         <Border Grid.Row="1" Background="{DynamicResource BgCardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                 CornerRadius="6" Padding="10" Margin="0,0,0,12">
-            <WrapPanel x:Name="InputLatencyActions" Visibility="Collapsed">
-                <Button Content="Сканировать HID" Tag="scan" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Автопоиск мыши" Tag="autodetect" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Контроллер донгла" Tag="dongle" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Измерить polling rate" Tag="measure" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Безопасное применение" Tag="safeapply" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Применить профиль" Tag="applynow" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Откатить" Tag="rollback" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Статус и журнал" Tag="status" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Установить службу" Tag="install" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Удалить службу" Tag="uninstall" Click="RunMode_Click" Margin="0,0,8,8"/>
-                <Button Content="Редактировать профиль" Click="EditProfile_Click" Margin="0,0,8,8"/>
-            </WrapPanel>
+            <StackPanel x:Name="InputLatencyActions" Visibility="Collapsed">
+                <Expander Header="Обнаружение и тесты" IsExpanded="True" Margin="0,0,0,4">
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button Content="Сканировать HID" Tag="scan" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Автопоиск мыши" Tag="autodetect" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Контроллер донгла" Tag="dongle" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Измерить polling rate" Tag="measure" Click="RunMode_Click" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                </Expander>
+                <Expander Header="Профиль и применение" IsExpanded="True" Margin="0,0,0,4">
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button Content="Безопасное применение" Tag="safeapply" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Применить профиль" Tag="applynow" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Редактировать профиль" Click="EditProfile_Click" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                </Expander>
+                <Expander Header="Служба и восстановление" IsExpanded="False">
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button Content="Статус и журнал" Tag="status" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Откатить" Tag="rollback" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Установить службу" Tag="install" Click="RunMode_Click" Margin="0,0,8,8"/>
+                        <Button Content="Удалить службу" Tag="uninstall" Click="RunMode_Click" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                </Expander>
+            </StackPanel>
         </Border>
 
-        <TextBox x:Name="OutputBox" Grid.Row="2" IsReadOnly="True" AcceptsReturn="True"
-                 TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                 FontFamily="Cascadia Mono, Consolas" FontSize="12"
-                 Background="{DynamicResource BgCardBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
-                 BorderBrush="{DynamicResource BorderBrush}" Padding="12"/>
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                <TextBlock Text="Результаты и журнал" FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="Копировать" Click="CopyOutput_Click" Margin="0,0,6,0"/>
+                    <Button Content="Очистить" Click="ClearOutput_Click"/>
+                </StackPanel>
+            </DockPanel>
+            <TextBox x:Name="OutputBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True"
+                     TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                     FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                     Background="{DynamicResource BgCardBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                     BorderBrush="{DynamicResource BorderBrush}" Padding="12"/>
+        </Grid>
 
         <StackPanel Grid.Row="3" Margin="0,10,0,8">
             <DockPanel LastChildFill="True">

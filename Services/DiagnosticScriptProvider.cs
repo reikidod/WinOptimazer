@@ -43,10 +43,12 @@ internal static class DiagnosticScriptProvider
 
     internal static string MaterializeScript(DiagnosticToolKind kind)
     {
-        var directory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "WinOptimizer", "EmbeddedDiagnostics");
+        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var applicationData = Path.Combine(programData, "WinOptimizer");
+        var directory = Path.Combine(applicationData, "EmbeddedDiagnostics");
 
+        Directory.CreateDirectory(applicationData);
+        EnsureNoReparsePoint(applicationData);
         Directory.CreateDirectory(directory);
         EnsureNoReparsePoint(directory);
 
