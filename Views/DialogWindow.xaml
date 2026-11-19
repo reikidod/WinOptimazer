@@ -10,7 +10,7 @@
         WindowStartupLocation="CenterOwner"
         Background="Transparent"
         Foreground="{DynamicResource TextPrimaryBrush}"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontFamily="Cascadia Mono, Cascadia Code, Consolas"
         FontSize="14"
         UseLayoutRounding="True"
         AllowsTransparency="True"
