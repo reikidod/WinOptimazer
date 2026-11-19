@@ -78,7 +78,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="tools\diagnostics\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="tools\diagnostics\CoreAffinity.bat" LogicalName="WinOptimizer.Diagnostics.CoreAffinity.bat" />
+    <EmbeddedResource Include="tools\diagnostics\InputLatencyOptimizer.ps1" LogicalName="WinOptimizer.Diagnostics.InputLatency.ps1" />
   </ItemGroup>
 
   <ItemGroup>
