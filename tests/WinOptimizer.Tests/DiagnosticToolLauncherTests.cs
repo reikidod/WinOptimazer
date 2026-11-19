@@ -3,49 +3,39 @@ using Xunit;
 
 namespace WinOptimizer.Tests;
 
-public sealed class DiagnosticToolLauncherTests
+public sealed class DiagnosticScriptProviderTests
 {
-    [Theory]
-    [InlineData(DiagnosticToolKind.CoreAffinity, "CoreAffinity.bat")]
-    [InlineData(DiagnosticToolKind.InputLatency, "InputLatencyOptimizer.bat")]
-    public void GetToolPath_ResolvesPackagedTool(DiagnosticToolKind kind, string expectedFileName)
-    {
-        var path = DiagnosticToolLauncher.GetToolPath(@"C:\WinOptimizer", kind);
-
-        Assert.Equal(Path.Combine(@"C:\WinOptimizer", "tools", "diagnostics", expectedFileName), path);
-    }
-
-
     [Fact]
-    public void PackagedScripts_PreserveCoreAffinityAndInputLatencyWorkflows()
+    public void CoreAffinity_ExtractsPowerShellWithoutBatchBootstrap()
     {
-        var root = Path.Combine(AppContext.BaseDirectory, "tools", "diagnostics");
-        var coreAffinity = File.ReadAllText(Path.Combine(root, "CoreAffinity.bat"));
-        var inputLatencyMenu = File.ReadAllText(Path.Combine(root, "InputLatencyOptimizer.bat"));
-        var inputLatency = File.ReadAllText(Path.Combine(root, "InputLatencyOptimizer.ps1"));
+        var script = DiagnosticScriptProvider.ExtractScript(DiagnosticToolKind.CoreAffinity);
 
-        Assert.Contains("FPS", coreAffinity, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("GetSystemCpuSetInformation", coreAffinity, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Restore", coreAffinity, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("autodetect", inputLatencyMenu, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("safeapply", inputLatencyMenu, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("HidRawSender", inputLatency, StringComparison.Ordinal);
-        Assert.Contains("InputProbe", inputLatency, StringComparison.Ordinal);
-        Assert.Contains("rollback", inputLatency, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("USB selective suspend", inputLatency, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("GetSystemCpuSetInformation", script, StringComparison.Ordinal);
+        Assert.Contains("FPS", script, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Read-Host", script, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("@echo off", script, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public void GetToolPath_RejectsBlankApplicationDirectory()
+    public void InputLatency_ContainsOriginalModesAndSafetyFlows()
     {
-        Assert.Throws<ArgumentException>(() =>
-            DiagnosticToolLauncher.GetToolPath(" ", DiagnosticToolKind.CoreAffinity));
+        var script = DiagnosticScriptProvider.ExtractScript(DiagnosticToolKind.InputLatency);
+
+        Assert.Contains("'autodetect'", script, StringComparison.Ordinal);
+        Assert.Contains("'dongle'", script, StringComparison.Ordinal);
+        Assert.Contains("'safeapply'", script, StringComparison.Ordinal);
+        Assert.Contains("'rollback'", script, StringComparison.Ordinal);
+        Assert.Contains("HidRawSender", script, StringComparison.Ordinal);
+        Assert.Contains("InputProbe", script, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void GetToolPath_RejectsUnknownTool()
+    public void MaterializeScript_WritesInternalPowerShellScript()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            DiagnosticToolLauncher.GetToolPath(@"C:\WinOptimizer", (DiagnosticToolKind)999));
+        var path = DiagnosticScriptProvider.MaterializeScript(DiagnosticToolKind.InputLatency);
+
+        Assert.EndsWith("InputLatencyOptimizer.internal.ps1", path, StringComparison.Ordinal);
+        Assert.True(File.Exists(path));
+        Assert.Contains("param(", File.ReadAllText(path), StringComparison.Ordinal);
     }
 }
