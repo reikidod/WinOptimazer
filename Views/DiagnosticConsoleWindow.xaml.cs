@@ -11,7 +11,6 @@ public partial class DiagnosticConsoleWindow : Window
     private readonly DiagnosticToolKind _kind;
     private Process? _process;
     private string? _scriptPath;
-    private bool _isClosing;
 
     public DiagnosticConsoleWindow(DiagnosticToolKind kind)
     {
@@ -82,17 +81,17 @@ public partial class DiagnosticConsoleWindow : Window
             _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             _process.OutputDataReceived += (_, args) =>
             {
-                if (args.Data is not null) Dispatcher.BeginInvoke(() => Append(args.Data + Environment.NewLine));
+                if (args.Data is not null) Dispatcher.BeginInvoke(new Action(() => Append(args.Data + Environment.NewLine)));
             };
             _process.ErrorDataReceived += (_, args) =>
             {
-                if (args.Data is not null) Dispatcher.BeginInvoke(() => Append("[ошибка] " + args.Data + Environment.NewLine));
+                if (args.Data is not null) Dispatcher.BeginInvoke(new Action(() => Append("[ошибка] " + args.Data + Environment.NewLine)));
             };
-            _process.Exited += (_, _) => Dispatcher.BeginInvoke(() =>
+            _process.Exited += (_, _) => Dispatcher.BeginInvoke(new Action(() =>
             {
                 StatusText.Text = $"Операция завершена · код {_process?.ExitCode}";
                 InputBox.IsEnabled = false;
-            });
+            }));
 
             Append($"\r\n> Запуск: {(_kind == DiagnosticToolKind.CoreAffinity ? "CoreAffinity" : "InputLatency")} {(mode ?? "interactive")}\r\n");
             if (!_process.Start())
@@ -144,7 +143,6 @@ public partial class DiagnosticConsoleWindow : Window
 
     private void StopProcess()
     {
-        _isClosing = true;
         try
         {
             if (_process is { HasExited: false })
