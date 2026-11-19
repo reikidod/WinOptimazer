@@ -54,6 +54,20 @@ public partial class DiagnosticConsoleWindow : Window
             _scriptPath ??= DiagnosticScriptProvider.MaterializeScript(_kind);
             var powershell = Path.Combine(Environment.SystemDirectory,
                 "WindowsPowerShell", "v1.0", "powershell.exe");
+
+            // Force UTF-8 for Russian text under redirected stdout/stdin.
+            // -File alone often leaves console CP = system ANSI → mojibake in the UI.
+            var scriptLiteral = "'" + _scriptPath.Replace("'", "''") + "'";
+            var modeArg = (_kind == DiagnosticToolKind.InputLatency && !string.IsNullOrWhiteSpace(mode))
+                ? " -Mode " + mode
+                : "";
+            var bootstrap =
+                "[Console]::OutputEncoding = [Text.Encoding]::UTF8; " +
+                "[Console]::InputEncoding = [Text.Encoding]::UTF8; " +
+                "$OutputEncoding = [Console]::OutputEncoding; " +
+                "try { chcp 65001 | Out-Null } catch {}; " +
+                "& " + scriptLiteral + modeArg;
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = powershell,
@@ -64,20 +78,16 @@ public partial class DiagnosticConsoleWindow : Window
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
+                StandardOutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                StandardErrorEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+                StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)
             };
             startInfo.ArgumentList.Add("-NoLogo");
             startInfo.ArgumentList.Add("-NoProfile");
             startInfo.ArgumentList.Add("-ExecutionPolicy");
             startInfo.ArgumentList.Add("Bypass");
-            startInfo.ArgumentList.Add("-File");
-            startInfo.ArgumentList.Add(_scriptPath);
-            if (_kind == DiagnosticToolKind.InputLatency && !string.IsNullOrWhiteSpace(mode))
-            {
-                startInfo.ArgumentList.Add("-Mode");
-                startInfo.ArgumentList.Add(mode);
-            }
+            startInfo.ArgumentList.Add("-Command");
+            startInfo.ArgumentList.Add(bootstrap);
 
             _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             _process.OutputDataReceived += (_, args) =>
@@ -111,7 +121,6 @@ public partial class DiagnosticConsoleWindow : Window
         }
     }
 
-
     private void EditProfile_Click(object sender, RoutedEventArgs e)
     {
         var profilePath = Path.Combine(
@@ -119,7 +128,7 @@ public partial class DiagnosticConsoleWindow : Window
             "WinOptimizer", "InputLatency", "profile.json");
         if (!File.Exists(profilePath))
         {
-            Append("Профиль ещё не создан. Сначала выполните «Сканировать HID» — исходный сценарий создаст профиль по умолчанию.\\r\\n");
+            Append("Профиль ещё не создан. Сначала выполните «Сканировать HID» — исходный сценарий создаст профиль по умолчанию.\r\n");
             return;
         }
 
