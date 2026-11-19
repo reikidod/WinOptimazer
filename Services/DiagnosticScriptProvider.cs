@@ -17,7 +17,6 @@ internal static class DiagnosticScriptProvider
 {
     private const string CoreAffinityResource = "WinOptimizer.Diagnostics.CoreAffinity.ps1";
     private const string InputLatencyResource = "WinOptimizer.Diagnostics.InputLatency.ps1";
-    private const string CoreAffinityMarker = "#PSBEGIN";
 
     internal static string ExtractScript(DiagnosticToolKind kind)
     {
@@ -32,14 +31,6 @@ internal static class DiagnosticScriptProvider
             ?? throw new FileNotFoundException($"Встроенный сценарий {resource} не найден.");
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
         var content = reader.ReadToEnd();
-
-        if (kind == DiagnosticToolKind.CoreAffinity)
-        {
-            var markerIndex = content.LastIndexOf(CoreAffinityMarker, StringComparison.Ordinal);
-            if (markerIndex < 0)
-                throw new InvalidDataException("В CoreAffinity не найден раздел PowerShell.");
-            content = content[(markerIndex + CoreAffinityMarker.Length)..].TrimStart('\r', '\n');
-        }
 
         if (string.IsNullOrWhiteSpace(content))
             throw new InvalidDataException($"Сценарий {kind} пуст.");
