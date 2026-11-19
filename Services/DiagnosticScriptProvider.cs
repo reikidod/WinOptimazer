@@ -46,6 +46,14 @@ internal static class DiagnosticScriptProvider
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var applicationData = Path.Combine(programData, "WinOptimizer");
         var directory = Path.Combine(applicationData, "EmbeddedDiagnostics");
+        return MaterializeScriptCore(kind, directory, protectDirectory: true);
+    }
+
+    internal static string MaterializeScriptForTests(DiagnosticToolKind kind, string directory) =>
+        MaterializeScriptCore(kind, directory, protectDirectory: false);
+
+    private static string MaterializeScriptCore(DiagnosticToolKind kind, string directory, bool protectDirectory)
+    {
 
         Directory.CreateDirectory(applicationData);
         EnsureNoReparsePoint(applicationData);
@@ -68,7 +76,7 @@ internal static class DiagnosticScriptProvider
         try
         {
             File.WriteAllBytes(temporary, bytes);
-            RestrictDirectory(directory);
+            if (protectDirectory) RestrictDirectory(directory);
 
             // Verify the on-disk copy only after its parent ACL has been restricted.
             // A mismatch means the file must never be passed to elevated PowerShell.

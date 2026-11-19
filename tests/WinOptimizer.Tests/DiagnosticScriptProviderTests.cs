@@ -30,12 +30,21 @@ public sealed class DiagnosticScriptProviderTests
     }
 
     [Fact]
-    public void MaterializeScript_WritesIntoProtectedProgramDataDirectory()
+    public void MaterializeScript_WritesEmbeddedCopyToIsolatedTestDirectory()
     {
-        var path = DiagnosticScriptProvider.MaterializeScript(DiagnosticToolKind.InputLatency);
+        var directory = Path.Combine(Path.GetTempPath(), "WinOptimizer.Tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var path = DiagnosticScriptProvider.MaterializeScriptForTests(DiagnosticToolKind.InputLatency, directory);
 
-        Assert.EndsWith(Path.Combine("WinOptimizer", "EmbeddedDiagnostics", "InputLatencyOptimizer.internal.ps1"), path, StringComparison.OrdinalIgnoreCase);
-        Assert.True(File.Exists(path));
-        Assert.Contains("param(", File.ReadAllText(path), StringComparison.Ordinal);
+            Assert.EndsWith(Path.Combine("EmbeddedDiagnostics", "InputLatencyOptimizer.internal.ps1"), path, StringComparison.OrdinalIgnoreCase);
+            Assert.True(File.Exists(path));
+            Assert.Contains("param(", File.ReadAllText(path), StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
     }
 }

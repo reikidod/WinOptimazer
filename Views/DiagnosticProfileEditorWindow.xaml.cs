@@ -32,8 +32,8 @@ public partial class DiagnosticProfileEditorWindow : Window
                     setting.ValueKind == JsonValueKind.True;
                 var warning = "Профиль содержит пользовательскую команду. Она может запускаться через cmd.exe с правами администратора при применении твика.";
                 if (autoApply)
-                    warning += "\\n\\nТакже включён автоматический повтор сохранённых настроек при запуске службы.";
-                warning += "\\n\\nСохраняйте профиль только если полностью доверяете каждой команде. Продолжить?";
+                    warning += "\n\nТакже включён автоматический повтор сохранённых настроек при запуске службы.";
+                warning += "\n\nСохраняйте профиль только если полностью доверяете каждой команде. Продолжить?";
                 if (MessageBox.Show(warning, "Проверка безопасности профиля",
                         MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                     return;
@@ -112,6 +112,10 @@ public partial class DiagnosticProfileEditorWindow : Window
         if (File.Exists(_profilePath) &&
             (File.GetAttributes(_profilePath) & FileAttributes.ReparsePoint) != 0)
             throw new IOException("Отказ от доступа к файлу профиля через reparse point.");
+        var backupPath = _profilePath + ".bak";
+        if (File.Exists(backupPath) &&
+            (File.GetAttributes(backupPath) & FileAttributes.ReparsePoint) != 0)
+            throw new IOException("Отказ от доступа к резервной копии через reparse point.");
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();

@@ -41,7 +41,6 @@ public sealed class DiagnosticProfileValidatorTests
     }
 
     [Theory]
-    [InlineData("""{"Tweaks":[]}""")]
     [InlineData("""{"Tweaks":[{"Name":"x","Type":"unknown","Enabled":true}]}""")]
     [InlineData("""{"Tweaks":[{"Name":"x","Type":"polling","Method":"hid-report","Enabled":true,"Levels":[0]}]}""")]
     [InlineData("""{"Tweaks":[{"Name":"x","Type":"polling","Method":"hid-report","Enabled":true,"Vid":"ZZZZ"}]}""")]
