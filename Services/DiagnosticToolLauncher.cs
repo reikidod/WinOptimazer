@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace WinOptimizer.Services;
 
-internal enum DiagnosticToolKind
+public enum DiagnosticToolKind
 {
     CoreAffinity,
     InputLatency
