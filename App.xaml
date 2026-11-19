@@ -16,7 +16,7 @@
                         <GeometryDrawing Brush="#FFFFFF" Geometry="M407,295 L393,302 385,311 380,322 380,341 386,354 397,364 411,369 423,369 436,364 447,354 453,342 454,326 449,312 439,301 426,295 Z" />
                         <GeometryDrawing Brush="#FFFFFF" Geometry="M67,176 L63,181 63,190 138,364 143,368 209,367 214,360 213,352 135,178 128,174 72,174 Z" />
                         <GeometryDrawing Brush="#FFFFFF" Geometry="M430,143 L426,141 370,141 364,144 298,289 294,292 290,292 286,288 260,228 253,220 196,219 187,224 185,228 187,239 238,355 246,367 331,368 337,363 434,158 435,150 Z" />
-                        <GeometryDrawing Brush="#00C58E" Geometry="M412,308 A14,14 0 1 1 411.9,308 Z" />
+                        <GeometryDrawing Brush="#3FB950" Geometry="M412,308 A14,14 0 1 1 411.9,308 Z" />
                     </DrawingGroup>
                 </DrawingImage.Drawing>
             </DrawingImage>
