@@ -80,6 +80,15 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void MainShell_UsesTerminalTypographyWithoutBecomingAConsole()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+        Assert.Equal("Cascadia Mono, Cascadia Code, Consolas", Attribute(view.Root!, "FontFamily"));
+        Assert.Equal("13", Attribute(view.Root!, "FontSize"));
+        Assert.Equal("WinOptimizer", Attribute(view.Root!, "Title"));
+    }
+
+    [Fact]
     public void CardSystem_UsesTechnicalPanelGeometry()
     {
         var main = LoadView("Views/MainWindow.xaml");
