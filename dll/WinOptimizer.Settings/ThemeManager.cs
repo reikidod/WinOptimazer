@@ -51,7 +51,7 @@ public static class ThemeManager
         new(ThemeAccent, "Как в теме", "", ""),
         new("blue", "Синий", "#6EA8FF", "#3A66C8"),
         new("red", "Красный", "#FF6B6B", "#C0392B"),
-        new("green", "Зелёный", "#00C58E", "#007A5A"),
+        new("green", "Зелёный", "#3FB950", "#1F6F3D"),
         new("purple", "Фиолетовый", "#B48CFF", "#7B4FD0"),
         new("orange", "Оранжевый", "#FFA94D", "#C46A12"),
         new("pink", "Розовый", "#FF7EB6", "#C23C7E"),
