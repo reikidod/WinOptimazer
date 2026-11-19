@@ -1259,6 +1259,22 @@
                                            Style="{StaticResource SecondaryText}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" />
                             </StackPanel>
                         </Border>
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,6,0,10" Padding="18,16"
+                                DataContext="{Binding InterruptAffinity}">
+                            <StackPanel>
+                                <TextBlock Text="Расширенные инструменты ввода и CPU" FontSize="16" FontWeight="SemiBold" />
+                                <TextBlock Text="Оригинальные проверенные сценарии CoreAffinity и InputLatency включены в сборку приложения. Они открываются в отдельном окне командной строки, чтобы сохранить интерактивные меню, запросы UAC, тесты и механизмы отката без потери функций исходных BAT/PowerShell-файлов."
+                                           Style="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,10" />
+                                <WrapPanel>
+                                    <Button Content="Core Affinity · CPU / FPS / IRQ" Style="{StaticResource AccentButton}"
+                                            Command="{Binding LaunchCoreAffinityCommand}" Margin="0,0,8,8"
+                                            ToolTip="Запустить исходный CoreAffinity: топология CPU, профили устройств, FPS-тесты, отчёты и восстановление" />
+                                    <Button Content="Input Latency · HID / Polling" 
+                                            Command="{Binding LaunchInputLatencyCommand}" Margin="0,0,8,8"
+                                            ToolTip="Запустить исходный InputLatency: автопоиск мыши, HID-инспектор, замер, безопасное применение и откат" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
                                                 <!-- Interrupt Affinity Optimizer -->
                                                 <Border Style="{StaticResource DashboardCard}" Margin="0,6,0,10" Padding="16,14"
                                                         DataContext="{Binding InterruptAffinity}">
