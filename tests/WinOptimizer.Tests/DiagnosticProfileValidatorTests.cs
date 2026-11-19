@@ -52,6 +52,14 @@ public sealed class DiagnosticProfileValidatorTests
     }
 
     [Fact]
+    public void HasCustomCommands_DetectsElevatedCommandExecution()
+    {
+        Assert.True(DiagnosticProfileValidator.HasCustomCommands(
+            """{"Tweaks":[{"Name":"Keyboard","Type":"polling","Method":"command","Enabled":true,"ApplyCommand":"vendor-tool.exe /rate {HZ}"}]}"""));
+        Assert.False(DiagnosticProfileValidator.HasCustomCommands(ValidProfile));
+    }
+
+    [Fact]
     public void Validate_RequiresTweaksArray()
     {
         Assert.Throws<InvalidDataException>(() => DiagnosticProfileValidator.Validate("""{"AutoApplyOnServiceStart":true}"""));

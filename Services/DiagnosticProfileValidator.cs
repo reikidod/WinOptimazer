@@ -52,6 +52,22 @@ internal static class DiagnosticProfileValidator
         }
     }
 
+    internal static bool HasCustomCommands(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (!document.RootElement.TryGetProperty("Tweaks", out var tweaks) || tweaks.ValueKind != JsonValueKind.Array)
+            return false;
+
+        return tweaks.EnumerateArray().Any(tweak =>
+            tweak.ValueKind == JsonValueKind.Object &&
+            tweak.TryGetProperty("Method", out var method) &&
+            method.ValueKind == JsonValueKind.String &&
+            method.GetString() == "command" &&
+            tweak.TryGetProperty("ApplyCommand", out var command) &&
+            command.ValueKind == JsonValueKind.String &&
+            !string.IsNullOrWhiteSpace(command.GetString()));
+    }
+
     private static void ValidatePollingTweak(JsonElement tweak, string name)
     {
         var method = RequiredString(tweak, "Method");
@@ -68,7 +84,7 @@ internal static class DiagnosticProfileValidator
                 throw new InvalidDataException($"Для твика «{name}» Levels должен быть непустым массивом.");
             foreach (var level in levels.EnumerateArray())
             {
-                if (!level.TryGetInt32(out var rate) || rate is < 125 or > 32000)
+                if (!level.TryGetInt32(out var levelRate) || levelRate is < 125 or > 32000)
                     throw new InvalidDataException($"Для твика «{name}» Levels содержит недопустимую частоту.");
             }
         }
@@ -87,13 +103,13 @@ internal static class DiagnosticProfileValidator
                 throw new InvalidDataException($"Для твика «{name}» ReportsByHz должен быть объектом.");
             foreach (var report in reports.EnumerateObject())
             {
-                if (!int.TryParse(report.Name, out var rate) || rate is < 125 or > 32000 ||
+                if (!int.TryParse(report.Name, out var reportRate) || reportRate is < 125 or > 32000 ||
                     report.Value.ValueKind != JsonValueKind.String)
                     throw new InvalidDataException($"Для твика «{name}» обнаружен некорректный HID-репорт.");
-                var hex = report.Value.GetString();
+                var hex = System.Text.RegularExpressions.Regex.Replace(report.Value.GetString() ?? string.Empty, @"(?i)0x|[\s:-]", string.Empty);
                 if (!string.IsNullOrEmpty(hex) &&
                     (hex.Length % 2 != 0 || !System.Text.RegularExpressions.Regex.IsMatch(hex, "^[0-9A-Fa-f]+$")))
-                    throw new InvalidDataException($"Для твика «{name}» HID-репорт должен быть HEX-строкой чётной длины.");
+                    throw new InvalidDataException($"Для твика «{name}» HID-репорт должен содержать HEX-байты.");
             }
         }
     }
