@@ -6,7 +6,7 @@
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource BgWindowBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontFamily="Cascadia Mono, Cascadia Code, Consolas"
         FontSize="13">
     <Grid Margin="18">
         <Grid.RowDefinitions>
