@@ -94,8 +94,7 @@ internal static class GpuAffinityBenchmark
         try
         {
             Console.WriteLine();
-            Console.WriteLine("ЭТАП 1/3 — исходный замер");
-            RestartAdapters(service, devices);
+            Console.WriteLine("ЭТАП 1/3 — исходный замер текущей конфигурации");
             var baseline = Aggregate(RunTrials(lavaPath, outputDirectory, "baseline", physicalDevice, trials, durationSeconds));
 
             var cores = devices[0].AvailableCores ?? Array.Empty<InterruptAffinityCore>();
