@@ -47,7 +47,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="10">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -183,7 +183,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Width="38" Height="38" Margin="0" CornerRadius="10" ToolTip="{Binding VersionLabel}" Background="#202124" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
+                            <Border Width="38" Height="38" Margin="0" CornerRadius="0" ToolTip="{Binding VersionLabel}" Background="#202124" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
                                 <Image Source="{StaticResource WinOptimizerAppIcon}" Stretch="Uniform" />
                             </Border>
                             <TextBlock Text="WinOptimizer" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -381,7 +381,7 @@
                                 AutomationProperties.Name="Официальный сайт WinOptimizer">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="bg" Background="Transparent" CornerRadius="10" Width="40" Height="40">
+                                    <Border x:Name="bg" Background="Transparent" CornerRadius="0" Width="40" Height="40">
                                         <Viewbox Width="20" Height="20">
                                             <Canvas Width="24" Height="24">
                                                 <Path Fill="Transparent" Stroke="{DynamicResource TextSecondaryBrush}"
@@ -406,7 +406,7 @@
                                 AutomationProperties.Name="GitHub">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="bg" Background="Transparent" CornerRadius="10" Width="40" Height="40">
+                                    <Border x:Name="bg" Background="Transparent" CornerRadius="0" Width="40" Height="40">
                                         <Viewbox Width="20" Height="20">
                                             <Canvas Width="24" Height="24">
                                                 <Path Fill="{DynamicResource TextSecondaryBrush}"
@@ -476,7 +476,7 @@
                         <!-- Главная статус-панель: рабочая панель, а не декоративный баннер. -->
                         <Border Background="{DynamicResource BgCardBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                CornerRadius="2" Padding="0" Margin="0,0,0,16">
+                                CornerRadius="0" Padding="0" Margin="0,0,0,16">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="4" />
@@ -485,9 +485,9 @@
                                 </Grid.ColumnDefinitions>
                                 <Border Background="{DynamicResource AccentBrush}" />
                                 <StackPanel Grid.Column="1" Margin="24,20,22,20" VerticalAlignment="Center">
-                                    <TextBlock Text="СИСТЕМНЫЙ МОНИТОР  /  WINOPTIMIZER" FontSize="9.5"
+                                    <TextBlock Text="ROOT / SYSTEM STATUS" FontSize="9.5"
                                                FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
-                                    <TextBlock Text="Состояние компьютера" FontSize="28"
+                                    <TextBlock Text="Состояние системы" FontSize="28"
                                                FontWeight="SemiBold" Margin="0,5,0,0" />
                                     <TextBlock Text="{Binding DashboardStatus}" Style="{StaticResource SecondaryText}"
                                                FontSize="12.5" TextWrapping="Wrap" Margin="0,4,0,0" />
@@ -1136,15 +1136,15 @@
                                                    FontSize="10.5" Margin="0,2,0,0" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource AccentBrush}" Margin="0,0,4,0" />
+                                        <Border Width="7" Height="7" CornerRadius="0" Background="{DynamicResource AccentBrush}" Margin="0,0,4,0" />
                                         <TextBlock Text="CPU" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
-                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource BrandGradientBrush}" Margin="0,0,4,0" />
+                                        <Border Width="7" Height="7" CornerRadius="0" Background="{DynamicResource BrandGradientBrush}" Margin="0,0,4,0" />
                                         <TextBlock Text="RAM" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
-                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource TextSecondaryBrush}" Margin="0,0,4,0" />
+                                        <Border Width="7" Height="7" CornerRadius="0" Background="{DynamicResource TextSecondaryBrush}" Margin="0,0,4,0" />
                                         <TextBlock Text="GPU" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
-                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource AccentBrush}" Opacity="0.65" Margin="0,0,4,0" />
+                                        <Border Width="7" Height="7" CornerRadius="0" Background="{DynamicResource AccentBrush}" Opacity="0.65" Margin="0,0,4,0" />
                                         <TextBlock Text="Диск" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,8,0" />
-                                        <Border Width="7" Height="7" CornerRadius="2" Background="{DynamicResource BrandGradientBrush}" Opacity="0.65" Margin="0,0,4,0" />
+                                        <Border Width="7" Height="7" CornerRadius="0" Background="{DynamicResource BrandGradientBrush}" Opacity="0.65" Margin="0,0,4,0" />
                                         <TextBlock Text="Сеть" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" />
                                     </StackPanel>
                                 </Grid>
@@ -1157,23 +1157,23 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid Width="16" Height="52" Margin="1,0" ToolTip="{Binding TooltipText}">
-                                                    <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="2" />
+                                                    <Border Background="{DynamicResource TrackOffBrush}" CornerRadius="0" />
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom"
                                                                 HorizontalAlignment="Center">
                                                         <Border Width="2" Height="{Binding CpuBarHeight}"
-                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding CpuBarOpacity}" CornerRadius="1"
+                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding CpuBarOpacity}" CornerRadius="0"
                                                                 Margin="0,0,1,0" />
                                                         <Border Width="2" Height="{Binding MemoryBarHeight}"
-                                                                Background="{DynamicResource BrandGradientBrush}" CornerRadius="1"
+                                                                Background="{DynamicResource BrandGradientBrush}" CornerRadius="0"
                                                                 Margin="0,0,1,0" />
                                                         <Border Width="2" Height="{Binding GpuBarHeight}"
-                                                                Background="{DynamicResource TextSecondaryBrush}" Opacity="{Binding GpuBarOpacity}" CornerRadius="1"
+                                                                Background="{DynamicResource TextSecondaryBrush}" Opacity="{Binding GpuBarOpacity}" CornerRadius="0"
                                                                 Margin="0,0,1,0" />
                                                         <Border Width="2" Height="{Binding DiskBarHeight}"
-                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding DiskBarOpacity}" CornerRadius="1"
+                                                                Background="{DynamicResource AccentBrush}" Opacity="{Binding DiskBarOpacity}" CornerRadius="0"
                                                                 Margin="0,0,1,0" />
                                                         <Border Width="2" Height="{Binding NetworkBarHeight}"
-                                                                Background="{DynamicResource BrandGradientBrush}" Opacity="{Binding NetworkBarOpacity}" CornerRadius="1" />
+                                                                Background="{DynamicResource BrandGradientBrush}" Opacity="{Binding NetworkBarOpacity}" CornerRadius="0" />
                                                     </StackPanel>
                                                 </Grid>
                                             </DataTemplate>
@@ -1437,7 +1437,7 @@
                 <Border Grid.Row="1" Style="{StaticResource BorderCard}" Margin="0,0,16,14" Padding="16,14">
                     <StackPanel>
                         <!-- Поле поиска в стиле чата: одна скруглённая плашка, кнопка отправки внутри -->
-                        <Border CornerRadius="22" Padding="20,8,8,8" BorderThickness="1"
+                        <Border CornerRadius="0" Padding="20,8,8,8" BorderThickness="1"
                                 Background="{DynamicResource BgSidebarBrush}">
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -1480,7 +1480,7 @@
                                         AutomationProperties.Name="Найти">
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
-                                            <Border x:Name="Dot" CornerRadius="18" Background="{DynamicResource AccentBrush}">
+                                            <Border x:Name="Dot" CornerRadius="0" Background="{DynamicResource AccentBrush}">
                                                 <TextBlock Text="↑" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource BgWindowBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
@@ -1536,7 +1536,7 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <Border Width="44" Height="44" CornerRadius="10" Background="{DynamicResource BgCardHoverBrush}"
+                                            <Border Width="44" Height="44" CornerRadius="0" Background="{DynamicResource BgCardHoverBrush}"
                                                     Margin="0,0,12,0" ClipToBounds="True">
                                                 <Grid>
                                                     <TextBlock Text="{Binding Initial}" FontSize="20" FontWeight="SemiBold"
@@ -1629,7 +1629,7 @@
                             </StackPanel>
                             <Border Grid.Column="1" Background="{DynamicResource BgCardHoverBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                    CornerRadius="5" Padding="13" VerticalAlignment="Center">
+                                    CornerRadius="0" Padding="13" VerticalAlignment="Center">
                                 <StackPanel MinWidth="135">
                                     <TextBlock Text="СОСТОЯНИЕ" FontSize="9.5" FontWeight="Bold"
                                                Foreground="{DynamicResource TextDimBrush}" />
@@ -1700,7 +1700,7 @@
                         <StackPanel>
                             <Border Background="{DynamicResource BgCardHoverBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                    CornerRadius="5" Padding="20" Margin="0,0,12,12">
+                                    CornerRadius="0" Padding="20" Margin="0,0,12,12">
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Setter Property="Visibility" Value="Collapsed" />
@@ -1773,7 +1773,7 @@
                                                 </WrapPanel>
 
                                                 <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0"
-                                                        Padding="11,10" CornerRadius="5"
+                                                        Padding="11,10" CornerRadius="0"
                                                         Background="{DynamicResource BgCardHoverBrush}"
                                                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                                     <Grid>
