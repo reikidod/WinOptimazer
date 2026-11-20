@@ -80,6 +80,41 @@ public sealed class UiStructureTests
     }
 
     [Fact]
+    public void MainShell_UsesTerminalDesktopChrome()
+    {
+        var view = LoadView("Views/MainWindow.xaml");
+        var root = Assert.Single(Elements(view, "Grid"), element =>
+            Attribute(element, "Name") == "RootGrid");
+        var rows = Elements(root, "RowDefinition").ToArray();
+        Assert.Equal(2, rows.Length);
+        Assert.Equal("54", Attribute(rows[0], "Height"));
+        Assert.Equal("*", Attribute(rows[1], "Height"));
+
+        Assert.Contains(Elements(root, "Border"), element =>
+            Attribute(element, "Row") == "0" &&
+            Attribute(element, "ColumnSpan") == "2" &&
+            Attribute(element, "Background") == "#010409" &&
+            Attribute(element, "BorderThickness") == "0,0,0,1");
+        Assert.Contains(Elements(root, "TextBlock"), element =>
+            Attribute(element, "Text") == "LOCAL SESSION");
+        Assert.Contains(Elements(root, "TextBlock"), element =>
+            Attribute(element, "Text") == "SYSTEM CONTROL");
+        Assert.Contains(Elements(root, "Border"), element =>
+            Attribute(element, "Name") == "SidebarPanel" &&
+            Attribute(element, "Row") == "1");
+        Assert.Contains(Elements(root, "Grid"), element =>
+            Attribute(element, "Row") == "1" &&
+            Attribute(element, "Column") == "1");
+
+        var theme = LoadView("Themes/DarkTheme.xaml");
+        var nav = Assert.Single(Elements(theme, "Style"), element =>
+            Attribute(element, "Key") == "NavButton");
+        Assert.Contains(Elements(nav, "Border"), element =>
+            Attribute(element, "Name") == "Root" &&
+            Attribute(element, "CornerRadius") == "0");
+    }
+
+    [Fact]
     public void MainShell_UsesTerminalTypographyWithoutBecomingAConsole()
     {
         var view = LoadView("Views/MainWindow.xaml");
@@ -98,7 +133,7 @@ public sealed class UiStructureTests
             Attribute(element, "Key") == "DashboardCard");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "CornerRadius" &&
-            Attribute(element, "Value") == "4");
+            Attribute(element, "Value") == "0");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "Effect" &&
             Attribute(element, "Value") == "{x:Null}");
@@ -114,7 +149,7 @@ public sealed class UiStructureTests
                 Attribute(element, "Key") == "BorderCard");
             Assert.Contains(Elements(borderCard, "Setter"), element =>
                 Attribute(element, "Property") == "CornerRadius" &&
-                Attribute(element, "Value") == "3");
+                Attribute(element, "Value") == "0");
         }
     }
 
@@ -138,9 +173,9 @@ public sealed class UiStructureTests
     {
         var view = LoadView("Views/MainWindow.xaml");
         Assert.Contains(Elements(view, "TextBlock"), element =>
-            Attribute(element, "Text") == "СИСТЕМНЫЙ МОНИТОР  /  WINOPTIMIZER");
+            Attribute(element, "Text") == "ROOT / SYSTEM STATUS");
         Assert.Contains(Elements(view, "TextBlock"), element =>
-            Attribute(element, "Text") == "Состояние компьютера");
+            Attribute(element, "Text") == "Состояние системы");
         Assert.Contains(Elements(view, "Button"), element =>
             Attribute(element, "Content") == "Обновить данные");
     }
@@ -177,13 +212,13 @@ public sealed class UiStructureTests
             Attribute(element, "Key") == "BorderCard");
         Assert.Contains(Elements(borderCard, "Setter"), element =>
             Attribute(element, "Property") == "CornerRadius" &&
-            Attribute(element, "Value") == "3");
+            Attribute(element, "Value") == "0");
 
         var hoverCard = Assert.Single(Elements(extras, "Style"), element =>
             Attribute(element, "Key") == "HoverCard");
         Assert.Contains(Elements(hoverCard, "Border"), element =>
             Attribute(element, "Name") == "Card" &&
-            Attribute(element, "CornerRadius") == "4" &&
+            Attribute(element, "CornerRadius") == "0" &&
             Attribute(element, "BorderThickness") == "1");
     }
 
