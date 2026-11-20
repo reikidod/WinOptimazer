@@ -8,7 +8,7 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="CornerRadius" Value="0" />
         <Setter Property="Padding" Value="18,16" />
         <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
