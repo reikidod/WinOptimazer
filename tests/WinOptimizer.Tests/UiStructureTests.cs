@@ -91,8 +91,8 @@ public sealed class UiStructureTests
         Assert.Equal("*", Attribute(rows[1], "Height"));
 
         Assert.Contains(Elements(root, "Border"), element =>
-            Attribute(element, "Row") == "0" &&
-            Attribute(element, "ColumnSpan") == "2" &&
+            Attribute(element, "Grid.Row") == "0" &&
+            Attribute(element, "Grid.ColumnSpan") == "2" &&
             Attribute(element, "Background") == "#010409" &&
             Attribute(element, "BorderThickness") == "0,0,0,1");
         Assert.Contains(Elements(root, "TextBlock"), element =>
@@ -101,10 +101,10 @@ public sealed class UiStructureTests
             Attribute(element, "Text") == "SYSTEM CONTROL");
         Assert.Contains(Elements(root, "Border"), element =>
             Attribute(element, "Name") == "SidebarPanel" &&
-            Attribute(element, "Row") == "1");
+            Attribute(element, "Grid.Row") == "1");
         Assert.Contains(Elements(root, "Grid"), element =>
-            Attribute(element, "Row") == "1" &&
-            Attribute(element, "Column") == "1");
+            Attribute(element, "Grid.Row") == "1" &&
+            Attribute(element, "Grid.Column") == "1");
 
         var theme = LoadView("Themes/DarkTheme.xaml");
         var nav = Assert.Single(Elements(theme, "Style"), element =>
