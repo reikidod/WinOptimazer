@@ -85,7 +85,7 @@ public sealed class UiStructureTests
         var view = LoadView("Views/MainWindow.xaml");
         var root = Assert.Single(Elements(view, "Grid"), element =>
             Attribute(element, "Name") == "RootGrid");
-        var rows = Elements(root, "RowDefinition").ToArray();
+        var rows = root.Elements().Single(element => element.Name.LocalName == "Grid.RowDefinitions").Elements().ToArray();
         Assert.Equal(2, rows.Length);
         Assert.Equal("54", Attribute(rows[0], "Height"));
         Assert.Equal("*", Attribute(rows[1], "Height"));
