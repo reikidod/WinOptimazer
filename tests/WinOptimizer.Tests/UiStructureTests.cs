@@ -206,7 +206,7 @@ public sealed class UiStructureTests
             Attribute(element, "Key") == "PageTitle");
         Assert.Contains(Elements(pageTitle, "Setter"), element =>
             Attribute(element, "Property") == "FontSize" &&
-            Attribute(element, "Value") == "29");
+            Attribute(element, "Value") == "23");
 
         var borderCard = Assert.Single(Elements(shared, "Style"), element =>
             Attribute(element, "Key") == "BorderCard");
