@@ -57,7 +57,7 @@
                     <Border Margin="10" Padding="4"
                             Background="{DynamicResource BgCardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="12">
+                            BorderThickness="1" CornerRadius="0">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.5" Color="Black" />
                         </Border.Effect>
@@ -78,7 +78,7 @@
                 <ControlTemplate TargetType="MenuItem">
                     <Border x:Name="Bd" Background="Transparent"
                             BorderBrush="Transparent" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8" SnapsToDevicePixels="True">
+                            CornerRadius="0" Padding="12,8" SnapsToDevicePixels="True">
                         <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"
                                           VerticalAlignment="Center" />
                     </Border>
@@ -120,10 +120,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">
                     <Grid SnapsToDevicePixels="True">
-                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3" />
-                        <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="3"
+                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="0" />
+                        <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="0"
                                 HorizontalAlignment="Left" />
-                        <Border x:Name="Marquee" Background="{TemplateBinding Foreground}" CornerRadius="3"
+                        <Border x:Name="Marquee" Background="{TemplateBinding Foreground}" CornerRadius="0"
                                 Visibility="Collapsed">
                             <Border.OpacityMask>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
