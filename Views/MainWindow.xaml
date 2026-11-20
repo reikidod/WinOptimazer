@@ -105,6 +105,10 @@
     </Window.InputBindings>
 
     <Grid x:Name="RootGrid" ClipToBounds="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="54" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition x:Name="SidebarColumn" Width="240" />
             <ColumnDefinition Width="*" />
@@ -112,7 +116,7 @@
 
         <!-- Пользовательский фон: картинка с размытием и затемняющий слой цвета темы (под всеми страницами) -->
         <!-- Картинка всегда в исходном масштабе: blur её не увеличивает, края просто обрезаются клипом -->
-        <Grid Grid.ColumnSpan="2" ClipToBounds="True" IsHitTestVisible="False">
+        <Grid Grid.RowSpan="2" Grid.ColumnSpan="2" ClipToBounds="True" IsHitTestVisible="False">
             <Image x:Name="BackgroundImage" Stretch="UniformToFill" Visibility="Collapsed"
                    RenderOptions.BitmapScalingMode="HighQuality">
                 <Image.Effect>
@@ -128,8 +132,43 @@
             <!-- Нейтральный фон без декоративных свечений и фоновой сетки. -->
         </Grid>
 
-        <!-- ============ Боковая панель ============ -->
-        <Border x:Name="SidebarPanel" Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" Panel.ZIndex="1">
+        <!-- Terminal desktop chrome: a fixed command/status strip, not a browser-like title card. -->
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#010409"
+                BorderBrush="#30363D" BorderThickness="0,0,0,1" Panel.ZIndex="5">
+            <Grid Margin="18,0,20,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="WIN" Foreground="#3FB950" FontWeight="Bold" FontSize="13"
+                               FontFamily="Cascadia Mono, Consolas" />
+                    <TextBlock Text="OPTIMIZER" Foreground="#E6EDF3" FontWeight="Bold" FontSize="13"
+                               FontFamily="Cascadia Mono, Consolas" Margin="5,0,0,0" />
+                    <Border Width="1" Height="18" Background="#30363D" Margin="16,0" />
+                    <TextBlock Text="SYSTEM CONTROL" Foreground="#8B949E" FontSize="10"
+                               FontFamily="Cascadia Mono, Consolas" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <TextBlock Text="LOCAL SESSION" Foreground="#8B949E" FontSize="9"
+                               FontFamily="Cascadia Mono, Consolas" />
+                    <TextBlock Text="  /  " Foreground="#484F58" FontSize="9"
+                               FontFamily="Cascadia Mono, Consolas" />
+                    <TextBlock Text="WINDOWS 10/11" Foreground="#3FB950" FontSize="9"
+                               FontFamily="Cascadia Mono, Consolas" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="6" Height="6" Fill="#3FB950" Margin="0,0,8,0" />
+                    <TextBlock Text="{Binding VersionLabel}" Foreground="#B1BAC4" FontSize="10"
+                               FontFamily="Cascadia Mono, Consolas" VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============ Command navigation ============ -->
+        <Border Grid.Row="1" x:Name="SidebarPanel" Background="{DynamicResource BgSidebarBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" Panel.ZIndex="1">
             <Grid Margin="10,20,10,14">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -419,7 +458,7 @@
         </Border>
 
         <!-- ============ Содержимое ============ -->
-        <Grid Grid.Column="1">
+        <Grid Grid.Row="1" Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
