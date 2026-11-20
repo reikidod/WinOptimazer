@@ -15,7 +15,7 @@
                         <!-- Включённое состояние — отдельный слой с плавным появлением: кисти берутся из текущей темы -->
                         <Border x:Name="OnTrack" CornerRadius="0" Opacity="0" Background="{DynamicResource AccentStrongBrush}" />
                         <Border x:Name="Thumb" Width="18" Height="18" HorizontalAlignment="Left" Margin="4,0,0,0" Background="{DynamicResource TextPrimaryBrush}" CornerRadius="0">
-                            <Ellipse.Effect>
+                            <Border.Effect>
                                 <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270" Opacity="0.5" Color="Black" />
                             </Ellipse.Effect>
                         </Border>
