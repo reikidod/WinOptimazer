@@ -22,7 +22,7 @@
 
     <!-- Заголовок страницы и подзаголовок -->
     <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="29" />
+        <Setter Property="FontSize" Value="23" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -46,7 +46,7 @@
     <!-- ===== Контекстное меню (в стиле карточек: скругление, рамка, тень, подсветка под курсором) ===== -->
     <Style x:Key="DarkContextMenu" TargetType="ContextMenu">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+        <Setter Property="FontFamily" Value="Cascadia Mono, Cascadia Code, Consolas" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="HasDropShadow" Value="False" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
