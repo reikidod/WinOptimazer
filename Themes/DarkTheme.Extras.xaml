@@ -17,7 +17,7 @@
                         <Border x:Name="Thumb" Width="18" Height="18" HorizontalAlignment="Left" Margin="4,0,0,0" Background="{DynamicResource TextPrimaryBrush}" CornerRadius="0">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270" Opacity="0.5" Color="Black" />
-                            </Ellipse.Effect>
+                            </Border.Effect>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
