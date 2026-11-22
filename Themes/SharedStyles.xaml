@@ -8,7 +8,7 @@
         <Setter Property="Background" Value="{DynamicResource BgCardBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="18,16" />
         <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -22,7 +22,7 @@
 
     <!-- Заголовок страницы и подзаголовок -->
     <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="23" />
+        <Setter Property="FontSize" Value="29" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -46,7 +46,7 @@
     <!-- ===== Контекстное меню (в стиле карточек: скругление, рамка, тень, подсветка под курсором) ===== -->
     <Style x:Key="DarkContextMenu" TargetType="ContextMenu">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        <Setter Property="FontFamily" Value="Cascadia Mono, Cascadia Code, Consolas" />
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="HasDropShadow" Value="False" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -57,7 +57,7 @@
                     <Border Margin="10" Padding="4"
                             Background="{DynamicResource BgCardBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="0">
+                            BorderThickness="1" CornerRadius="12">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.5" Color="Black" />
                         </Border.Effect>
@@ -78,7 +78,7 @@
                 <ControlTemplate TargetType="MenuItem">
                     <Border x:Name="Bd" Background="Transparent"
                             BorderBrush="Transparent" BorderThickness="1"
-                            CornerRadius="0" Padding="12,8" SnapsToDevicePixels="True">
+                            CornerRadius="8" Padding="12,8" SnapsToDevicePixels="True">
                         <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"
                                           VerticalAlignment="Center" />
                     </Border>
@@ -120,10 +120,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">
                     <Grid SnapsToDevicePixels="True">
-                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="0" />
-                        <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="0"
+                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3" />
+                        <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="3"
                                 HorizontalAlignment="Left" />
-                        <Border x:Name="Marquee" Background="{TemplateBinding Foreground}" CornerRadius="0"
+                        <Border x:Name="Marquee" Background="{TemplateBinding Foreground}" CornerRadius="3"
                                 Visibility="Collapsed">
                             <Border.OpacityMask>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">

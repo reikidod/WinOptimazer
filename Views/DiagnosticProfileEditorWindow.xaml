@@ -5,7 +5,7 @@
         MinWidth="560" MinHeight="420" WindowStartupLocation="CenterOwner"
         Background="{DynamicResource BgWindowBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
-        FontFamily="Cascadia Mono, Cascadia Code, Consolas">
+        FontFamily="Segoe UI Variable Text, Segoe UI">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

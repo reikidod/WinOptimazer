@@ -2,21 +2,21 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:WinOptimizer.Views">
 
-    <!-- WinOptimizer Terminal Control Desk.
-         Это самостоятельное WPF-приложение с терминальной визуальной системой, не командная оболочка.
-         Слои: рабочая область -> боковая панель -> информационные панели -> hover.
-         Зелёный акцент обозначает активное состояние и основные действия. -->
-    <Color x:Key="BgWindowColor">#0D1117</Color>
-    <Color x:Key="BgSidebarColor">#010409</Color>
-    <Color x:Key="BgCardColor">#161B22</Color>
-    <Color x:Key="BgCardHoverColor">#21262D</Color>
-    <Color x:Key="BgInputColor">#0D1117</Color>
-    <Color x:Key="BorderColor">#30363D</Color>
-    <Color x:Key="BorderHoverColor">#484F58</Color>
-    <Color x:Key="AccentColor">#3FB950</Color>
-    <Color x:Key="AccentStrongColor">#1F6F3D</Color>
-    <Color x:Key="AccentSoftColor">#263FB950</Color>
-    <Color x:Key="TrackOffColor">#30363D</Color>
+    <!-- WinOptimizer "Signal" Control Center (design system v3).
+         Layers: window (deepest) -> sidebar -> card -> card hover.
+         Brand accent = logo green #00C58E. Used for selection, focus, primary actions, progress.
+         Status colours (success / warn / danger) only for state, never decoration. -->
+    <Color x:Key="BgWindowColor">#101418</Color>
+    <Color x:Key="BgSidebarColor">#151A1F</Color>
+    <Color x:Key="BgCardColor">#1A2127</Color>
+    <Color x:Key="BgCardHoverColor">#222A31</Color>
+    <Color x:Key="BgInputColor">#12171C</Color>
+    <Color x:Key="BorderColor">#2C363E</Color>
+    <Color x:Key="BorderHoverColor">#3D4A54</Color>
+    <Color x:Key="AccentColor">#00C58E</Color>
+    <Color x:Key="AccentStrongColor">#007A5A</Color>
+    <Color x:Key="AccentSoftColor">#2600C58E</Color>
+    <Color x:Key="TrackOffColor">#2A343C</Color>
 
     <SolidColorBrush x:Key="BgWindowBrush" Color="{StaticResource BgWindowColor}" />
     <SolidColorBrush x:Key="BgSidebarBrush" Color="{StaticResource BgSidebarColor}" />
@@ -32,13 +32,13 @@
     <SolidColorBrush x:Key="TextOnAccentBrush" Color="#FFFFFF" />
 
     <!-- Brand keys kept for compatibility with existing pages; they follow the accent (ThemeManager overrides them per theme). -->
-    <SolidColorBrush x:Key="BrandCyanBrush" Color="#3FB950" />
-    <SolidColorBrush x:Key="BrandRedBrush" Color="#1F6F3D" />
+    <SolidColorBrush x:Key="BrandCyanBrush" Color="#00C58E" />
+    <SolidColorBrush x:Key="BrandRedBrush" Color="#007A5A" />
     <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#3FB950" Offset="0" />
-        <GradientStop Color="#1F6F3D" Offset="1" />
+        <GradientStop Color="#00C58E" Offset="0" />
+        <GradientStop Color="#007A5A" Offset="1" />
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="BrandActionBrush" Color="#3FB950" />
+    <SolidColorBrush x:Key="BrandActionBrush" Color="#00C58E" />
 
     <!-- Compatibility resources: intentionally empty so old references stay valid. -->
     <DrawingBrush x:Key="SiteGridBrush" TileMode="None">
@@ -58,17 +58,17 @@
         <GradientStop Color="#00000000" Offset="0" />
         <GradientStop Color="#00000000" Offset="1" />
     </RadialGradientBrush>
-    <SolidColorBrush x:Key="SiteAccentButtonBrush" Color="#3FB950" />
+    <SolidColorBrush x:Key="SiteAccentButtonBrush" Color="#00C58E" />
 
     <!-- Text on slate surfaces (all pairs >= 4.5:1 on BgCard). -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E6EDF3" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B1BAC4" />
-    <SolidColorBrush x:Key="TextDimBrush" Color="#8B949E" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F2F5F3" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B5C0BA" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="#8E9B94" />
 
-    <SolidColorBrush x:Key="SuccessBrush" Color="#3FB950" />
-    <SolidColorBrush x:Key="WarnBrush" Color="#D29922" />
-    <SolidColorBrush x:Key="DangerBrush" Color="#F85149" />
-    <SolidColorBrush x:Key="NeutralBrush" Color="#8B949E" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#2FD49A" />
+    <SolidColorBrush x:Key="WarnBrush" Color="#F0B35C" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#F2777A" />
+    <SolidColorBrush x:Key="NeutralBrush" Color="#8591A8" />
 
     <!-- ===== Кнопки: радиус 8, без масштабирования/«пружины»; отклик — лёгкая подсветка ===== -->
     <Style TargetType="Button">
@@ -87,10 +87,10 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="2"
+                            CornerRadius="5"
                             SnapsToDevicePixels="True">
                         <Grid>
-                            <Border x:Name="Highlight" Background="White" Opacity="0" CornerRadius="2" IsHitTestVisible="False" />
+                            <Border x:Name="Highlight" Background="White" Opacity="0" CornerRadius="4" IsHitTestVisible="False" />
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
@@ -136,11 +136,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Root" CornerRadius="0" Background="Transparent"
+                    <Border x:Name="Root" CornerRadius="6" Background="Transparent"
                             BorderThickness="1" BorderBrush="Transparent"
-                            Padding="12,8" SnapsToDevicePixels="True">
+                            Padding="12,10" SnapsToDevicePixels="True">
                         <Grid>
-                            <Border x:Name="Bar" Width="2" Height="18" CornerRadius="0"
+                            <Border x:Name="Bar" Width="3" Height="18" CornerRadius="0"
                                     HorizontalAlignment="Left" VerticalAlignment="Center"
                                     Margin="-12,0,0,0"
                                     Background="{DynamicResource AccentBrush}" Opacity="0"
@@ -160,8 +160,7 @@
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="#102617" />
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentStrongBrush}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentSoftBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
@@ -216,7 +215,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="2" SnapsToDevicePixels="True">
+                            CornerRadius="8" SnapsToDevicePixels="True">
                         <Grid>
                             <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
                                           Margin="{TemplateBinding Padding}"

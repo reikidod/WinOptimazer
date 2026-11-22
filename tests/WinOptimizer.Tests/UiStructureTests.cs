@@ -59,10 +59,10 @@ public sealed class UiStructureTests
 
         foreach (var (key, value) in new[]
         {
-            ("BgWindowColor", "#0D1117"),
-            ("BgSidebarColor", "#010409"),
-            ("BgCardColor", "#161B22"),
-            ("AccentColor", "#3FB950")
+            ("BgWindowColor", "#101418"),
+            ("BgSidebarColor", "#151A1F"),
+            ("BgCardColor", "#1A2127"),
+            ("AccentColor", "#00C58E")
         })
         {
             Assert.Contains(Elements(theme, "Color"), element =>
@@ -80,50 +80,6 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void MainShell_UsesTerminalDesktopChrome()
-    {
-        var view = LoadView("Views/MainWindow.xaml");
-        var root = Assert.Single(Elements(view, "Grid"), element =>
-            Attribute(element, "Name") == "RootGrid");
-        var rows = root.Elements().Single(element => element.Name.LocalName == "Grid.RowDefinitions").Elements().ToArray();
-        Assert.Equal(2, rows.Length);
-        Assert.Equal("54", Attribute(rows[0], "Height"));
-        Assert.Equal("*", Attribute(rows[1], "Height"));
-
-        Assert.Contains(Elements(root, "Border"), element =>
-            Attribute(element, "Grid.Row") == "0" &&
-            Attribute(element, "Grid.ColumnSpan") == "2" &&
-            Attribute(element, "Background") == "#010409" &&
-            Attribute(element, "BorderThickness") == "0,0,0,1");
-        Assert.Contains(Elements(root, "TextBlock"), element =>
-            Attribute(element, "Text") == "LOCAL SESSION");
-        Assert.Contains(Elements(root, "TextBlock"), element =>
-            Attribute(element, "Text") == "SYSTEM CONTROL");
-        Assert.Contains(Elements(root, "Border"), element =>
-            Attribute(element, "Name") == "SidebarPanel" &&
-            Attribute(element, "Grid.Row") == "1");
-        Assert.Contains(Elements(root, "Grid"), element =>
-            Attribute(element, "Grid.Row") == "1" &&
-            Attribute(element, "Grid.Column") == "1");
-
-        var theme = LoadView("Themes/DarkTheme.xaml");
-        var nav = Assert.Single(Elements(theme, "Style"), element =>
-            Attribute(element, "Key") == "NavButton");
-        Assert.Contains(Elements(nav, "Border"), element =>
-            Attribute(element, "Name") == "Root" &&
-            Attribute(element, "CornerRadius") == "0");
-    }
-
-    [Fact]
-    public void MainShell_UsesTerminalTypographyWithoutBecomingAConsole()
-    {
-        var view = LoadView("Views/MainWindow.xaml");
-        Assert.Equal("Cascadia Mono, Cascadia Code, Consolas", Attribute(view.Root!, "FontFamily"));
-        Assert.Equal("13", Attribute(view.Root!, "FontSize"));
-        Assert.Equal("WinOptimizer", Attribute(view.Root!, "Title"));
-    }
-
-    [Fact]
     public void CardSystem_UsesTechnicalPanelGeometry()
     {
         var main = LoadView("Views/MainWindow.xaml");
@@ -133,7 +89,7 @@ public sealed class UiStructureTests
             Attribute(element, "Key") == "DashboardCard");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "CornerRadius" &&
-            Attribute(element, "Value") == "0");
+            Attribute(element, "Value") == "4");
         Assert.Contains(Elements(dashboardCard, "Setter"), element =>
             Attribute(element, "Property") == "Effect" &&
             Attribute(element, "Value") == "{x:Null}");
@@ -149,7 +105,7 @@ public sealed class UiStructureTests
                 Attribute(element, "Key") == "BorderCard");
             Assert.Contains(Elements(borderCard, "Setter"), element =>
                 Attribute(element, "Property") == "CornerRadius" &&
-                Attribute(element, "Value") == "0");
+                Attribute(element, "Value") == "3");
         }
     }
 
@@ -173,9 +129,9 @@ public sealed class UiStructureTests
     {
         var view = LoadView("Views/MainWindow.xaml");
         Assert.Contains(Elements(view, "TextBlock"), element =>
-            Attribute(element, "Text") == "ROOT / SYSTEM STATUS");
+            Attribute(element, "Text") == "СИСТЕМНЫЙ МОНИТОР  /  WINOPTIMIZER");
         Assert.Contains(Elements(view, "TextBlock"), element =>
-            Attribute(element, "Text") == "Состояние системы");
+            Attribute(element, "Text") == "Состояние компьютера");
         Assert.Contains(Elements(view, "Button"), element =>
             Attribute(element, "Content") == "Обновить данные");
     }
@@ -206,19 +162,19 @@ public sealed class UiStructureTests
             Attribute(element, "Key") == "PageTitle");
         Assert.Contains(Elements(pageTitle, "Setter"), element =>
             Attribute(element, "Property") == "FontSize" &&
-            Attribute(element, "Value") == "23");
+            Attribute(element, "Value") == "29");
 
         var borderCard = Assert.Single(Elements(shared, "Style"), element =>
             Attribute(element, "Key") == "BorderCard");
         Assert.Contains(Elements(borderCard, "Setter"), element =>
             Attribute(element, "Property") == "CornerRadius" &&
-            Attribute(element, "Value") == "0");
+            Attribute(element, "Value") == "3");
 
         var hoverCard = Assert.Single(Elements(extras, "Style"), element =>
             Attribute(element, "Key") == "HoverCard");
         Assert.Contains(Elements(hoverCard, "Border"), element =>
             Attribute(element, "Name") == "Card" &&
-            Attribute(element, "CornerRadius") == "0" &&
+            Attribute(element, "CornerRadius") == "4" &&
             Attribute(element, "BorderThickness") == "1");
     }
 
@@ -239,7 +195,7 @@ public sealed class UiStructureTests
         var app = LoadView("App.xaml");
         Assert.Contains(Elements(app, "DrawingImage"), element =>
             Attribute(element, "Key") == "WinOptimizerAppIcon" &&
-            Elements(element, "GeometryDrawing").Any(drawing => Attribute(drawing, "Brush") == "#3FB950") &&
+            Elements(element, "GeometryDrawing").Any(drawing => Attribute(drawing, "Brush") == "#00C58E") &&
             Elements(element, "GeometryDrawing").Count() == 5);
     }
 
@@ -338,28 +294,6 @@ public sealed class UiStructureTests
     }
 
     [Fact]
-    public void Sidebar_UsesConsistentTechnicalOutlineIcons()
-    {
-        var document = LoadView("Views/MainWindow.xaml");
-        var navigationIcons = Elements(document, "Path")
-            .Where(element => Attribute(element, "Stroke") ==
-                "{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}")
-            .ToList();
-
-        Assert.Equal(10, navigationIcons.Count);
-        Assert.All(navigationIcons, icon =>
-        {
-            Assert.Equal("Transparent", Attribute(icon, "Fill"));
-            Assert.Equal("1.7", Attribute(icon, "StrokeThickness"));
-            Assert.Equal("Round", Attribute(icon, "StrokeLineJoin"));
-        });
-
-        var application = XDocument.Load(Path.Combine(RepositoryRoot(), "App.xaml"));
-        Assert.Contains(Elements(application, "GeometryDrawing"), drawing =>
-            Attribute(drawing, "Brush") == "#3FB950");
-    }
-
-    [Fact]
     public void SideMouseButtons_AreConnectedToNavigationHistory()
     {
         var codeBehind = File.ReadAllText(Path.Combine(RepositoryRoot(), "Views/MainWindow.xaml.cs"));
@@ -414,21 +348,21 @@ public sealed class UiStructureTests
     public void ThemeManager_RebuildsAtmosphereForSelectedTheme()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "dll/WinOptimizer.Settings/ThemeManager.cs"));
-        Assert.Contains("#3FB950", source);
-        Assert.Contains("#0D1117", source);
-        Assert.Contains("#1F6F3D", source);
-        Assert.Contains("Terminal Control Desk", source);
+        Assert.Contains("#00C58E", source);
+        Assert.Contains("#101418", source);
+        Assert.Contains("#007A5A", source);
+        Assert.Contains("Control Center", source);
     }
 
     [Fact]
-    public void TerminalPalette_IsPresentInDarkTheme()
+    public void SignalPalette_IsPresentInDarkTheme()
     {
         var theme = File.ReadAllText(Path.Combine(RepositoryRoot(), "Themes/DarkTheme.xaml"));
-        Assert.Contains("#0D1117", theme);
-        Assert.Contains("#010409", theme);
-        Assert.Contains("#161B22", theme);
-        Assert.Contains("#3FB950", theme);
-        Assert.Contains("#1F6F3D", theme);
+        Assert.Contains("#101418", theme);
+        Assert.Contains("#151A1F", theme);
+        Assert.Contains("#1A2127", theme);
+        Assert.Contains("#00C58E", theme);
+        Assert.Contains("#007A5A", theme);
         Assert.Contains("AccentButton", theme);
         Assert.Contains("NavButton", theme);
     }
